@@ -4,7 +4,7 @@
 <div class="card dashboard-card">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="fw-semibold mb-1">Edit Product</h4>
+            <h4 class="fw-semibold mb-1">Edit Barang</h4>
             <p class="text-muted mb-0">Refine the details of this inventory item.</p>
         </div>
         <a href="{{ route('products.index') }}" class="btn btn-outline-secondary rounded-pill">Back</a>
@@ -14,32 +14,24 @@
         @csrf
         @method('PUT')
         <div class="col-md-6">
-            <label class="form-label">Name</label>
+            <label class="form-label">Nama Perangkat</label>
             <input type="text" name="name" class="form-control" value="{{ old('name', $product->name) }}" required>
         </div>
         <div class="col-md-6">
-            <label class="form-label">Category</label>
+            <label class="form-label">Model/Tipe</label>
             <input type="text" name="category" class="form-control" value="{{ old('category', $product->category) }}" required>
         </div>
         <div class="col-md-6">
-            <label class="form-label">Sub Category</label>
+            <label class="form-label">Kapasitas</label>
             <input type="text" name="subcategory" class="form-control" value="{{ old('subcategory', $product->subcategory) }}">
         </div>
-        <div class="col-md-6">
-            <label class="form-label">Edition</label>
-            <input type="text" name="edition" class="form-control" value="{{ old('edition', $product->edition) }}">
-        </div>
         <div class="col-12">
-            <label class="form-label">Description</label>
+            <label class="form-label">Deskripsi</label>
             <textarea name="description" rows="4" class="form-control">{{ old('description', $product->description) }}</textarea>
         </div>
         <div class="col-md-4">
-            <label class="form-label">Stock</label>
+            <label class="form-label">Kuantiti</label>
             <input type="number" min="0" name="stock" class="form-control" value="{{ old('stock', $product->stock) }}" required>
-        </div>
-        <div class="col-md-4">
-            <label class="form-label">Price</label>
-            <input type="number" step="0.01" min="0" name="price" class="form-control" value="{{ old('price', $product->price) }}" required>
         </div>
         <div class="col-md-4">
             <label class="form-label">Status</label>

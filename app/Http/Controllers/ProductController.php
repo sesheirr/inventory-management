@@ -43,10 +43,12 @@ class ProductController extends Controller
             'edition' => ['nullable', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
             'stock' => ['required', 'integer', 'min:0'],
-            'price' => ['required', 'numeric', 'min:0'],
+            'price' => ['nullable', 'numeric', 'min:0'],
             'status' => ['required', 'in:active,inactive,out_of_stock'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
+
+        $data['price'] = $data['price'] ?? 0;
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('products', 'public');
@@ -76,10 +78,12 @@ class ProductController extends Controller
             'edition' => ['nullable', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
             'stock' => ['required', 'integer', 'min:0'],
-            'price' => ['required', 'numeric', 'min:0'],
+            'price' => ['nullable', 'numeric', 'min:0'],
             'status' => ['required', 'in:active,inactive,out_of_stock'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
+
+        $data['price'] = $data['price'] ?? 0;
 
         if ($request->hasFile('image')) {
             if ($product->image && Storage::disk('public')->exists($product->image)) {

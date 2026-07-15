@@ -20,11 +20,11 @@
             <thead>
                 <tr>
                     <th><input type="checkbox" class="form-check-input"></th>
-                    <th>Name</th>
-                    <th>Category</th>
-                    <th>Sub Category</th>
-                    <th>Edition</th>
-                    <th>Action</th>
+                    <th>Nama Perangkat</th>
+                    <th>Model/Tipe</th>
+                    <th>Kapasitas</th>
+                    <th>Deskripsi</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
