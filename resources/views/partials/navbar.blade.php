@@ -17,9 +17,9 @@
         <button class="icon-btn" type="button"><i class="bi bi-moon"></i></button>
         <button class="icon-btn" type="button"><i class="bi bi-bell"></i></button>
         <div class="profile-pill">
-            <div class="avatar">JD</div>
+            <div class="avatar">SF</div>
             <div>
-                <div class="fw-semibold">Jhon Doe</div>
+                <div class="fw-semibold">Sheira Fitria</div>
                 <small class="text-muted">Admin</small>
             </div>
         </div>
