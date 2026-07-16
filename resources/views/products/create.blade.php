@@ -7,7 +7,7 @@
             <h4 class="fw-semibold mb-1">Create Product</h4>
             <p class="text-muted mb-0">Add a new inventory item with complete details.</p>
         </div>
-        <a href="{{ route('products.index') }}" class="btn btn-outline-secondary rounded-pill">Back</a>
+        <!-- Tombol Back di sini sudah dihapus -->
     </div>
 
     <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data" class="row g-4">
@@ -36,10 +36,7 @@
             <label class="form-label">Kuantiti</label>
             <input type="number" min="0" name="stock" class="form-control" value="{{ old('stock', 0) }}" required>
         </div>
-        <div class="col-md-4">
-            <label class="form-label">Harga</label>
-            <input type="number" step="0.01" min="0" name="price" class="form-control" value="{{ old('price', 0) }}">
-        </div>
+    
         <div class="col-md-4">
             <label class="form-label">Status</label>
             <select name="status" class="form-select">

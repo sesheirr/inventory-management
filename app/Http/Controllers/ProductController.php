@@ -36,6 +36,7 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+       
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'category' => ['required', 'string', 'max:100'],
@@ -43,12 +44,11 @@ class ProductController extends Controller
             'edition' => ['nullable', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
             'stock' => ['required', 'integer', 'min:0'],
-            'price' => ['nullable', 'numeric', 'min:0'],
             'status' => ['required', 'in:active,inactive,out_of_stock'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
-        $data['price'] = $data['price'] ?? 0;
+       
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('products', 'public');
@@ -71,6 +71,7 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
+        
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'category' => ['required', 'string', 'max:100'],
@@ -78,12 +79,11 @@ class ProductController extends Controller
             'edition' => ['nullable', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
             'stock' => ['required', 'integer', 'min:0'],
-            'price' => ['nullable', 'numeric', 'min:0'],
             'status' => ['required', 'in:active,inactive,out_of_stock'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
-        $data['price'] = $data['price'] ?? 0;
+    
 
         if ($request->hasFile('image')) {
             if ($product->image && Storage::disk('public')->exists($product->image)) {
@@ -113,6 +113,27 @@ class ProductController extends Controller
         $product->delete();
 
         return redirect()->route('products.index')->with('success', 'Product deleted successfully.');
+    }
+
+    public function destroySelected(Request $request)
+    {
+        if ($request->selected_ids) {
+            $ids = explode(',', $request->selected_ids);
+
+            $products = Product::whereIn('id', $ids)->get();
+
+            foreach ($products as $product) {
+                if ($product->image && Storage::disk('public')->exists($product->image)) {
+                    Storage::disk('public')->delete($product->image);
+                }
+            }
+
+            Product::whereIn('id', $ids)->delete();
+
+            return redirect()->route('products.index')->with('success', 'Selected products deleted successfully.');
+        }
+
+        return redirect()->route('products.index')->with('error', 'No products selected.');
     }
 
     public function search(Request $request)

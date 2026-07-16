@@ -7,4 +7,6 @@ Route::get('/', function () {
     return redirect()->route('products.index');
 });
 
+Route::delete('products/destroy-selected',[ProductController::class, 'destroySelected'])->name('products.destroySelected');
+
 Route::resource('products', ProductController::class);

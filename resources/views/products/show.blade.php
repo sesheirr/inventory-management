@@ -7,7 +7,7 @@
             <h4 class="fw-semibold mb-1">Product Details</h4>
             <p class="text-muted mb-0">Detailed information for {{ $product->name }}.</p>
         </div>
-        <a href="{{ route('products.index') }}" class="btn btn-outline-secondary rounded-pill">Back</a>
+        <!-- Tombol Back lama di sini sudah dihapus -->
     </div>
 
     <div class="row g-4">
@@ -42,12 +42,7 @@
                         <div class="fw-semibold">{{ $product->edition }}</div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="stat-box">
-                        <span class="text-muted">Price</span>
-                        <div class="fw-semibold">${{ number_format($product->price, 2) }}</div>
-                    </div>
-                </div>
+                
                 <div class="col-md-6">
                     <div class="stat-box">
                         <span class="text-muted">Stock</span>

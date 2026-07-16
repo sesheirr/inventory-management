@@ -7,7 +7,7 @@
             <h4 class="fw-semibold mb-1">Edit Barang</h4>
             <p class="text-muted mb-0">Refine the details of this inventory item.</p>
         </div>
-        <a href="{{ route('products.index') }}" class="btn btn-outline-secondary rounded-pill">Back</a>
+        <!-- Tombol Back di sini sudah dihapus -->
     </div>
 
     <form action="{{ route('products.update', $product) }}" method="POST" enctype="multipart/form-data" class="row g-4">
