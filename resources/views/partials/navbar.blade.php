@@ -18,9 +18,7 @@
             <i id="themeIcon" class="bi bi-moon"></i>
         </button>
         
-        <button class="icon-btn" type="button">
-            <i class="bi bi-bell"></i>
-        </button>
+        <!-- Tombol notifikasi bel di sini sudah dihapus -->
         
         <div class="profile-pill">
             <div class="avatar">SF</div>

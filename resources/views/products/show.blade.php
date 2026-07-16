@@ -36,12 +36,6 @@
                         <div class="fw-semibold">{{ $product->subcategory }}</div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="stat-box">
-                        <span class="text-muted">Edition</span>
-                        <div class="fw-semibold">{{ $product->edition }}</div>
-                    </div>
-                </div>
                 
                 <div class="col-md-6">
                     <div class="stat-box">
