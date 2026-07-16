@@ -8,6 +8,192 @@
     --border: #eceff4;
 }
 
+/* Dark theme variables when `dark` class applied on <html> */
+html.dark {
+    --sidebar-bg: #11131a;
+    --sidebar-active: #171a23;
+    --bg: #12141d;
+    --text: #eef2ff;
+    --muted: #9aa6b2;
+    --card: #171a24;
+    --border: rgba(255,255,255,0.08);
+}
+
+/* Dark-mode overrides for specific components to improve contrast */
+html.dark .topbar,
+html.dark .dashboard-card,
+html.dark .topbar-search,
+html.dark .search-box .form-control,
+html.dark .profile-pill,
+html.dark .icon-btn,
+html.dark .action-icon,
+html.dark .product-thumb,
+html.dark .detail-image,
+html.dark .stat-box,
+html.dark .dropdown-menu,
+html.dark .form-check-input,
+html.dark .table,
+html.dark .table-responsive,
+html.dark .dropdown-item,
+html.dark .page-link {
+    background: rgba(255,255,255,0.04) !important;
+    color: var(--text) !important;
+    border-color: rgba(255,255,255,0.08) !important;
+}
+
+html.dark .profile-pill .fw-semibold,
+html.dark .profile-pill small,
+html.dark .profile-pill .text-muted,
+html.dark .text-muted,
+html.dark p.text-muted,
+html.dark small.text-muted {
+    color: #9aa6b2 !important;
+}
+
+html.dark .dashboard-card {
+    background: #171a24 !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+}
+
+html.dark .topbar-search,
+html.dark .search-box .form-control,
+html.dark .profile-pill,
+html.dark .icon-btn,
+html.dark .action-icon {
+    box-shadow: none !important;
+}
+
+html.dark .product-thumb {
+    background: rgba(255,255,255,0.08) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05) !important;
+}
+
+html.dark .product-thumb img {
+    filter: none !important;
+}
+
+html.dark .table,
+html.dark .table-responsive,
+html.dark .card.dashboard-card {
+    background: #171a24 !important;
+}
+
+html.dark .card.dashboard-card {
+    border-color: rgba(255,255,255,0.08) !important;
+}
+
+html.dark .table {
+    color: var(--text) !important;
+    border-color: rgba(255,255,255,0.08) !important;
+}
+
+html.dark .table thead th {
+    background: rgba(255,255,255,0.08) !important;
+    color: #cbd5e1 !important;
+    border-bottom: 1px solid rgba(255,255,255,0.12) !important;
+}
+
+html.dark .table tbody tr,
+html.dark .table tbody td,
+html.dark .table tbody th {
+    background: rgba(255,255,255,0.02) !important;
+    color: var(--text) !important;
+}
+
+html.dark .table tbody tr:hover {
+    background: rgba(255,255,255,0.05) !important;
+}
+
+html.dark .table thead th,
+html.dark .table tbody td,
+html.dark .table-responsive {
+    border-color: rgba(255,255,255,0.08) !important;
+}
+
+html.dark .form-control,
+html.dark .dropdown-menu,
+html.dark .page-link,
+html.dark .table-responsive,
+html.dark .table {
+    background-color: #171a24 !important;
+    color: #eef2ff !important;
+}
+
+html.dark .table thead th,
+html.dark .table tbody td,
+html.dark .table tbody th {
+    border-color: rgba(255,255,255,0.08) !important;
+}
+
+html.dark .detail-image,
+html.dark .stat-box {
+    background: rgba(255,255,255,0.05) !important;
+}
+
+html.dark .search-box i {
+    color: #9aa6b2 !important;
+}
+
+html.dark .btn,
+html.dark .btn-light,
+html.dark .btn-secondary,
+html.dark .btn-link {
+    color: #eef2ff !important;
+}
+
+html.dark .btn-light {
+    background-color: rgba(255,255,255,0.08) !important;
+    border-color: rgba(255,255,255,0.16) !important;
+}
+
+html.dark .btn-secondary {
+    background-color: rgba(255,255,255,0.08) !important;
+    border-color: rgba(255,255,255,0.16) !important;
+}
+
+html.dark .btn-link {
+    color: #dbe4ff !important;
+}
+
+html.dark .form-control,
+html.dark .form-select,
+html.dark .form-check-input,
+html.dark .form-check-label,
+html.dark .form-control:focus,
+html.dark .form-select:focus {
+    background-color: #171a24 !important;
+    border-color: rgba(255,255,255,0.10) !important;
+    color: #eef2ff !important;
+}
+
+html.dark .form-control::placeholder,
+html.dark .form-select option {
+    color: #94a3b8 !important;
+}
+
+html.dark .dropdown-menu {
+    background-color: #171a24 !important;
+}
+
+html.dark .dropdown-item,
+html.dark .page-link,
+html.dark .pagination .page-item .page-link {
+    color: #dbe4ff !important;
+}
+
+html.dark .dropdown-item:hover,
+html.dark .page-link:hover,
+html.dark .page-item.active .page-link {
+    background: rgba(255,255,255,0.08) !important;
+    color: #eef2ff !important;
+}
+
+html.dark .badge.bg-success-subtle,
+html.dark .badge.bg-danger-subtle {
+    background: rgba(255,255,255,0.08) !important;
+    color: #eef2ff !important;
+}
+
 body {
     margin: 0;
     font-family: 'Poppins', sans-serif;
