@@ -76,7 +76,6 @@
                     <option value="all" @selected($condition === 'all')>Semua</option>
                     <option value="active" @selected($condition === 'active')>Aktif</option>
                     <option value="inactive" @selected($condition === 'inactive')>Tidak Aktif</option>
-                    <option value="out_of_stock" @selected($condition === 'out_of_stock')>Stok Habis</option>
                 </select>
             </div>
             <div class="col-md-12 text-end">
