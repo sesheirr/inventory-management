@@ -462,3 +462,82 @@ body {
         width: 100%;
     }
 }
+
+/* ===========================
+   PROFILE DROPDOWN STYLES
+   =========================== */
+
+.profile-pill {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.profile-pill:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.1) !important;
+}
+
+.profile-dropdown-menu {
+    border-radius: 14px !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
+    margin-top: 8px;
+    min-width: 200px;
+}
+
+.profile-dropdown-menu .dropdown-header {
+    background: var(--card) !important;
+    border-bottom: 1px solid var(--border) !important;
+    border-radius: 14px 14px 0 0;
+}
+
+.profile-dropdown-menu .dropdown-divider {
+    margin: 4px 0 !important;
+    border-color: var(--border) !important;
+}
+
+.profile-dropdown-menu .dropdown-item {
+    color: var(--text) !important;
+    padding: 10px 16px !important;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.profile-dropdown-menu .dropdown-item:hover {
+    background: var(--border) !important;
+    color: var(--text) !important;
+}
+
+.profile-dropdown-menu .dropdown-item.text-danger:hover {
+    background: #fee2e2 !important;
+    color: #dc2626 !important;
+}
+
+html.dark .profile-dropdown-menu {
+    background: #171a24 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+}
+
+html.dark .profile-dropdown-menu .dropdown-header {
+    background: #171a24 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html.dark .profile-dropdown-menu .dropdown-divider {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html.dark .profile-dropdown-menu .dropdown-item {
+    color: #eef2ff !important;
+}
+
+html.dark .profile-dropdown-menu .dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #eef2ff !important;
+}
+
+html.dark .profile-dropdown-menu .dropdown-item.text-danger:hover {
+    background: rgba(220, 38, 38, 0.15) !important;
+    color: #fca5a5 !important;
+}
