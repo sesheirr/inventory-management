@@ -29,7 +29,7 @@ class AuthController extends Controller
         // Attempt login
         if (Auth::attempt($credentials, $request->remember_me)) {
             $request->session()->regenerate();
-            return redirect()->route('products.index')->with('success', 'Login berhasil!');
+            return redirect()->route('dashboard')->with('success', 'Login berhasil!');
         }
 
         // Jika login gagal
