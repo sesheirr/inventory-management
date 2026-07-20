@@ -4,12 +4,12 @@
 <div class="card dashboard-card">
     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
         <div>
-            <h4 class="fw-semibold mb-1">Reports</h4>
-            <p class="text-muted mb-0">Inventory statistics, charts, and exports.</p>
+            <h4 class="fw-semibold mb-1">Laporan</h4>
+            <p class="text-muted mb-0">Statistik, grafik, dan ekspor inventaris.</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            <a href="{{ route('reports.exportExcel', request()->query()) }}" class="btn btn-outline-secondary rounded-pill">Export Excel</a>
-            <button type="button" class="btn btn-outline-secondary rounded-pill" onclick="window.print()">Print</button>
+            <a href="{{ route('reports.exportExcel', request()->query()) }}" class="btn btn-outline-secondary rounded-pill">Ekspor Excel</a>
+            <button type="button" class="btn btn-outline-secondary rounded-pill" onclick="window.print()">Cetak</button>
         </div>
     </div>
 
@@ -55,17 +55,17 @@
     <div class="card p-4 mb-4 rounded-4 shadow-sm">
         <form method="GET" action="{{ route('reports.index') }}" class="row g-3 align-items-end">
             <div class="col-md-3">
-                <label class="form-label">From</label>
+                <label class="form-label">Dari</label>
                 <input type="date" name="date_from" value="{{ $dateFrom }}" class="form-control">
             </div>
             <div class="col-md-3">
-                <label class="form-label">To</label>
+                <label class="form-label">Sampai</label>
                 <input type="date" name="date_to" value="{{ $dateTo }}" class="form-control">
             </div>
             <div class="col-md-2">
                 <label class="form-label">Kategori</label>
                 <select name="category_id" class="form-select">
-                    <option value="">All</option>
+                    <option value="">Semua</option>
                     @foreach($categories as $category)
                         <option value="{{ $category->id }}" @selected($categoryId == $category->id)>{{ $category->name }}</option>
                     @endforeach
@@ -74,7 +74,7 @@
             <div class="col-md-2">
                 <label class="form-label">Ruangan</label>
                 <select name="room_id" class="form-select">
-                    <option value="">All</option>
+                    <option value="">Semua</option>
                     @foreach($rooms as $room)
                         <option value="{{ $room->id }}" @selected($roomId == $room->id)>{{ $room->name }}</option>
                     @endforeach
@@ -83,14 +83,14 @@
             <div class="col-md-2">
                 <label class="form-label">Kondisi</label>
                 <select name="condition" class="form-select">
-                    <option value="all" @selected($condition === 'all')>All</option>
-                    <option value="active" @selected($condition === 'active')>Active</option>
-                    <option value="inactive" @selected($condition === 'inactive')>Inactive</option>
-                    <option value="out_of_stock" @selected($condition === 'out_of_stock')>Out of Stock</option>
+                    <option value="all" @selected($condition === 'all')>Semua</option>
+                    <option value="active" @selected($condition === 'active')>Aktif</option>
+                    <option value="inactive" @selected($condition === 'inactive')>Tidak Aktif</option>
+                    <option value="out_of_stock" @selected($condition === 'out_of_stock')>Stok Habis</option>
                 </select>
             </div>
             <div class="col-md-12 text-end">
-                <button type="submit" class="btn btn-primary rounded-pill">Filter</button>
+                <button type="submit" class="btn btn-primary rounded-pill">Saring</button>
             </div>
         </form>
     </div>

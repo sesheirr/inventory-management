@@ -4,16 +4,15 @@
 <div class="card dashboard-card">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="fw-semibold mb-1">Create Product</h4>
-            <p class="text-muted mb-0">Add a new inventory item with complete details.</p>
+            <h4 class="fw-semibold mb-1">Buat Barang</h4>
+            <p class="text-muted mb-0">Tambah barang baru dengan detail lengkap.</p>
         </div>
-        <!-- Tombol Back di sini sudah dihapus -->
     </div>
 
     <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data" class="row g-4">
         @csrf
         <div class="col-md-6">
-            <label class="form-label">Nama Perangkat</label>
+            <label class="form-label">Nama Barang</label>
             <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
         </div>
         <div class="col-md-6">
@@ -24,30 +23,30 @@
             <label class="form-label">Kapasitas</label>
             <input type="text" name="subcategory" class="form-control" value="{{ old('subcategory') }}">
         </div>
-        
+
         <div class="col-12">
             <label class="form-label">Deskripsi</label>
             <textarea name="description" rows="4" class="form-control">{{ old('description') }}</textarea>
         </div>
         <div class="col-md-4">
-            <label class="form-label">Kuantiti</label>
+            <label class="form-label">Jumlah</label>
             <input type="number" min="0" name="stock" class="form-control" value="{{ old('stock', 0) }}" required>
         </div>
-    
+
         <div class="col-md-4">
             <label class="form-label">Status</label>
             <select name="status" class="form-select">
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="out_of_stock">Out of Stock</option>
+                <option value="active">Aktif</option>
+                <option value="inactive">Tidak Aktif</option>
+                <option value="out_of_stock">Stok Habis</option>
             </select>
         </div>
         <div class="col-12">
-            <label class="form-label">Image</label>
+            <label class="form-label">Gambar</label>
             <input type="file" name="image" class="form-control">
         </div>
         <div class="col-12 d-flex justify-content-end gap-2">
-            <button type="submit" class="btn btn-primary rounded-pill px-4">Save Product</button>
+            <button type="submit" class="btn btn-primary rounded-pill px-4">Simpan Barang</button>
         </div>
     </form>
 </div>
