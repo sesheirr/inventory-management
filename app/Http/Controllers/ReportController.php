@@ -38,7 +38,6 @@ class ReportController extends Controller
 
         $totalProducts = (clone $filteredProducts)->count();
         $totalActive = (clone $filteredProducts)->where('status', 'active')->count();
-        $totalDamaged = (clone $filteredProducts)->where('status', '<>', 'active')->count();
 
         $totalCategories = Category::count();
         $totalRooms = Room::count();
@@ -113,7 +112,6 @@ class ReportController extends Controller
             'totalRooms',
             'totalMutations',
             'totalActive',
-            'totalDamaged',
             'categoryLabels',
             'categoryValues',
             'mutationLabels',

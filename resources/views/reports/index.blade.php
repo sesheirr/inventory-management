@@ -40,12 +40,6 @@
         </div>
         <div class="col-md-4">
             <div class="stat-box p-4 rounded-4 shadow-sm">
-                <span class="text-muted">Barang Rusak</span>
-                <div class="fs-3 fw-semibold">{{ $totalDamaged }}</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="stat-box p-4 rounded-4 shadow-sm">
                 <span class="text-muted">Barang Aktif</span>
                 <div class="fs-3 fw-semibold">{{ $totalActive }}</div>
             </div>
