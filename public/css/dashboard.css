@@ -74,16 +74,26 @@ html.dark .product-thumb img {
 
 html.dark .table,
 html.dark .table-responsive,
-html.dark .card.dashboard-card {
+html.dark .card.dashboard-card,
+html.dark .card,
+html.dark .bg-white,
+html.dark .card.p-4,
+html.dark .card.rounded-4 {
     background: #171a24 !important;
+    background-color: #171a24 !important;
 }
 
-html.dark .card.dashboard-card {
+html.dark .card.dashboard-card,
+html.dark .card,
+html.dark .bg-white,
+html.dark .card.p-4,
+html.dark .card.rounded-4 {
     border-color: rgba(255,255,255,0.08) !important;
+    color: #eef2ff !important;
 }
 
 html.dark .table {
-    color: var(--text) !important;
+    color: #eef2ff !important;
     border-color: rgba(255,255,255,0.08) !important;
 }
 

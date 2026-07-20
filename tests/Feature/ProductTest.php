@@ -18,6 +18,21 @@ class ProductTest extends TestCase
         $response->assertSee('Products');
     }
 
+    public function test_dashboard_page_loads(): void
+    {
+        $response = $this->get('/dashboard');
+
+        $response->assertStatus(200);
+        $response->assertSee('Dashboard');
+    }
+
+    public function test_reports_page_is_not_available(): void
+    {
+        $response = $this->get('/reports');
+
+        $response->assertNotFound();
+    }
+
     public function test_user_can_create_product(): void
     {
         $response = $this->post('/products', [

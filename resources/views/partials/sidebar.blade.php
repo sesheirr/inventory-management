@@ -10,11 +10,10 @@
     </div>
 
     <nav class="nav-links">
-        <a href="#" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}"><i class="bi bi-grid"></i><span>Dashboard</span></a>
+        <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"><i class="bi bi-grid"></i><span>Dashboard</span></a>
         <a href="{{ route('products.index') }}" class="nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}"><i class="bi bi-box2"></i><span>Products</span></a>
         <a href="{{ route('categories.index') }}" class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}"><i class="bi bi-tags"></i><span>Categories</span></a>
         <a href="{{ route('rooms.index') }}" class="nav-link {{ request()->routeIs('rooms.*') ? 'active' : '' }}"><i class="bi bi-building"></i><span>Rooms</span></a>
-        <a href="{{ route('reports.index') }}" class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}"><i class="bi bi-bar-chart"></i><span>Reports</span></a>
     </nav>
 
     <div class="sidebar-footer">

@@ -86,8 +86,13 @@ class ReportController extends Controller
         $categoryLabels = $categoryCounts->keys()->toArray();
         $categoryValues = $categoryCounts->values()->toArray();
 
+        $driver = $mutationQuery->getQuery()->getConnection()->getDriverName();
+        $monthExpression = $driver === 'sqlite'
+            ? "strftime('%Y-%m', mutation_date) as month"
+            : "DATE_FORMAT(mutation_date, '%Y-%m') as month";
+
         $mutationByMonth = (clone $mutationQuery)
-            ->selectRaw("DATE_FORMAT(mutation_date, '%Y-%m') as month, COUNT(*) as total")
+            ->selectRaw("{$monthExpression}, COUNT(*) as total")
             ->groupBy('month')
             ->orderBy('month')
             ->get();
@@ -95,7 +100,7 @@ class ReportController extends Controller
         $mutationLabels = $mutationByMonth->pluck('month')->toArray();
         $mutationValues = $mutationByMonth->pluck('total')->toArray();
 
-        return view('reports.index', compact(
+        return view('dashboard', compact(
             'categories',
             'rooms',
             'dateFrom',
