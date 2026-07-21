@@ -1,15 +1,55 @@
+@php
+    // Determine page title and breadcrumb based on current route
+    $pageTitle = 'Dashboard';
+    $breadcrumb = 'Inventory / Dashboard';
+    $showBackButton = false;
+
+    if (Route::is('dashboard')) {
+        $pageTitle = 'Dashboard';
+        $breadcrumb = 'Inventory / Dashboard';
+    } elseif (Route::is('reports.index') || Route::is('reports.*')) {
+        $pageTitle = 'Laporan';
+        $breadcrumb = 'Inventory / Laporan';
+        $showBackButton = true;
+    } elseif (Route::is('products.index')) {
+        $pageTitle = 'Barang';
+        $breadcrumb = 'Inventory / Barang';
+        $showBackButton = false;
+    } elseif (Route::is('products.*')) {
+        $pageTitle = 'Barang';
+        $breadcrumb = 'Inventory / Barang';
+        $showBackButton = true;
+    } elseif (Route::is('categories.index')) {
+        $pageTitle = 'Kategori';
+        $breadcrumb = 'Inventory / Kategori';
+        $showBackButton = false;
+    } elseif (Route::is('categories.*')) {
+        $pageTitle = 'Kategori';
+        $breadcrumb = 'Inventory / Kategori';
+        $showBackButton = true;
+    } elseif (Route::is('rooms.index')) {
+        $pageTitle = 'Ruangan';
+        $breadcrumb = 'Inventory / Ruangan';
+        $showBackButton = false;
+    } elseif (Route::is('rooms.*')) {
+        $pageTitle = 'Ruangan';
+        $breadcrumb = 'Inventory / Ruangan';
+        $showBackButton = true;
+    }
+@endphp
+
 <header class="topbar">
     <div class="d-flex align-items-center gap-3">
        
-        @if(!Route::is('products.index'))
+        @if($showBackButton)
             <button class="btn btn-light rounded-circle p-2 border-0 shadow-sm" type="button" onclick="window.history.back()">
                 <i class="bi bi-arrow-left"></i>
             </button>
         @endif
         
         <div>
-            <p class="text-muted mb-0 small">Inventory / Products</p>
-            <h3 class="mb-0 fw-semibold">Product</h3>
+            <p class="text-muted mb-0 small">{{ $breadcrumb }}</p>
+            <h3 class="mb-0 fw-semibold">{{ $pageTitle }}</h3>
         </div>
     </div>
 
