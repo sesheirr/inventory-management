@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\BarangExport;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
+use Cloudinary\Cloudinary;
 
 class ProductController extends Controller
 {
@@ -51,7 +54,10 @@ class ProductController extends Controller
        
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('products', 'public');
+            $cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
+            $uploadedFile = $cloudinary->uploadApi()->upload($request->file('image')->getRealPath());
+            $data['image'] = $uploadedFile['secure_url'] ?? null;
+            $data['image_public_id'] = $uploadedFile['public_id'] ?? null;
         }
 
         Product::create($data);
@@ -86,17 +92,41 @@ class ProductController extends Controller
     
 
         if ($request->hasFile('image')) {
-            if ($product->image && Storage::disk('public')->exists($product->image)) {
+            // remove previous Cloudinary image if exists
+            if (!empty($product->image_public_id)) {
+                try {
+                    $cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
+                    $cloudinary->uploadApi()->destroy($product->image_public_id);
+                } catch (\Throwable $e) {
+                    // ignore cloudinary deletion errors
+                }
+            }
+
+            // remove previous local file if exists
+            if ($product->image && $this->isLocalImage($product->image) && Storage::disk('public')->exists($product->image)) {
                 Storage::disk('public')->delete($product->image);
             }
 
-            $data['image'] = $request->file('image')->store('products', 'public');
+            $cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
+            $uploadedFile = $cloudinary->uploadApi()->upload($request->file('image')->getRealPath());
+            $data['image'] = $uploadedFile['secure_url'] ?? null;
+            $data['image_public_id'] = $uploadedFile['public_id'] ?? null;
         } elseif ($request->boolean('remove_image')) {
-            if ($product->image && Storage::disk('public')->exists($product->image)) {
+            // delete from Cloudinary if exists
+            if (!empty($product->image_public_id)) {
+                try {
+                    $cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
+                    $cloudinary->uploadApi()->destroy($product->image_public_id);
+                } catch (\Throwable $e) {
+                }
+            }
+
+            if ($product->image && $this->isLocalImage($product->image) && Storage::disk('public')->exists($product->image)) {
                 Storage::disk('public')->delete($product->image);
             }
 
             $data['image'] = null;
+            $data['image_public_id'] = null;
         }
 
         $product->update($data);
@@ -106,7 +136,18 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        if ($product->image && Storage::disk('public')->exists($product->image)) {
+        // delete remote Cloudinary image if present
+        if (!empty($product->image_public_id)) {
+            try {
+                $cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
+                $cloudinary->uploadApi()->destroy($product->image_public_id);
+            } catch (\Throwable $e) {
+                // ignore
+            }
+        }
+
+        // delete local image if present
+        if ($product->image && $this->isLocalImage($product->image) && Storage::disk('public')->exists($product->image)) {
             Storage::disk('public')->delete($product->image);
         }
 
@@ -123,7 +164,15 @@ class ProductController extends Controller
             $products = Product::whereIn('id', $ids)->get();
 
             foreach ($products as $product) {
-                if ($product->image && Storage::disk('public')->exists($product->image)) {
+                if (!empty($product->image_public_id)) {
+                    try {
+                        $cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
+                        $cloudinary->uploadApi()->destroy($product->image_public_id);
+                    } catch (\Throwable $e) {
+                    }
+                }
+
+                if ($product->image && $this->isLocalImage($product->image) && Storage::disk('public')->exists($product->image)) {
                     Storage::disk('public')->delete($product->image);
                 }
             }
@@ -136,8 +185,22 @@ class ProductController extends Controller
         return redirect()->route('products.index')->with('error', 'No products selected.');
     }
 
+    public function exportExcel()
+    {
+        return Excel::download(new BarangExport, 'laporan-inventaris-barang.xlsx');
+    }
+
     public function search(Request $request)
     {
         return $this->index($request);
+    }
+
+    private function isLocalImage(?string $path): bool
+    {
+        if (empty($path)) {
+            return false;
+        }
+
+        return !str_starts_with($path, 'http');
     }
 }

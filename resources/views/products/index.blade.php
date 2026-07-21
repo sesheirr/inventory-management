@@ -25,6 +25,10 @@
                 </button>
             </form>
 
+            <a href="{{ route('products.export') }}" class="btn btn-success d-flex align-items-center gap-2">
+                <i class="bi bi-file-earmark-excel-fill"></i>Export Excel
+            </a>
+
             <x-primary-button href="{{ route('products.create') }}">
                 <i class="bi bi-plus-lg me-2"></i>Tambah Barang
             </x-primary-button>
@@ -56,7 +60,7 @@
                             <div class="d-flex align-items-center gap-3">
                                 <div class="product-thumb">
                                     @if($product->image)
-                                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
+                                        <img src="{{ \Illuminate\Support\Str::startsWith($product->image, 'http') ? $product->image : asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
                                     @else
                                         <i class="bi bi-box2"></i>
                                     @endif

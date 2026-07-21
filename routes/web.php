@@ -34,8 +34,9 @@ Route::middleware('auth')->group(function () {
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('reports/export-excel', [ReportController::class, 'exportExcel'])->name('reports.exportExcel');
 
-    // Rute Manajemen Produk (Fitur Hapus Massal & CRUD)
+    // Rute Manajemen Produk (Fitur Hapus Massal, Ekspor Excel & CRUD)
     Route::delete('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected');
+    Route::get('products/export-excel', [ProductController::class, 'exportExcel'])->name('products.export');
     Route::resource('products', ProductController::class);
     
     // Rute Manajemen Kategori & Ruangan
