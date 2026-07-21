@@ -68,7 +68,10 @@
                                                 ? $product->image 
                                                 : asset('storage/' . ltrim($product->image, '/'));
                                         @endphp
-                                        <img src="{{ $imageSrc }}" alt="{{ $product->name }}" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\"bi bi-box2\"></i>';">
+                                        <img src="{{ $imageSrc }}" 
+                                             alt="{{ $product->name }}" 
+                                             style="width: 48px; height: 48px; object-fit: cover; border-radius: 8px;"
+                                             onerror="this.onerror=null; this.src='https://placehold.co/100x100?text=No+Image';">
                                     @else
                                         <i class="bi bi-box2"></i>
                                     @endif
