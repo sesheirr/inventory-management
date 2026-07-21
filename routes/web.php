@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoomController;
 use Illuminate\Support\Facades\Route;
@@ -36,6 +37,7 @@ Route::middleware('auth')->group(function () {
     // Rute Laporan
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('reports/export-excel', [ReportController::class, 'exportExcel'])->name('reports.exportExcel');
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
 
     // Rute Manajemen Produk (Fitur Hapus Massal, Ekspor Excel & CRUD)
     Route::delete('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected');

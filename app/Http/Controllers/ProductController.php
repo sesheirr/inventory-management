@@ -61,7 +61,8 @@ class ProductController extends Controller
                 $data['image'] = $uploadedFile['secure_url'] ?? null;
                 $data['image_public_id'] = $uploadedFile['public_id'] ?? null;
             } catch (\Throwable $e) {
-                $data['image'] = null;
+                $storedImage = $request->file('image')->store('products', 'public');
+                $data['image'] = $storedImage;
                 $data['image_public_id'] = null;
             }
         }
@@ -119,7 +120,8 @@ class ProductController extends Controller
                 $data['image'] = $uploadedFile['secure_url'] ?? null;
                 $data['image_public_id'] = $uploadedFile['public_id'] ?? null;
             } catch (\Throwable $e) {
-                $data['image'] = null;
+                $storedImage = $request->file('image')->store('products', 'public');
+                $data['image'] = $storedImage;
                 $data['image_public_id'] = null;
             }
         } elseif ($request->boolean('remove_image')) {
