@@ -3,6 +3,7 @@
 @section('content')
 <div class="card dashboard-card">
     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+        {{-- Search Box --}}
         <div class="position-relative search-box" style="max-width: 320px; width: 100%;">
             <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
             <input type="text"
@@ -15,6 +16,7 @@
                    autocomplete="off">
         </div>
 
+        {{-- Action Buttons --}}
         <div class="d-flex align-items-center gap-2">
             <form id="bulk-delete-form" action="{{ route('products.destroySelected') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus barang yang dipilih?')">
                 @csrf
@@ -35,6 +37,7 @@
         </div>
     </div>
 
+    {{-- Table Responsive --}}
     <div class="table-responsive">
         <table class="table align-middle">
             <thead>
@@ -60,7 +63,12 @@
                             <div class="d-flex align-items-center gap-3">
                                 <div class="product-thumb">
                                     @if($product->image)
-                                        <img src="{{ \Illuminate\Support\Str::startsWith($product->image, 'http') ? $product->image : asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
+                                        @php
+                                            $imageSrc = \Illuminate\Support\Str::startsWith($product->image, ['http://', 'https://']) 
+                                                ? $product->image 
+                                                : asset('storage/' . ltrim($product->image, '/'));
+                                        @endphp
+                                        <img src="{{ $imageSrc }}" alt="{{ $product->name }}" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\"bi bi-box2\"></i>';">
                                     @else
                                         <i class="bi bi-box2"></i>
                                     @endif
@@ -116,6 +124,7 @@
                         </td>
                     </tr>
 
+                    {{-- Delete Modal --}}
                     <div class="modal fade" id="deleteModal{{ $product->id }}" tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content rounded-4">
@@ -146,6 +155,7 @@
         </table>
     </div>
 
+    {{-- Pagination Container --}}
     <div id="paginationContainer" class="d-flex justify-content-between align-items-center mt-4">
         <p class="text-muted mb-0">Menampilkan {{ $products->firstItem() ?? 0 }} sampai {{ $products->lastItem() ?? 0 }} dari {{ $products->total() }} barang</p>
         {{ $products->links() }}
