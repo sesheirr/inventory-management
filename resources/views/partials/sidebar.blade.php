@@ -4,8 +4,8 @@
             <i class="bi bi-box-seam"></i>
         </div>
         <div>
-            <h5 class="mb-0">Inventaris</h5>
-            <small>Manajemen</small>
+            <h5 class="mb-0">Inventory Management</h5>
+            <small>System</small>
         </div>
     </div>
 
