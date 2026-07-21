@@ -50,6 +50,14 @@ html.dark small.text-muted {
     color: #9aa6b2 !important;
 }
 
+.profile-role-label {
+    color: #111827 !important;
+}
+
+html.dark .profile-role-label {
+    color: #ffffff !important;
+}
+
 html.dark .dashboard-card {
     background: #171a24 !important;
     border: 1px solid rgba(255,255,255,0.06) !important;

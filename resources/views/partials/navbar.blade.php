@@ -73,7 +73,7 @@
                 <div class="avatar">{{ substr(auth()->user()->name ?? 'SF', 0, 2) }}</div>
                 <div>
                     <div class="fw-semibold">{{ auth()->user()->name ?? 'User' }}</div>
-                    <small class="text-muted">
+                    <small class="profile-role-label">
                         @if(auth()->user()->role === 'admin' || auth()->user()->role === 'Administrator')
                             Administrator
                         @else
