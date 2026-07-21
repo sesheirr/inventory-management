@@ -38,7 +38,6 @@
             <select name="status" class="form-select">
                 <option value="active">Aktif</option>
                 <option value="inactive">Tidak Aktif</option>
-                <option value="out_of_stock">Stok Habis</option>
             </select>
         </div>
         <div class="col-12">
