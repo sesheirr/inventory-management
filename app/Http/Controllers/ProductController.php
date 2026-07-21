@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Cloudinary\Cloudinary;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -54,10 +55,15 @@ class ProductController extends Controller
        
 
         if ($request->hasFile('image')) {
-            $cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
-            $uploadedFile = $cloudinary->uploadApi()->upload($request->file('image')->getRealPath());
-            $data['image'] = $uploadedFile['secure_url'] ?? null;
-            $data['image_public_id'] = $uploadedFile['public_id'] ?? null;
+            try {
+                $cloudinary = $this->getCloudinary();
+                $uploadedFile = $cloudinary->uploadApi()->upload($request->file('image')->getRealPath());
+                $data['image'] = $uploadedFile['secure_url'] ?? null;
+                $data['image_public_id'] = $uploadedFile['public_id'] ?? null;
+            } catch (\Throwable $e) {
+                $data['image'] = null;
+                $data['image_public_id'] = null;
+            }
         }
 
         Product::create($data);
@@ -95,7 +101,7 @@ class ProductController extends Controller
             // remove previous Cloudinary image if exists
             if (!empty($product->image_public_id)) {
                 try {
-                    $cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
+                    $cloudinary = $this->getCloudinary();
                     $cloudinary->uploadApi()->destroy($product->image_public_id);
                 } catch (\Throwable $e) {
                     // ignore cloudinary deletion errors
@@ -107,15 +113,20 @@ class ProductController extends Controller
                 Storage::disk('public')->delete($product->image);
             }
 
-            $cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
-            $uploadedFile = $cloudinary->uploadApi()->upload($request->file('image')->getRealPath());
-            $data['image'] = $uploadedFile['secure_url'] ?? null;
-            $data['image_public_id'] = $uploadedFile['public_id'] ?? null;
+            try {
+                $cloudinary = $this->getCloudinary();
+                $uploadedFile = $cloudinary->uploadApi()->upload($request->file('image')->getRealPath());
+                $data['image'] = $uploadedFile['secure_url'] ?? null;
+                $data['image_public_id'] = $uploadedFile['public_id'] ?? null;
+            } catch (\Throwable $e) {
+                $data['image'] = null;
+                $data['image_public_id'] = null;
+            }
         } elseif ($request->boolean('remove_image')) {
             // delete from Cloudinary if exists
             if (!empty($product->image_public_id)) {
                 try {
-                    $cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
+                    $cloudinary = $this->getCloudinary();
                     $cloudinary->uploadApi()->destroy($product->image_public_id);
                 } catch (\Throwable $e) {
                 }
@@ -139,7 +150,7 @@ class ProductController extends Controller
         // delete remote Cloudinary image if present
         if (!empty($product->image_public_id)) {
             try {
-                $cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
+                $cloudinary = $this->getCloudinary();
                 $cloudinary->uploadApi()->destroy($product->image_public_id);
             } catch (\Throwable $e) {
                 // ignore
@@ -166,7 +177,7 @@ class ProductController extends Controller
             foreach ($products as $product) {
                 if (!empty($product->image_public_id)) {
                     try {
-                        $cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
+                        $cloudinary = $this->getCloudinary();
                         $cloudinary->uploadApi()->destroy($product->image_public_id);
                     } catch (\Throwable $e) {
                     }
@@ -202,5 +213,50 @@ class ProductController extends Controller
         }
 
         return !str_starts_with($path, 'http');
+    }
+
+    private function getCloudinary(): Cloudinary
+    {
+        $cloudinaryUrl = env('CLOUDINARY_URL');
+
+        if (empty($cloudinaryUrl)) {
+            // fallback: try to read .env directly
+            $envPath = base_path('.env');
+            if (file_exists($envPath)) {
+                $contents = file_get_contents($envPath);
+                if (preg_match('/^CLOUDINARY_URL=(.*)$/m', $contents, $m)) {
+                    $cloudinaryUrl = trim($m[1]);
+                    // strip surrounding quotes
+                    $cloudinaryUrl = preg_replace('/^"|"$|^\'|\'$/', '', $cloudinaryUrl);
+                }
+            }
+        }
+
+        if (empty($cloudinaryUrl)) {
+            throw new \RuntimeException('CLOUDINARY_URL is not set. Please configure Cloudinary in your .env');
+        }
+
+        // parse cloudinary://API_KEY:API_SECRET@CLOUD_NAME
+        $parts = parse_url($cloudinaryUrl);
+
+        if (!$parts || empty($parts['scheme']) || ($parts['scheme'] !== 'cloudinary')) {
+            throw new \RuntimeException('Invalid CLOUDINARY_URL format.');
+        }
+
+        $cloudName = $parts['host'] ?? null;
+        $apiKey = $parts['user'] ?? null;
+        $apiSecret = $parts['pass'] ?? null;
+
+        if (empty($cloudName) || empty($apiKey) || empty($apiSecret)) {
+            throw new \RuntimeException('Incomplete Cloudinary credentials in CLOUDINARY_URL.');
+        }
+
+        return new Cloudinary([
+            'cloud' => [
+                'cloud_name' => $cloudName,
+                'api_key' => $apiKey,
+                'api_secret' => $apiSecret,
+            ],
+        ]);
     }
 }
