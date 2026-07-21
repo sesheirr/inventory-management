@@ -29,8 +29,11 @@ Route::middleware('auth')->group(function () {
         return redirect()->route('dashboard');
     });
 
-    // Rute Dashboard & Laporan
+    // Rute Dashboard & Settings
     Route::get('/dashboard', [ReportController::class, 'index'])->name('dashboard');
+    Route::view('/settings', 'settings')->name('settings');
+
+    // Rute Laporan
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('reports/export-excel', [ReportController::class, 'exportExcel'])->name('reports.exportExcel');
 

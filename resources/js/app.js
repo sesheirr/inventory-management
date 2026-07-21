@@ -9,6 +9,17 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('DOMContentLoaded', () => {
     const toggle = document.getElementById('darkModeToggle');
     const icon = document.getElementById('themeIcon');
+    const themeButtons = document.querySelectorAll('.segment-button');
+
+    function updateSegmentButtons(theme) {
+        themeButtons.forEach(button => {
+            if (button.dataset.theme === theme) {
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
+            }
+        });
+    }
 
     function applyTheme(theme) {
         const docEl = document.documentElement;
@@ -25,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 icon.classList.add('bi-moon');
             }
         }
+        updateSegmentButtons(theme);
     }
 
     function getPreferredTheme() {
@@ -46,4 +58,14 @@ document.addEventListener('DOMContentLoaded', () => {
             applyTheme(newTheme);
         });
     }
+
+    themeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const selectedTheme = button.dataset.theme;
+            if (selectedTheme) {
+                localStorage.setItem('theme', selectedTheme);
+                applyTheme(selectedTheme);
+            }
+        });
+    });
 });
