@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -26,6 +27,7 @@ class ProfileController extends Controller
             'birth_date' => ['nullable', 'date'],
             'address' => ['nullable', 'string'],
             'bio' => ['nullable', 'string'],
+            'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
         if (!empty($data['birth_date'])) {
@@ -34,6 +36,11 @@ class ProfileController extends Controller
             } catch (\Throwable $e) {
                 unset($data['birth_date']);
             }
+        }
+
+        if ($request->hasFile('avatar')) {
+            $avatarPath = $request->file('avatar')->store('avatars', 'public');
+            $data['avatar'] = $avatarPath;
         }
 
         $user->fill($data);

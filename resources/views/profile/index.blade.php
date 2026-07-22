@@ -78,8 +78,12 @@
                         <div class="row align-items-center g-4 position-relative">
                             <div class="col-lg-8">
                                 <div class="d-flex flex-column flex-md-row align-items-md-center gap-4">
-                                    <div class="avatar-circle shadow">
-                                        <i class="fa-solid fa-user"></i>
+                                    <div class="avatar-circle shadow overflow-hidden">
+                                        @if(!empty($user->avatar))
+                                            <img src="{{ asset('storage/' . trim(str_replace(['public/', 'storage/'], '', $user->avatar), '/')) }}" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover;">
+                                        @else
+                                            <i class="fa-solid fa-user"></i>
+                                        @endif
                                     </div>
                                     <div>
                                         <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
@@ -246,13 +250,26 @@
 <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 border-0 shadow">
-            <form action="{{ route('profile.update') }}" method="POST">
+            <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-header border-0">
                     <h5 class="modal-title fw-semibold" id="editProfileModalLabel">Edit Profil</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                    <div class="mb-3 text-center">
+                        <label class="form-label">Foto Profil</label>
+                        <div class="d-flex flex-column align-items-center gap-2">
+                            <div class="avatar-circle shadow overflow-hidden" style="width: 90px; height: 90px; font-size: 2rem;">
+                                @if(!empty($user->avatar))
+                                    <img src="{{ asset('storage/' . trim(str_replace(['public/', 'storage/'], '', $user->avatar), '/')) }}" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover;">
+                                @else
+                                    <i class="fa-solid fa-user"></i>
+                                @endif
+                            </div>
+                            <input type="file" name="avatar" class="form-control" accept="image/*">
+                        </div>
+                    </div>
                     <div class="mb-3">
                         <label class="form-label">Nama Lengkap</label>
                         <input type="text" name="name" class="form-control" value="{{ old('name', $user->name) }}" required>
