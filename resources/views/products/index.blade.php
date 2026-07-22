@@ -2,6 +2,40 @@
 
 @section('content')
 <div class="card dashboard-card">
+    <style>
+        .product-thumb {
+            width: 48px;
+            height: 48px;
+            min-width: 48px;
+            min-height: 48px;
+            border-radius: 12px;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--bs-border-color);
+            background-color: var(--bs-body-bg);
+        }
+
+        .product-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .category-badge,
+        .room-badge {
+            min-width: 130px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+    </style>
+
     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
         {{-- Search Box --}}
         <div class="position-relative search-box" style="max-width: 320px; width: 100%;">
@@ -46,8 +80,8 @@
                         <input type="checkbox" id="select-all-checkbox" class="form-check-input" @if($products->isEmpty()) disabled @endif>
                     </th>
                     <th>Nama Barang</th>
-                    <th>Model/Tipe</th>
-                    <th>Kapasitas</th>
+                    <th>Kategori</th>
+                    <th>Ruangan</th>
                     <th>Jumlah</th>
                     <th>Status</th>
                     <th style="width: 50px;"></th>
@@ -64,45 +98,56 @@
                                 <div class="product-thumb">
                                     @if($product->image)
                                         @php
-                                            $imageSrc = \Illuminate\Support\Str::startsWith($product->image, ['http://', 'https://']) 
-                                                ? $product->image 
+                                            $imageSrc = \Illuminate\Support\Str::startsWith($product->image, ['http://', 'https://'])
+                                                ? $product->image
                                                 : asset('storage/' . ltrim($product->image, '/'));
                                         @endphp
-                                        <img src="{{ $imageSrc }}" 
-                                             alt="{{ $product->name }}" 
-                                             style="width: 48px; height: 48px; object-fit: cover; border-radius: 8px;"
+                                        <img src="{{ $imageSrc }}"
+                                             alt="{{ $product->name }}"
                                              onerror="this.onerror=null; this.src='https://placehold.co/100x100?text=No+Image';">
                                     @else
-                                        <i class="bi bi-box2"></i>
+                                        <i class="bi bi-box2 text-muted fs-5"></i>
                                     @endif
                                 </div>
                                 <div>
                                     <div class="fw-semibold">{{ $product->name }}</div>
+                                    @if($product->subcategory)
+                                        <div class="text-muted small">{{ $product->subcategory }}</div>
+                                    @endif
                                 </div>
                             </div>
                         </td>
-                        <td>{{ $product->category }}</td>
-                        <td>{{ $product->subcategory }}</td>
-
                         <td>
-                            <span class="fw-medium">{{ $product->stock ?? 0 }}</span> pcs
+                            <span class="badge category-badge bg-primary-subtle text-primary-emphasis px-3 py-2 rounded-pill text-wrap">
+                                {{ $product->category }}
+                            </span>
                         </td>
-
                         <td>
-                            @if(($product->stock ?? 0) > 0)
-                                <span class="badge bg-success-subtle text-success px-2.5 py-1.5 rounded-pill fw-medium text-capitalize">
-                                    {{ $product->status === 'inactive' ? 'Tidak Aktif' : 'Aktif' }}
+                            <span class="badge room-badge bg-secondary-subtle text-secondary-emphasis px-3 py-2 rounded-pill text-wrap">
+                                {{ $product->room ?: 'Belum diisi' }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="fw-semibold">{{ $product->stock ?? 0 }}</span>
+                        </td>
+                        <td>
+                            @if(($product->stock ?? 0) > 0 && $product->status !== 'inactive')
+                                <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-medium text-capitalize">
+                                    Aktif
+                                </span>
+                            @elseif($product->status === 'inactive')
+                                <span class="badge bg-warning-subtle text-warning px-3 py-2 rounded-pill fw-medium text-capitalize">
+                                    Tidak Aktif
                                 </span>
                             @else
-                                <span class="badge bg-danger-subtle text-danger px-2.5 py-1.5 rounded-pill fw-medium text-capitalize">
+                                <span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill fw-medium text-capitalize">
                                     Stok Habis
                                 </span>
                             @endif
                         </td>
-
                         <td>
                             <div class="dropdown">
-                                <button class="btn btn-link text-secondary p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="text-decoration: none; font-size: 1.25rem; line-height: 1; border: none;">
+                                <button class="btn btn-link text-secondary p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="text-decoration: none; font-size: 1.25rem; line-height: 1;">
                                     <i class="bi bi-three-dots"></i>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end rounded-3 shadow-sm border-0">

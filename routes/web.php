@@ -38,6 +38,7 @@ Route::middleware('auth')->group(function () {
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('reports/export-excel', [ReportController::class, 'exportExcel'])->name('reports.exportExcel');
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     // Rute Manajemen Produk (Fitur Hapus Massal, Ekspor Excel & CRUD)
     Route::delete('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected');
