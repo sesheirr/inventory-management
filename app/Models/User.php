@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'role'])]
+#[Fillable(['name', 'email', 'password', 'role', 'phone', 'gender', 'birth_date', 'address', 'bio'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -21,6 +21,17 @@ class User extends Authenticatable
     public function mutations(): HasMany
     {
         return $this->hasMany(Mutation::class);
+    }
+
+    public function getUsernameAttribute($value): string
+    {
+        if (!empty($value)) {
+            return $value;
+        }
+
+        $emailLocalPart = explode('@', (string) $this->email)[0] ?? '';
+
+        return $emailLocalPart !== '' ? $emailLocalPart : ($this->name ?? 'Administrator');
     }
 
     /**

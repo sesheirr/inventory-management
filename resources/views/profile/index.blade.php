@@ -100,9 +100,9 @@
                             </div>
                             <div class="col-lg-4 text-lg-end">
                                 <div class="d-flex flex-wrap justify-content-lg-end gap-2">
-                                    <a href="#" class="btn btn-edit-profile-hero btn-sm rounded-pill px-3">
+                                    <button type="button" class="btn btn-edit-profile-hero btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#editProfileModal">
                                         <i class="fa-solid fa-pen me-2"></i>Edit Profile
-                                    </a>
+                                    </button>
                                     <a href="#" class="btn btn-info text-white btn-sm rounded-pill px-3">
                                         <i class="fa-solid fa-key me-2"></i>Ubah Password
                                     </a>
@@ -178,7 +178,20 @@
                                     <div class="info-icon"><i class="fa-solid fa-cake-candles"></i></div>
                                     <div>
                                         <small class="text-muted">Tanggal Lahir</small>
-                                        <div class="fw-semibold text-profile-body">{{ isset($user->birth_date) ? \Carbon\Carbon::parse($user->birth_date)->translatedFormat('d F Y') : '-' }}</div>
+                                        <div class="fw-semibold text-profile-body">
+                                            @php
+                                                $birthDateDisplay = '-';
+                                                if (!empty($user->birth_date)) {
+                                                    try {
+                                                        $parsedBirthDate = \Carbon\Carbon::parse($user->birth_date);
+                                                        $birthDateDisplay = $parsedBirthDate->translatedFormat('d F Y');
+                                                    } catch (\Throwable $e) {
+                                                        $birthDateDisplay = $user->birth_date;
+                                                    }
+                                                }
+                                            @endphp
+                                            {{ $birthDateDisplay }}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -226,6 +239,72 @@
             </div>
 
            
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <form action="{{ route('profile.update') }}" method="POST">
+                @csrf
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-semibold" id="editProfileModalLabel">Edit Profil</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nama Lengkap</label>
+                        <input type="text" name="name" class="form-control" value="{{ old('name', $user->name) }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" value="{{ old('email', $user->email) }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nomor HP</label>
+                        <input type="text" name="phone" class="form-control" value="{{ old('phone', $user->phone ?? '') }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Jenis Kelamin</label>
+                        <select name="gender" class="form-select">
+                            <option value="" @selected(empty($user->gender))>-- Pilih --</option>
+                            <option value="Laki-laki" @selected($user->gender === 'Laki-laki')>Laki-laki</option>
+                            <option value="Perempuan" @selected($user->gender === 'Perempuan')>Perempuan</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tanggal Lahir</label>
+                        @php
+                            $birthDateValue = old('birth_date');
+                            if (empty($birthDateValue) && !empty($user->birth_date)) {
+                                try {
+                                    $parsedBirthDate = \Carbon\Carbon::parse($user->birth_date);
+                                    $birthDateValue = $parsedBirthDate->format('Y-m-d');
+                                } catch (\Throwable $e) {
+                                    $birthDateValue = (string) $user->birth_date;
+                                }
+                            }
+                            if (!empty($birthDateValue)) {
+                                $birthDateValue = substr((string) $birthDateValue, 0, 10);
+                            }
+                        @endphp
+                        <input type="date" name="birth_date" class="form-control" value="{{ $birthDateValue ?? '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Alamat</label>
+                        <textarea name="address" class="form-control" rows="3">{{ old('address', $user->address ?? '') }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Bio</label>
+                        <textarea name="bio" class="form-control" rows="3">{{ old('bio', $user->bio ?? '') }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary rounded-pill">Simpan</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
