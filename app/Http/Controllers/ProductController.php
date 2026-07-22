@@ -6,6 +6,7 @@ use App\Exports\BarangExport;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 use Cloudinary\Cloudinary;
 use Illuminate\Support\Str;
@@ -36,15 +37,16 @@ class ProductController extends Controller
 
     public function create()
     {
-        return view('products.create');
+        return view('products.create', [
+            'categoryOptions' => $this->categoryOptions(),
+        ]);
     }
 
     public function store(Request $request)
     {
-       
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
-            'category' => ['required', 'string', 'max:100'],
+            'category' => ['required', 'string', Rule::in($this->categoryOptions())],
             'subcategory' => ['nullable', 'string', 'max:100'],
             'room' => ['nullable', 'string', 'max:150'],
             'edition' => ['nullable', 'string', 'max:100'],
@@ -81,15 +83,17 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        return view('products.edit', compact('product'));
+        return view('products.edit', [
+            'product' => $product,
+            'categoryOptions' => $this->categoryOptions(),
+        ]);
     }
 
     public function update(Request $request, Product $product)
     {
-        
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
-            'category' => ['required', 'string', 'max:100'],
+            'category' => ['required', 'string', Rule::in($this->categoryOptions())],
             'subcategory' => ['nullable', 'string', 'max:100'],
             'room' => ['nullable', 'string', 'max:150'],
             'edition' => ['nullable', 'string', 'max:100'],
@@ -199,6 +203,18 @@ class ProductController extends Controller
         }
 
         return redirect()->route('products.index')->with('error', 'No products selected.');
+    }
+
+    private function categoryOptions(): array
+    {
+        return [
+            'Peralatan IT & Jaringan',
+            'Perangkat Multimedia & Penyiaran',
+            'Elektronik Kantor',
+            'Mebel & Furniture',
+            'Kendaraan Operasional',
+            'Barang Habis Pakai (BHP)',
+        ];
     }
 
     public function exportExcel()

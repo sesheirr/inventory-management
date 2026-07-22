@@ -1,90 +1,90 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
 <div class="card dashboard-card">
+    <style>
+        .category-card {
+            background: var(--bs-body-bg);
+            border: 1px solid var(--bs-border-color, #e2e8f0);
+            border-radius: 16px;
+            transition: background .2s ease, border-color .2s ease;
+        }
+
+        [data-bs-theme="dark"] .category-card {
+            background: #111827;
+            border-color: rgba(255,255,255,0.08);
+        }
+
+        .category-product-item {
+            padding: 16px 0;
+            border-bottom: 1px solid var(--bs-border-color, #e2e8f0);
+        }
+
+        [data-bs-theme="dark"] .category-product-item {
+            border-color: rgba(255,255,255,0.08);
+        }
+
+        .category-product-item:last-child {
+            border-bottom: none;
+        }
+
+        .category-product-meta {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+    </style>
+
     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
         <div>
             <h4 class="fw-semibold mb-1">Kategori</h4>
-            <p class="text-muted mb-0">Kelola kategori barang inventaris Anda.</p>
+            <p class="text-muted mb-0">Filter dan lihat barang berdasarkan kategori utama.</p>
         </div>
 
-        <div class="d-flex align-items-center gap-2">
-            <form action="{{ route('categories.index') }}" method="GET" class="position-relative search-box" style="max-width: 320px; width: 100%;">
+        <div class="d-flex align-items-center gap-2 w-100 w-lg-auto">
+            <form action="{{ route('categories.index') }}" method="GET" class="position-relative search-box" style="max-width: 420px; width: 100%;">
                 <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-                <input type="text" name="search" value="{{ $query ?? '' }}" class="form-control rounded-pill" placeholder="Cari kategori..." style="padding-left: 2.7rem;">
+                <input type="text" name="search" value="{{ $query ?? '' }}" class="form-control rounded-pill" placeholder="Cari kategori atau barang..." style="padding-left: 2.7rem;">
             </form>
-            <a href="{{ route('categories.create') }}" class="btn btn-primary rounded-pill">
-                <i class="bi bi-plus-lg me-2"></i>Tambah Kategori
-            </a>
         </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="table align-middle">
-            <thead>
-                <tr>
-                    <th>Nama</th>
-                    <th>Deskripsi</th>
-                    <th class="text-end">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($categories as $category)
-                    <tr>
-                        <td>{{ $category->name }}</td>
-                        <td>{{ $category->description }}</td>
-                        <td class="text-end">
-                            <div class="dropdown">
-                                <button class="btn btn-link text-secondary p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-three-dots"></i>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end rounded-3 shadow-sm border-0">
-                                    <li><a class="dropdown-item py-2" href="{{ route('categories.show', $category) }}"><i class="bi bi-eye me-2"></i>Lihat</a></li>
-                                    <li><a class="dropdown-item py-2" href="{{ route('categories.edit', $category) }}"><i class="bi bi-pencil me-2"></i>Edit</a></li>
-                                    <li><hr class="dropdown-divider opacity-50"></li>
-                                    <li>
-                                        <button type="button" class="dropdown-item py-2 text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $category->id }}">
-                                            <i class="bi bi-trash me-2"></i>Hapus
-                                        </button>
-                                    </li>
-                                </ul>
-                            </div>
+    <div class="row g-4">
+        @foreach($categories as $category)
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="category-card p-4 h-100 shadow-sm">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="fw-semibold mb-1">{{ $category->name }}</h5>
+                            <p class="text-muted mb-0">{{ $category->count }} barang</p>
+                        </div>
+                        <span class="badge rounded-pill bg-primary-subtle text-primary-emphasis px-3 py-2">Kategori Tetap</span>
+                    </div>
 
-                            <div class="modal fade" id="deleteModal{{ $category->id }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered">
-                                    <div class="modal-content rounded-4">
-                                        <div class="modal-header border-0">
-                                            <h5 class="modal-title">Hapus kategori?</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            Ini akan menghapus kategori "{{ $category->name }}".
-                                        </div>
-                                        <div class="modal-footer border-0">
-                                            <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
-                                            <form action="{{ route('categories.destroy', $category) }}" method="POST">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-danger rounded-pill">Hapus</button>
-                                            </form>
-                                        </div>
-                                    </div>
+                    @if($category->products->isEmpty())
+                        <div class="text-muted">Tidak ada barang pada kategori ini.</div>
+                    @else
+                        @foreach($category->products->take(5) as $product)
+                            <div class="category-product-item d-flex flex-column flex-sm-row justify-content-between gap-3">
+                                <div>
+                                    <div class="fw-semibold">{{ $product->name }}</div>
+                                    <div class="category-product-meta">{{ $product->room ? 'Ruangan: ' . $product->room : 'Ruangan belum diisi' }}</div>
+                                </div>
+                                <div class="text-sm-end">
+                                    <div class="fw-semibold">{{ $product->stock }}</div>
+                                    <div class="category-product-meta">stok</div>
                                 </div>
                             </div>
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="3" class="text-center py-5 text-muted">Tidak ada kategori ditemukan.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+                        @endforeach
 
-    <div class="d-flex justify-content-between align-items-center mt-4">
-        <p class="text-muted mb-0">Menampilkan {{ $categories->firstItem() ?? 0 }} sampai {{ $categories->lastItem() ?? 0 }} dari {{ $categories->total() }} kategori</p>
-        {{ $categories->links() }}
+                        @if($category->count > 5)
+                            <div class="mt-3 text-center">
+                                <a href="{{ route('products.index', ['search' => $category->name]) }}" class="btn btn-sm btn-outline-primary rounded-pill">Lihat semua barang</a>
+                            </div>
+                        @endif
+                    @endif
+                </div>
+            </div>
+        @endforeach
     </div>
 </div>
 @endsection
