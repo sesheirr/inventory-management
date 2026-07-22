@@ -35,9 +35,13 @@
         $pageTitle = 'Ruangan';
         $breadcrumb = 'Inventory / Ruangan';
         $showBackButton = true;
+    } elseif (Route::is('profile')) {
+        $pageTitle = 'Profile';
+        $breadcrumb = 'Inventory / Profile';
+        $showBackButton = true;
     } elseif (Route::is('settings')) {
-        $pageTitle = '';
-        $breadcrumb = null;
+        $pageTitle = 'Settings';
+        $breadcrumb = 'Inventory / Settings';
         $showBackButton = false;
     }
 @endphp
@@ -57,7 +61,7 @@
             @endif
 
             @if($pageTitle)
-                <h3 class="mb-0 fw-semibold">{{ $pageTitle }}</h3>
+                <h3 class="mb-0 fw-bold">{{ $pageTitle }}</h3>
             @endif
         </div>
     </div>

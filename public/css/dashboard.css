@@ -336,6 +336,33 @@ body {
     justify-content: space-between;
     padding: 24px 30px;
     background: var(--bg);
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+@media (max-width: 991px) {
+    .topbar {
+        justify-content: space-between;
+        padding: 20px 22px;
+    }
+
+    .topbar .d-flex.align-items-center {
+        width: 100%;
+        justify-content: space-between;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 767px) {
+    .topbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .topbar .d-flex.align-items-center {
+        width: 100%;
+        justify-content: space-between;
+    }
 }
 
 .topbar-search {
@@ -366,6 +393,30 @@ body {
     border-radius: 999px;
     background: #fff;
     box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    color: #111827;
+}
+
+.profile-pill .fw-semibold {
+    color: #111827 !important;
+}
+
+.profile-pill small,
+.profile-pill .text-muted {
+    color: #6b7280 !important;
+}
+
+html.dark .profile-pill {
+    background: rgba(255, 255, 255, 0.08) !important;
+    box-shadow: none !important;
+}
+
+html.dark .profile-pill .fw-semibold {
+    color: #f8fafc !important;
+}
+
+html.dark .profile-pill small,
+html.dark .profile-pill .text-muted {
+    color: #d1d5db !important;
 }
 
 .avatar {
@@ -1115,6 +1166,39 @@ html.dark .profile-dropdown-menu .dropdown-item.text-danger:hover {
     border-radius: 24px;
     position: relative;
     overflow: hidden;
+}
+
+@media (max-width: 991px) {
+    .profile-hero .row {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .profile-hero .text-lg-end {
+        text-align: left !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .profile-hero .hero-text-subtle,
+    .profile-hero .hero-text-white {
+        font-size: 0.95rem;
+    }
+
+    .profile-hero .avatar-circle {
+        width: 80px;
+        height: 80px;
+        font-size: 1.6rem;
+    }
+
+    .profile-hero .d-flex.flex-column.flex-md-row {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+
+    .profile-hero .btn {
+        width: 100%;
+    }
 }
 
 .hero-glow {
