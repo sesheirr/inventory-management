@@ -58,4 +58,10 @@ document.addEventListener('DOMContentLoaded', () => {
             applyTheme(selectedTheme);
         });
     });
+
+    window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+        applyTheme(getPreferredTheme());
+    }
+  });
 });
