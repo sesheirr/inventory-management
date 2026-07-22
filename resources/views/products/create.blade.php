@@ -23,6 +23,10 @@
             <label class="form-label">Kapasitas</label>
             <input type="text" name="subcategory" class="form-control" value="{{ old('subcategory') }}">
         </div>
+        <div class="col-md-6">
+            <label class="form-label">Ruangan</label>
+            <input type="text" name="room" class="form-control" value="{{ old('room') }}" placeholder="Nama ruangan atau lokasi">
+        </div>
 
         <div class="col-12">
             <label class="form-label">Deskripsi</label>

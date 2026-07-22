@@ -9,20 +9,29 @@ class RoomController extends Controller
 {
     public function index(Request $request)
     {
+        // New behavior: derive room names from products table (distinct room values)
         $query = trim((string) $request->input('search', ''));
 
-        $rooms = Room::query();
+        // get distinct non-empty room names from products
+        $roomNamesQuery = \App\Models\Product::query()
+            ->whereNotNull('room')
+            ->where('room', '<>', '');
 
         if ($query !== '') {
-            $rooms->where(function ($q) use ($query): void {
-                $q->where('name', 'like', "%{$query}%")
-                    ->orWhere('location', 'like', "%{$query}%")
-                    ->orWhere('person_in_charge', 'like', "%{$query}%")
-                    ->orWhere('description', 'like', "%{$query}%");
-            });
+            $roomNamesQuery->where('room', 'like', "%{$query}%");
         }
 
-        $rooms = $rooms->latest()->paginate(10)->withQueryString();
+        $roomNames = $roomNamesQuery->select('room')->distinct()->pluck('room');
+
+        // build rooms collection where each item contains name and products list
+        $rooms = $roomNames->map(function ($name) {
+            $products = \App\Models\Product::where('room', $name)->latest()->get();
+            return (object) [
+                'name' => $name,
+                'products' => $products,
+                'count' => $products->count(),
+            ];
+        });
 
         return view('rooms.index', compact('rooms', 'query'));
     }

@@ -23,6 +23,7 @@ class ProductController extends Controller
                 $q->where('name', 'like', "%{$query}%")
                     ->orWhere('category', 'like', "%{$query}%")
                     ->orWhere('subcategory', 'like', "%{$query}%")
+                    ->orWhere('room', 'like', "%{$query}%")
                     ->orWhere('edition', 'like', "%{$query}%")
                     ->orWhere('description', 'like', "%{$query}%");
             });
@@ -45,6 +46,7 @@ class ProductController extends Controller
             'name' => ['required', 'string', 'max:100'],
             'category' => ['required', 'string', 'max:100'],
             'subcategory' => ['nullable', 'string', 'max:100'],
+            'room' => ['nullable', 'string', 'max:150'],
             'edition' => ['nullable', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
             'stock' => ['required', 'integer', 'min:0'],
@@ -89,6 +91,7 @@ class ProductController extends Controller
             'name' => ['required', 'string', 'max:100'],
             'category' => ['required', 'string', 'max:100'],
             'subcategory' => ['nullable', 'string', 'max:100'],
+            'room' => ['nullable', 'string', 'max:150'],
             'edition' => ['nullable', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
             'stock' => ['required', 'integer', 'min:0'],

@@ -16,6 +16,7 @@ class Product extends Model
         'category',
         'category_id',
         'room_id',
+        'room',
         'subcategory',
         'edition',
         'description',
