@@ -8,31 +8,60 @@
 
 @section('content')
 <style>
-    /* Mengatur warna teks judul & isi info agar selalu kontras di Light & Dark Mode */
-    [data-bs-theme="dark"] .text-profile-title,
-    [data-bs-theme="dark"] .text-profile-body {
+    /* Mengatur warna teks judul & isi info agar selalu kontras di Light & Dark Mode
+       PENTING: sistem toggle project ini pakai class "dark"/"light" di <html>
+       (lihat app.js: docEl.classList.add(...)), BUKAN atribut data-bs-theme.
+       Makanya selector di sini pakai html.dark / html.light, bukan [data-bs-theme]. */
+    html.dark .text-profile-title,
+    html.dark .text-profile-body {
         color: #ffffff !important;
     }
-    [data-bs-theme="light"] .text-profile-title,
-    [data-bs-theme="light"] .text-profile-body {
+    html.light .text-profile-title,
+    html.light .text-profile-body {
         color: #192333 !important;
     }
-    
-    /* Memastikan teks dalam Banner Hero Biru selalu berwarna terang/putih di kedua mode */
-    .profile-hero .hero-text-white {
+
+    /* Nama besar di hero: gelap saat light mode, putih saat dark mode */
+    .profile-hero-name {
+        color: #192333 !important;
+    }
+    html.dark .profile-hero-name {
         color: #ffffff !important;
     }
+
+    /* Role & email di hero: sebelumnya dipaksa putih permanen (bug).
+       Sekarang ikut adaptif sesuai tema aktif. */
     .profile-hero .hero-text-subtle {
+        color: rgba(25, 35, 51, 0.75) !important;
+    }
+    html.dark .profile-hero .hero-text-subtle {
         color: rgba(255, 255, 255, 0.85) !important;
     }
 
-    /* Styling Tombol Edit Profile pada Banner Hero */
+    /* Kalau ada teks yang memang harus selalu putih terlepas dari tema (jarang dipakai) */
+    .profile-hero .hero-text-white {
+        color: #192333 !important;
+    }
+    html.dark .profile-hero .hero-text-white {
+        color: #ffffff !important;
+    }
+
+    /* Styling Tombol Edit Profile pada Banner Hero: border & teks ikut adaptif juga */
     .btn-edit-profile-hero {
+        border: 1px solid rgba(25, 35, 51, 0.35);
+        color: #192333 !important;
+        background-color: rgba(25, 35, 51, 0.06);
+    }
+    .btn-edit-profile-hero:hover {
+        background-color: rgba(25, 35, 51, 0.12);
+        color: #192333 !important;
+    }
+    html.dark .btn-edit-profile-hero {
         border: 1px solid rgba(255, 255, 255, 0.5);
         color: #ffffff !important;
         background-color: rgba(255, 255, 255, 0.1);
     }
-    .btn-edit-profile-hero:hover {
+    html.dark .btn-edit-profile-hero:hover {
         background-color: rgba(255, 255, 255, 0.25);
         color: #ffffff !important;
     }
@@ -54,12 +83,13 @@
                                     </div>
                                     <div>
                                         <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-                                            <h2 class="fw-bold mb-0 hero-text-white">{{ $user->name ?? 'Administrator' }}</h2>
+
+                                            <h2 class="fw-bold mb-0 profile-hero-name">{{ $user->name ?? 'Administrator' }}</h2>
                                             <span class="badge rounded-pill bg-success-subtle text-success-emphasis px-3 py-2">Active</span>
                                         </div>
                                         <p class="hero-text-subtle mb-2">
                                             <i class="fa-solid fa-shield-halved me-2"></i>
-                                            <span class="fw-semibold text-white">{{ ucfirst($user->role ?? 'Administrator') }}</span>
+                                            <span class="fw-semibold">{{ ucfirst($user->role ?? 'Administrator') }}</span>
                                         </p>
                                         <p class="hero-text-subtle mb-0">
                                             <i class="fa-solid fa-envelope me-2"></i>
@@ -195,24 +225,7 @@
                 </div>
             </div>
 
-            {{-- 6. Tombol Aksi Bawah --}}
-            <div class="col-12">
-                <div class="card border-0 shadow-lg rounded-4 profile-card">
-                    <div class="card-body p-4 p-lg-5">
-                        <div class="d-flex flex-wrap gap-2">
-                            <a href="#" class="btn btn-primary rounded-pill px-4 py-2 action-btn">
-                                <i class="fa-solid fa-pen me-2"></i>Edit Profile
-                            </a>
-                            <a href="#" class="btn btn-info text-white rounded-pill px-4 py-2 action-btn">
-                                <i class="fa-solid fa-key me-2"></i>Ubah Password
-                            </a>
-                            <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary rounded-pill px-4 py-2 action-btn">
-                                <i class="fa-solid fa-arrow-left me-2"></i>Kembali ke Dashboard
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+           
         </div>
     </div>
 </div>

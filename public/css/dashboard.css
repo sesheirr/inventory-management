@@ -1287,3 +1287,67 @@ html.dark .profile-dropdown-menu .dropdown-item.text-danger:hover {
         font-size: 1.6rem;
     }
 }
+
+/* Teks nama & meta info di hero: ikut adaptasi warna sesuai tema aktif */
+.profile-hero-name {
+    color: #111827;
+}
+html.dark .profile-hero-name {
+    color: #ffffff;
+}
+
+.profile-hero-meta {
+    color: #374151;
+}
+html.dark .profile-hero-meta {
+    color: #cbd5e1;
+}
+
+/* Tombol outline di dalam profile page: border & teks ikut adaptasi juga */
+.profile-page .btn-outline-light {
+    color: #111827;
+    border-color: rgba(17, 24, 39, 0.35);
+}
+.profile-page .btn-outline-light:hover {
+    background-color: rgba(17, 24, 39, 0.08);
+    color: #111827;
+}
+html.dark .profile-page .btn-outline-light {
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.5);
+}
+html.dark .profile-page .btn-outline-light:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+
+.profile-hero-name {
+    color: #111827;
+}
+html.dark .profile-hero-name {
+    color: #ffffff;
+}
+
+.profile-hero-meta {
+    color: #374151;
+}
+html.dark .profile-hero-meta {
+    color: #cbd5e1;
+}
+
+.profile-page .btn-outline-light {
+    color: #111827;
+    border-color: rgba(17, 24, 39, 0.35);
+}
+.profile-page .btn-outline-light:hover {
+    background-color: rgba(17, 24, 39, 0.08);
+    color: #111827;
+}
+html.dark .profile-page .btn-outline-light {
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.5);
+}
+html.dark .profile-page .btn-outline-light:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
