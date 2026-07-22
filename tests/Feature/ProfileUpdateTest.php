@@ -22,10 +22,6 @@ class ProfileUpdateTest extends TestCase
         $response = $this->actingAs($user)->post(route('profile.update'), [
             'name' => 'New Name',
             'email' => 'new@example.com',
-<<<<<<< HEAD
-            // additional profile fields can be added here
-=======
-            'birth_date' => '2024-10-15',
             'birth_date' => '2024-10-15',
         ]);
 
@@ -35,12 +31,6 @@ class ProfileUpdateTest extends TestCase
         $user->refresh();
         $this->assertSame('New Name', $user->name);
         $this->assertSame('new@example.com', $user->email);
-        $this->assertSame('2024-10-15', $user->birth_date->format('Y-m-d'));
-        // end of test
-    }
-
-    // Additional profile-related tests may be added here if needed.
-=======
         $this->assertSame('2024-10-15', $user->birth_date->format('Y-m-d'));
     }
 
@@ -64,5 +54,4 @@ class ProfileUpdateTest extends TestCase
         $this->assertNotEmpty($user->avatar);
         $this->assertTrue(Storage::disk('public')->exists($user->avatar));
     }
->>>>>>> ec79ca1ace00ea60ea799955a266124571753834
 }
