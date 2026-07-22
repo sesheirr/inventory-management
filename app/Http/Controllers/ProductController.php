@@ -10,6 +10,7 @@ use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 use Cloudinary\Cloudinary;
 use Illuminate\Support\Str;
+use Intervention\Image\ImageManagerStatic as Image;
 
 class ProductController extends Controller
 {
@@ -68,6 +69,18 @@ class ProductController extends Controller
                 $storedImage = $request->file('image')->store('products', 'public');
                 $data['image'] = $storedImage;
                 $data['image_public_id'] = null;
+
+                // create thumbnail for local image
+                try {
+                    Storage::disk('public')->makeDirectory('products/thumbs');
+                    $originalPath = storage_path('app/public/' . $storedImage);
+                    $thumbPath = storage_path('app/public/products/thumbs/' . basename($storedImage));
+                    Image::make($originalPath)->fit(300, 300, function ($constraint) {
+                        $constraint->upsize();
+                    })->save($thumbPath);
+                } catch (\Throwable $ei) {
+                    // ignore thumbnail generation errors
+                }
             }
         }
 
@@ -130,6 +143,18 @@ class ProductController extends Controller
                 $storedImage = $request->file('image')->store('products', 'public');
                 $data['image'] = $storedImage;
                 $data['image_public_id'] = null;
+
+                // create thumbnail for local image
+                try {
+                    Storage::disk('public')->makeDirectory('products/thumbs');
+                    $originalPath = storage_path('app/public/' . $storedImage);
+                    $thumbPath = storage_path('app/public/products/thumbs/' . basename($storedImage));
+                    Image::make($originalPath)->fit(300, 300, function ($constraint) {
+                        $constraint->upsize();
+                    })->save($thumbPath);
+                } catch (\Throwable $ei) {
+                    // ignore thumbnail generation errors
+                }
             }
         } elseif ($request->boolean('remove_image')) {
             // delete from Cloudinary if exists
@@ -142,7 +167,12 @@ class ProductController extends Controller
             }
 
             if ($product->image && $this->isLocalImage($product->image) && Storage::disk('public')->exists($product->image)) {
+                // delete image and thumbnail
                 Storage::disk('public')->delete($product->image);
+                $thumb = 'products/thumbs/' . basename($product->image);
+                if (Storage::disk('public')->exists($thumb)) {
+                    Storage::disk('public')->delete($thumb);
+                }
             }
 
             $data['image'] = null;
@@ -193,7 +223,12 @@ class ProductController extends Controller
                 }
 
                 if ($product->image && $this->isLocalImage($product->image) && Storage::disk('public')->exists($product->image)) {
+                    // delete image and thumbnail
                     Storage::disk('public')->delete($product->image);
+                    $thumb = 'products/thumbs/' . basename($product->image);
+                    if (Storage::disk('public')->exists($thumb)) {
+                        Storage::disk('public')->delete($thumb);
+                    }
                 }
             }
 
