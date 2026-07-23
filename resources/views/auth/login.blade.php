@@ -20,7 +20,7 @@
                 </div>
             </div>
 
-            <h1 class="form-title">Welcome Back</h1>
+            <h1 class="form-title">Login</h1>
             <p class="form-subtitle">Masuk ke akun Anda untuk melanjutkan</p>
 
             {{-- Error Messages --}}

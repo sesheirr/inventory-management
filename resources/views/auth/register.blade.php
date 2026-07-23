@@ -20,7 +20,7 @@
                 </div>
             </div>
 
-            <h1 class="form-title">Create Account</h1>
+            <h1 class="form-title">Buat Akun</h1>
             <p class="form-subtitle">Silakan lengkapi data untuk membuat akun</p>
 
             {{-- Error Messages --}}
