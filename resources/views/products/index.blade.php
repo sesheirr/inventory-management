@@ -7,6 +7,32 @@
         .product-thumb img { width:100%; height:100%; object-fit:cover; }
         .category-badge, .room-badge { min-width:130px; display:inline-flex; align-items:center; justify-content:center; }
         .table-responsive { overflow-x:auto; }
+        .delete-mode-cell { min-width:42px; }
+        .product-checkbox,
+        .select-all-checkbox {
+            width: 1.15rem !important;
+            height: 1.15rem !important;
+            border: 1px solid var(--bs-secondary-border-subtle, rgba(255,255,255,0.6)) !important;
+            background-color: var(--bs-body-bg) !important;
+            cursor: pointer;
+        }
+        .product-checkbox:checked,
+        .select-all-checkbox:checked {
+            background-color: var(--bs-danger) !important;
+            border-color: var(--bs-danger) !important;
+        }
+        [data-bs-theme="dark"] .product-checkbox,
+        [data-bs-theme="dark"] .select-all-checkbox {
+            border-color: rgba(255,255,255,0.7) !important;
+        }
+        @media (max-width: 576px) {
+            .delete-toolbar { width: 100%; }
+            .delete-toolbar .btn,
+            .delete-toolbar span {
+                width: 100%;
+                justify-content: center;
+            }
+        }
     </style>
 
     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
@@ -15,12 +41,16 @@
             <input id="realtimeSearch" name="search" value="{{ $query ?? '' }}" class="form-control rounded-pill" placeholder="Cari barang..." style="padding-left:2.7rem;" autocomplete="off">
         </div>
 
-        <div class="d-flex align-items-center gap-2">
-            <form id="bulk-delete-form" action="{{ route('products.destroySelected') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus barang yang dipilih?')">
-                @csrf @method('DELETE')
-                <input type="hidden" name="selected_ids" id="selected-ids-input">
-                <button type="submit" id="btn-bulk-delete" class="btn btn-danger d-none"><i class="bi bi-trash me-2"></i>Hapus Terpilih (<span id="selected-count">0</span>)</button>
-            </form>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <button type="button" id="delete-mode-toggle" class="btn btn-outline-danger rounded-pill"><i class="bi bi-trash me-2"></i>Mode Hapus</button>
+
+            <div id="delete-toolbar" class="delete-toolbar d-none d-flex flex-wrap align-items-center gap-2">
+                <button type="button" id="select-all-btn" class="btn btn-outline-secondary rounded-pill">Pilih Semua</button>
+                <button type="button" id="btn-bulk-delete" class="btn btn-danger rounded-pill" data-bs-toggle="modal" data-bs-target="#bulkDeleteModal" disabled>
+                    <i class="bi bi-trash me-2"></i>Hapus Semua
+                </button>
+                <span id="selected-summary" class="text-muted small">0 barang dipilih</span>
+            </div>
 
             <a href="{{ route('products.export') }}" class="btn btn-success d-flex align-items-center gap-2"><i class="bi bi-file-earmark-excel-fill"></i>Export Excel</a>
             <x-primary-button href="{{ route('products.create') }}"><i class="bi bi-plus-lg me-2"></i>Tambah Barang</x-primary-button>
@@ -31,7 +61,7 @@
         <table class="table align-middle">
             <thead>
                 <tr>
-                    <th style="width:40px;"><input type="checkbox" id="select-all-checkbox" class="form-check-input" @if($products->isEmpty()) disabled @endif></th>
+                    <th style="width:42px;" class="delete-mode-cell d-none"><input type="checkbox" id="select-all-checkbox" class="form-check-input select-all-checkbox" @if($products->isEmpty()) disabled @endif></th>
                     <th>Nama Barang</th>
                     <th>Kategori</th>
                     <th>Ruangan</th>
@@ -43,7 +73,7 @@
             <tbody id="productTableBody">
                 @forelse($products as $product)
                     <tr>
-                        <td><input type="checkbox" class="form-check-input product-checkbox" value="{{ $product->id }}"></td>
+                        <td class="delete-mode-cell d-none"><input type="checkbox" class="form-check-input product-checkbox" value="{{ $product->id }}"></td>
                         <td>
                             <div class="d-flex align-items-center gap-3">
                                 <div class="product-thumb">
@@ -113,6 +143,28 @@
         </table>
     </div>
 
+    <div class="modal fade" id="bulkDeleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">Hapus semua barang?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Yakin ingin menghapus <span id="bulk-delete-count">0</span> barang?</p>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
+                    <form id="bulk-delete-form" action="{{ route('products.destroySelected') }}" method="POST">
+                        @csrf
+                        <div id="selected-ids-container"></div>
+                        <button type="submit" class="btn btn-danger rounded-pill">Ya</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="paginationContainer" class="d-flex justify-content-between align-items-center mt-4">
         <p class="text-muted mb-0">Menampilkan {{ $products->firstItem() ?? 0 }} sampai {{ $products->lastItem() ?? 0 }} dari {{ $products->total() }} barang</p>
         {{ $products->links() }}
@@ -121,31 +173,81 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const deleteModeToggle = document.getElementById('delete-mode-toggle');
+    const deleteToolbar = document.getElementById('delete-toolbar');
+    const deleteModeCells = document.querySelectorAll('.delete-mode-cell');
     const checkboxes = document.querySelectorAll('.product-checkbox');
-    const selectAll = document.getElementById('select-all-checkbox');
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    const selectAllBtn = document.getElementById('select-all-btn');
     const btnBulkDelete = document.getElementById('btn-bulk-delete');
-    const selectedCount = document.getElementById('selected-count');
-    const selectedIdsInput = document.getElementById('selected-ids-input');
+    const selectedSummary = document.getElementById('selected-summary');
+    const bulkDeleteCount = document.getElementById('bulk-delete-count');
+    const selectedIdsContainer = document.getElementById('selected-ids-container');
+    const realtimeSearch = document.getElementById('realtimeSearch');
 
-    function updateSelection() {
+    let deleteModeEnabled = false;
+    let debounceTimer = null;
+
+    function syncSelectionState() {
         const selected = Array.from(checkboxes).filter(ch => ch.checked).map(ch => ch.value);
-        if (selected.length > 0) {
-            btnBulkDelete.classList.remove('d-none');
-            selectedCount.textContent = selected.length;
-            selectedIdsInput.value = selected.join(',');
-        } else {
-            btnBulkDelete.classList.add('d-none');
-            selectedCount.textContent = 0;
-            selectedIdsInput.value = '';
+        const count = selected.length;
+        const isAllSelected = checkboxes.length > 0 && count === checkboxes.length;
+
+        selectedSummary.textContent = `${count} barang dipilih`;
+        bulkDeleteCount.textContent = count;
+        btnBulkDelete.disabled = count === 0;
+        selectAllCheckbox.checked = isAllSelected;
+        selectAllBtn.textContent = isAllSelected ? 'Batal Pilih Semua' : 'Pilih Semua';
+
+        selectedIdsContainer.innerHTML = '';
+        selected.forEach(id => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'selected_ids[]';
+            input.value = id;
+            selectedIdsContainer.appendChild(input);
+        });
+    }
+
+    function toggleDeleteMode() {
+        deleteModeEnabled = !deleteModeEnabled;
+        deleteModeToggle.innerHTML = deleteModeEnabled
+            ? '<i class="bi bi-x-circle me-2"></i>Selesai Mode Hapus'
+            : '<i class="bi bi-trash me-2"></i>Mode Hapus';
+
+        deleteToolbar.classList.toggle('d-none', !deleteModeEnabled);
+        deleteModeCells.forEach(cell => cell.classList.toggle('d-none', !deleteModeEnabled));
+
+        if (!deleteModeEnabled) {
+            checkboxes.forEach(ch => ch.checked = false);
+            selectAllCheckbox.checked = false;
+            syncSelectionState();
         }
     }
 
-    selectAll?.addEventListener('change', function () { checkboxes.forEach(ch => ch.checked = this.checked); updateSelection(); });
-    checkboxes.forEach(ch => ch.addEventListener('change', updateSelection));
+    deleteModeToggle?.addEventListener('click', toggleDeleteMode);
 
-    const realtimeSearch = document.getElementById('realtimeSearch');
-    let debounceTimer = null;
-    realtimeSearch?.addEventListener('input', function () { clearTimeout(debounceTimer); debounceTimer = setTimeout(() => { const q = encodeURIComponent(this.value || ''); window.location.href = `?search=${q}`; }, 350); });
+    selectAllBtn?.addEventListener('click', function () {
+        const allSelected = Array.from(checkboxes).every(ch => ch.checked);
+        checkboxes.forEach(ch => ch.checked = !allSelected);
+        syncSelectionState();
+    });
+
+    selectAllCheckbox?.addEventListener('change', function () {
+        checkboxes.forEach(ch => ch.checked = this.checked);
+        syncSelectionState();
+    });
+
+    checkboxes.forEach(ch => ch.addEventListener('change', syncSelectionState));
+    syncSelectionState();
+
+    realtimeSearch?.addEventListener('input', function () {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            const q = encodeURIComponent(this.value || '');
+            window.location.href = `?search=${q}`;
+        }, 350);
+    });
 });
 </script>
 

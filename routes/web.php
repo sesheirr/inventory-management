@@ -43,7 +43,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     // Rute Manajemen Produk (Fitur Hapus Massal, Ekspor Excel & CRUD)
-    Route::delete('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected');
+    Route::post('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected');
+    Route::delete('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected.delete');
     Route::get('products/export-excel', [ProductController::class, 'exportExcel'])->name('products.export');
     Route::resource('products', ProductController::class);
     

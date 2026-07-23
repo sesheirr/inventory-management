@@ -188,21 +188,7 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        // delete remote Cloudinary image if present
-        if (!empty($product->image_public_id)) {
-            try {
-                $cloudinary = $this->getCloudinary();
-                $cloudinary->uploadApi()->destroy($product->image_public_id);
-            } catch (\Throwable $e) {
-                // ignore
-            }
-        }
-
-        // delete local image if present
-        if ($product->image && $this->isLocalImage($product->image) && Storage::disk('public')->exists($product->image)) {
-            Storage::disk('public')->delete($product->image);
-        }
-
+        $this->deleteProductAssets($product);
         $product->delete();
 
         return redirect()->route('products.index')->with('success', 'Product deleted successfully.');
@@ -210,36 +196,26 @@ class ProductController extends Controller
 
     public function destroySelected(Request $request)
     {
-        if ($request->selected_ids) {
-            $ids = explode(',', $request->selected_ids);
+        $validated = $request->validate([
+            'selected_ids' => ['required', 'array'],
+            'selected_ids.*' => ['required', 'integer', 'exists:products,id'],
+        ]);
 
-            $products = Product::whereIn('id', $ids)->get();
+        $ids = array_values(array_unique(array_map('intval', $validated['selected_ids'])));
 
-            foreach ($products as $product) {
-                if (!empty($product->image_public_id)) {
-                    try {
-                        $cloudinary = $this->getCloudinary();
-                        $cloudinary->uploadApi()->destroy($product->image_public_id);
-                    } catch (\Throwable $e) {
-                    }
-                }
-
-                if ($product->image && $this->isLocalImage($product->image) && Storage::disk('public')->exists($product->image)) {
-                    // delete image and thumbnail
-                    Storage::disk('public')->delete($product->image);
-                    $thumb = 'products/thumbs/' . basename($product->image);
-                    if (Storage::disk('public')->exists($thumb)) {
-                        Storage::disk('public')->delete($thumb);
-                    }
-                }
-            }
-
-            Product::whereIn('id', $ids)->delete();
-
-            return redirect()->route('products.index')->with('success', 'Selected products deleted successfully.');
+        if ($ids === []) {
+            return redirect()->route('products.index')->with('error', 'No products selected.');
         }
 
-        return redirect()->route('products.index')->with('error', 'No products selected.');
+        $products = Product::whereIn('id', $ids)->get();
+
+        foreach ($products as $product) {
+            $this->deleteProductAssets($product);
+        }
+
+        Product::whereIn('id', $ids)->delete();
+
+        return redirect()->route('products.index')->with('success', 'Selected products deleted successfully.');
     }
 
     private function categoryOptions(): array
@@ -262,6 +238,27 @@ class ProductController extends Controller
     public function search(Request $request)
     {
         return $this->index($request);
+    }
+
+    private function deleteProductAssets(Product $product): void
+    {
+        if (!empty($product->image_public_id)) {
+            try {
+                $cloudinary = $this->getCloudinary();
+                $cloudinary->uploadApi()->destroy($product->image_public_id);
+            } catch (\Throwable $e) {
+                // ignore Cloudinary deletion errors
+            }
+        }
+
+        if ($product->image && $this->isLocalImage($product->image) && Storage::disk('public')->exists($product->image)) {
+            Storage::disk('public')->delete($product->image);
+
+            $thumb = 'products/thumbs/' . basename($product->image);
+            if (Storage::disk('public')->exists($thumb)) {
+                Storage::disk('public')->delete($thumb);
+            }
+        }
     }
 
     private function isLocalImage(?string $path): bool
