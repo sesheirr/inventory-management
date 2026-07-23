@@ -25,6 +25,7 @@ class Product extends Model
         'status',
         'image',
         'image_public_id',
+        'kode_barang',
     ];
 
     public function category(): BelongsTo

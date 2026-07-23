@@ -84,6 +84,8 @@ class ProductController extends Controller
             }
         }
 
+        $data['kode_barang'] = 'BRG-' . strtoupper(Str::random(6));
+
         Product::create($data);
 
         return redirect()->route('products.index')->with('success', 'Product created successfully.');

@@ -39,8 +39,17 @@ class ReportController extends Controller
         $totalProducts = (clone $filteredProducts)->count();
         $totalActive = (clone $filteredProducts)->where('status', 'active')->count();
 
-        $totalCategories = Category::count();
-        $totalRooms = Room::count();
+        $totalCategories = Product::query()
+            ->whereNotNull('category')
+            ->where('category', '!=', '')
+            ->distinct('category')
+            ->count('category');
+
+        $totalRooms = Product::query()
+            ->whereNotNull('room')
+            ->where('room', '!=', '')
+            ->distinct('room')
+            ->count('room');
 
         $mutationQuery = Mutation::with(['product.category', 'product.room']);
 
