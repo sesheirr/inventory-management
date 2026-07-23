@@ -57,7 +57,7 @@ class ProductController extends Controller
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
-       
+        
 
         if ($request->hasFile('image')) {
             try {

@@ -9,22 +9,24 @@ use App\Http\Controllers\RoomController;
 use Illuminate\Support\Facades\Route;
 
 // ==========================================
-// AUTH ROUTES (Rute Login & Logout)
+// AUTH ROUTES (Untuk Orang Yang BELUM Login / Guest)
 // ==========================================
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
-});
 
-Route::middleware('auth')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    // Route Register DIPINDAHKAN KE SINI agar bisa diakses tanpa login:
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [AuthController::class, 'register']);
 });
 
 // ==========================================
-// PROTECTED ROUTES (Hanya Bisa Diakses Jika Sudah Login)
+// PROTECTED ROUTES (Hanya Bisa Diakses Jika SUDAH Login)
 // ==========================================
 Route::middleware('auth')->group(function () {
     
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
     // Halaman Utama otomatis dialihkan ke Dashboard
     Route::get('/', function () {
         return redirect()->route('dashboard');
