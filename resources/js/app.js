@@ -3,6 +3,34 @@ document.addEventListener('DOMContentLoaded', () => {
     if (searchInput) {
         searchInput.setAttribute('autocomplete', 'off');
     }
+
+   // Auto-close Notifikasi Toast
+document.querySelectorAll('.toast').forEach((toastElement) => {
+    // 1. Set waktu tunggu 3 detik (3000 ms)
+    setTimeout(() => {
+        // Efek fade-out halus
+        toastElement.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+        toastElement.style.opacity = '0';
+        toastElement.style.transform = 'translateY(-10px)';
+
+        // Hapus elemen dari HTML setelah efek fade-out selesai
+        setTimeout(() => {
+            toastElement.remove();
+        }, 400);
+    }, 3000);
+});
+
+// Tombol 'X' (Close) Manual
+document.querySelectorAll('.btn-close').forEach((button) => {
+    button.addEventListener('click', () => {
+        const toast = button.closest('.toast');
+        if (toast) {
+            toast.style.transition = 'opacity 0.2s ease';
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 200);
+        }
+    });
+});
 });
 
 // Dark/Light theme toggle
