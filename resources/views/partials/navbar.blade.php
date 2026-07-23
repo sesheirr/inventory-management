@@ -77,8 +77,8 @@
         <div class="dropdown">
             <div class="profile-pill dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;">
                 <div class="avatar">
-                    @if(!empty($currentUser?->avatar_url))
-                        <img src="{{ $currentUser->avatar_url }}" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                    @if(!empty($currentUser?->avatar))
+                        <img src="{{ $currentUser->avatar }}" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                     @else
                         {{ strtoupper(substr($currentUser->name ?? 'U', 0, 2)) }}
                     @endif

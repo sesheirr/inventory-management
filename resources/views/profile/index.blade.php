@@ -79,8 +79,8 @@
                             <div class="col-lg-8">
                                 <div class="d-flex flex-column flex-md-row align-items-md-center gap-4">
                                     <div class="avatar-circle shadow overflow-hidden">
-                                        @if(!empty($user->avatar_url))
-                                            <img src="{{ $user->avatar_url }}" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover;">
+                                        @if(!empty($user->avatar))
+                                            <img src="{{ $user->avatar }}" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover;">
                                         @else
                                             <span class="fw-bold fs-2">{{ strtoupper(substr($user->name ?? 'U', 0, 2)) }}</span>
                                         @endif
@@ -240,8 +240,8 @@
                         <label class="form-label">Foto Profil</label>
                         <div class="d-flex flex-column align-items-center gap-2">
                             <div class="avatar-circle shadow overflow-hidden" style="width: 90px; height: 90px; font-size: 2rem;">
-                                @if(!empty($user->avatar_url))
-                                    <img id="profilePreviewImage" src="{{ $user->avatar_url }}" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                                @if(!empty($user->avatar))
+                                    <img id="profilePreviewImage" src="{{ $user->avatar }}" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover; display: block;">
                                     <span id="profilePreviewFallback" class="fw-bold d-none">{{ strtoupper(substr($user->name ?? 'U', 0, 2)) }}</span>
                                 @else
                                     <img id="profilePreviewImage" src="" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover; display: none;">
