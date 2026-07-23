@@ -71,14 +71,22 @@
             <i id="themeIcon" class="bi bi-moon"></i>
         </button>
 
+        @php $currentUser = auth()->user(); @endphp
+
         <!-- PROFILE DROPDOWN -->
         <div class="dropdown">
             <div class="profile-pill dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;">
-                <div class="avatar">{{ substr(auth()->user()->name ?? 'SF', 0, 2) }}</div>
+                <div class="avatar">
+                    @if(!empty($currentUser?->avatar_url))
+                        <img src="{{ $currentUser->avatar_url }}" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                    @else
+                        {{ strtoupper(substr($currentUser->name ?? 'U', 0, 2)) }}
+                    @endif
+                </div>
                 <div>
-                    <div class="fw-semibold">{{ auth()->user()->name ?? 'User' }}</div>
+                    <div class="fw-semibold">{{ $currentUser->name ?? 'User' }}</div>
                     <small class="profile-role-label">
-                        @if(auth()->user()->role === 'admin' || auth()->user()->role === 'Administrator')
+                        @if(($currentUser->role ?? '') === 'admin' || ($currentUser->role ?? '') === 'Administrator')
                             Administrator
                         @else
                             User
@@ -89,8 +97,8 @@
 
             <ul class="dropdown-menu dropdown-menu-end rounded-3 shadow-sm border-0 profile-dropdown-menu">
                 <li class="dropdown-header px-3 py-2">
-                    <div class="fw-semibold">{{ auth()->user()->name ?? 'User' }}</div>
-                    <small class="text-muted">{{ auth()->user()->email ?? '' }}</small>
+                    <div class="fw-semibold">{{ $currentUser->name ?? 'User' }}</div>
+                    <small class="text-muted">{{ $currentUser->email ?? '' }}</small>
                 </li>
 
                 <li><hr class="dropdown-divider"></li>

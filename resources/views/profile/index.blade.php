@@ -79,10 +79,10 @@
                             <div class="col-lg-8">
                                 <div class="d-flex flex-column flex-md-row align-items-md-center gap-4">
                                     <div class="avatar-circle shadow overflow-hidden">
-                                        @if(!empty($user->avatar))
-                                            <img src="{{ asset('storage/' . trim(str_replace(['public/', 'storage/'], '', $user->avatar), '/')) }}" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover;">
+                                        @if(!empty($user->avatar_url))
+                                            <img src="{{ $user->avatar_url }}" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover;">
                                         @else
-                                            <i class="fa-solid fa-user"></i>
+                                            <span class="fw-bold fs-2">{{ strtoupper(substr($user->name ?? 'U', 0, 2)) }}</span>
                                         @endif
                                     </div>
                                     <div>
@@ -118,7 +118,7 @@
             </div>
 
             {{-- 4. Detail Kartu Informasi Profil --}}
-            <div class="col-12 col-xl-8">
+            <div class="col-12">
                 <div class="card border-0 shadow-lg rounded-4 h-100 profile-card">
                     <div class="card-body p-4 p-lg-5">
                         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -132,7 +132,7 @@
                         </div>
 
                         <div class="row g-3">
-                            <div class="col-12 col-md-6">
+                            <div class="col-12 col-md-6 col-lg-4">
                                 <div class="info-item">
                                     <div class="info-icon"><i class="fa-solid fa-user"></i></div>
                                     <div>
@@ -141,7 +141,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-12 col-md-6">
+                            <div class="col-12 col-md-6 col-lg-4">
                                 <div class="info-item">
                                     <div class="info-icon"><i class="fa-solid fa-at"></i></div>
                                     <div>
@@ -150,7 +150,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-12 col-md-6">
+                            <div class="col-12 col-md-6 col-lg-4">
                                 <div class="info-item">
                                     <div class="info-icon"><i class="fa-solid fa-envelope"></i></div>
                                     <div>
@@ -159,7 +159,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-12 col-md-6">
+                            <div class="col-12 col-md-6 col-lg-4">
                                 <div class="info-item">
                                     <div class="info-icon"><i class="fa-solid fa-phone"></i></div>
                                     <div>
@@ -168,7 +168,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-12 col-md-6">
+                            <div class="col-12 col-md-6 col-lg-4">
                                 <div class="info-item">
                                     <div class="info-icon"><i class="fa-solid fa-venus-mars"></i></div>
                                     <div>
@@ -177,7 +177,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-12 col-md-6">
+                            <div class="col-12 col-md-6 col-lg-4">
                                 <div class="info-item">
                                     <div class="info-icon"><i class="fa-solid fa-cake-candles"></i></div>
                                     <div>
@@ -222,27 +222,6 @@
                 </div>
             </div>
 
-            {{-- 5. Kartu Tentang Saya --}}
-            <div class="col-12 col-xl-4">
-                <div class="card border-0 shadow-lg rounded-4 h-100 profile-card">
-                    <div class="card-body p-4 p-lg-5">
-                        <div class="d-flex align-items-center gap-2 mb-4">
-                            <div class="icon-badge">
-                                <i class="fa-solid fa-user-edit"></i>
-                            </div>
-                            <div>
-                                <h4 class="fw-bold mb-0 text-profile-title">Tentang Saya</h4>
-                                <p class="text-muted small mb-0">Ringkasan singkat profil.</p>
-                            </div>
-                        </div>
-                        <p class="text-profile-body mb-0 lh-lg">
-                            {{ $user->bio ?? 'Belum ada deskripsi.' }}
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-           
         </div>
     </div>
 </div>
@@ -261,13 +240,15 @@
                         <label class="form-label">Foto Profil</label>
                         <div class="d-flex flex-column align-items-center gap-2">
                             <div class="avatar-circle shadow overflow-hidden" style="width: 90px; height: 90px; font-size: 2rem;">
-                                @if(!empty($user->avatar))
-                                    <img src="{{ asset('storage/' . trim(str_replace(['public/', 'storage/'], '', $user->avatar), '/')) }}" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover;">
+                                @if(!empty($user->avatar_url))
+                                    <img id="profilePreviewImage" src="{{ $user->avatar_url }}" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                                    <span id="profilePreviewFallback" class="fw-bold d-none">{{ strtoupper(substr($user->name ?? 'U', 0, 2)) }}</span>
                                 @else
-                                    <i class="fa-solid fa-user"></i>
+                                    <img id="profilePreviewImage" src="" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                                    <span id="profilePreviewFallback" class="fw-bold">{{ strtoupper(substr($user->name ?? 'U', 0, 2)) }}</span>
                                 @endif
                             </div>
-                            <input type="file" name="avatar" class="form-control" accept="image/*">
+                            <input type="file" id="avatarInput" name="avatar" class="form-control" accept="image/*">
                         </div>
                     </div>
                     <div class="mb-3">
@@ -312,10 +293,6 @@
                         <label class="form-label">Alamat</label>
                         <textarea name="address" class="form-control" rows="3">{{ old('address', $user->address ?? '') }}</textarea>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Bio</label>
-                        <textarea name="bio" class="form-control" rows="3">{{ old('bio', $user->bio ?? '') }}</textarea>
-                    </div>
                 </div>
                 <div class="modal-footer border-0">
                     <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
@@ -325,4 +302,33 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const avatarInput = document.getElementById('avatarInput');
+    const previewImage = document.getElementById('profilePreviewImage');
+    const previewFallback = document.getElementById('profilePreviewFallback');
+
+    if (!avatarInput || !previewImage || !previewFallback) {
+        return;
+    }
+
+    avatarInput.addEventListener('change', function (event) {
+        const [file] = event.target.files || [];
+
+        if (!file) {
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            previewImage.src = e.target.result;
+            previewImage.style.display = 'block';
+            previewFallback.classList.add('d-none');
+        };
+
+        reader.readAsDataURL(file);
+    });
+});
+</script>
 @endsection
