@@ -106,8 +106,8 @@
                 <span id="selected-summary" class="text-muted small">0 barang dipilih</span>
             </div>
 
-            <a href="{{ route('products.export') }}" class="btn btn-success d-flex align-items-center gap-2"><i class="bi bi-file-earmark-excel-fill"></i>Export Excel</a>
-            <x-primary-button href="{{ route('products.create') }}"><i class="bi bi-plus-lg me-2"></i>Tambah Barang</x-primary-button>
+            <a id="export-btn" href="{{ route('products.export') }}" class="btn btn-success d-flex align-items-center gap-2"><i class="bi bi-file-earmark-excel-fill"></i>Export Excel</a>
+            <x-primary-button id="add-product-btn" href="{{ route('products.create') }}"><i class="bi bi-plus-lg me-2"></i>Tambah Barang</x-primary-button>
         </div>
     </div>
 
@@ -228,6 +228,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const bulkDeleteCount = document.getElementById('bulk-delete-count');
     const selectedIdsContainer = document.getElementById('selected-ids-container');
     const realtimeSearch = document.getElementById('realtimeSearch');
+    const exportButton = document.getElementById('export-btn');
+    const addProductButton = document.getElementById('add-product-btn');
 
     let deleteModeEnabled = false;
     let debounceTimer = null;
@@ -268,6 +270,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         deleteToolbar.classList.toggle('d-none', !deleteModeEnabled);
         deleteModeCells.forEach(cell => cell.classList.toggle('d-none', !deleteModeEnabled));
+
+        if (exportButton) {
+            exportButton.classList.toggle('d-none', deleteModeEnabled);
+        }
+        if (addProductButton) {
+            addProductButton.classList.toggle('d-none', deleteModeEnabled);
+        }
 
         if (!deleteModeEnabled) {
             checkboxes.forEach(ch => {
