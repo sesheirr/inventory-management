@@ -8,23 +8,77 @@
         .category-badge, .room-badge { min-width:130px; display:inline-flex; align-items:center; justify-content:center; }
         .table-responsive { overflow-x:auto; }
         .delete-mode-cell { min-width:42px; }
+
+        /* ===== Checkbox (Mode Hapus) ===== */
         .product-checkbox,
         .select-all-checkbox {
-            width: 1.15rem !important;
-            height: 1.15rem !important;
-            border: 1px solid var(--bs-secondary-border-subtle, rgba(255,255,255,0.6)) !important;
-            background-color: var(--bs-body-bg) !important;
+            width: 23px !important;
+            height: 23px !important;
+            border: 2px solid #4B5563 !important;
+            background-color: transparent !important;
+            border-radius: 6px !important;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            position: relative;
+            margin: 0;
+            flex-shrink: 0;
+            transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        .product-checkbox:hover,
+        .select-all-checkbox:hover {
+            border-color: #EF4444 !important;
             cursor: pointer;
         }
         .product-checkbox:checked,
         .select-all-checkbox:checked {
-            background-color: var(--bs-danger) !important;
-            border-color: var(--bs-danger) !important;
+            background-color: #EF4444 !important;
+            border-color: #EF4444 !important;
+            box-shadow: 0 0 0 3px rgba(239,68,68,0.25), 0 0 8px rgba(239,68,68,0.6);
         }
+        .product-checkbox:checked::after,
+        .select-all-checkbox:checked::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 45%;
+            width: 6px;
+            height: 11px;
+            border: solid #fff;
+            border-width: 0 2px 2px 0;
+            transform: translate(-50%, -50%) rotate(45deg);
+        }
+        .product-checkbox:focus-visible,
+        .select-all-checkbox:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(239,68,68,0.3);
+        }
+        /* Keep colors consistent in both light & dark, since spec is explicit */
         [data-bs-theme="dark"] .product-checkbox,
         [data-bs-theme="dark"] .select-all-checkbox {
-            border-color: rgba(255,255,255,0.7) !important;
+            border-color: #4B5563 !important;
         }
+
+        /* ===== Row highlight when selected for delete ===== */
+        tr.row-selected-for-delete {
+            background-color: rgba(239,68,68,0.10) !important;
+            box-shadow: inset 4px 0 0 0 #EF4444;
+            transition: background-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        tr.row-selected-for-delete td,
+        tr.row-selected-for-delete .fw-semibold,
+        tr.row-selected-for-delete .text-muted {
+            color: inherit;
+        }
+
+        .delete-mode-cell {
+            min-width:42px;
+            display: flex;
+            align-items: center;
+            height: 100%;
+        }
+        td.delete-mode-cell { display: table-cell; }
+
         @media (max-width: 576px) {
             .delete-toolbar { width: 100%; }
             .delete-toolbar .btn,
@@ -178,6 +232,13 @@ document.addEventListener('DOMContentLoaded', function () {
     let deleteModeEnabled = false;
     let debounceTimer = null;
 
+    // Toggle row highlight based on checkbox state
+    function updateRowHighlight(checkbox) {
+        const row = checkbox.closest('tr');
+        if (!row) return;
+        row.classList.toggle('row-selected-for-delete', checkbox.checked);
+    }
+
     function syncSelectionState() {
         const selected = Array.from(checkboxes).filter(ch => ch.checked).map(ch => ch.value);
         const count = selected.length;
@@ -209,7 +270,10 @@ document.addEventListener('DOMContentLoaded', function () {
         deleteModeCells.forEach(cell => cell.classList.toggle('d-none', !deleteModeEnabled));
 
         if (!deleteModeEnabled) {
-            checkboxes.forEach(ch => ch.checked = false);
+            checkboxes.forEach(ch => {
+                ch.checked = false;
+                updateRowHighlight(ch);
+            });
             selectAllCheckbox.checked = false;
             syncSelectionState();
         }
@@ -219,16 +283,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
     selectAllBtn?.addEventListener('click', function () {
         const allSelected = Array.from(checkboxes).every(ch => ch.checked);
-        checkboxes.forEach(ch => ch.checked = !allSelected);
+        checkboxes.forEach(ch => {
+            ch.checked = !allSelected;
+            updateRowHighlight(ch);
+        });
         syncSelectionState();
     });
 
     selectAllCheckbox?.addEventListener('change', function () {
-        checkboxes.forEach(ch => ch.checked = this.checked);
+        checkboxes.forEach(ch => {
+            ch.checked = this.checked;
+            updateRowHighlight(ch);
+        });
         syncSelectionState();
     });
 
-    checkboxes.forEach(ch => ch.addEventListener('change', syncSelectionState));
+    checkboxes.forEach(ch => ch.addEventListener('change', function () {
+        updateRowHighlight(this);
+        syncSelectionState();
+    }));
     syncSelectionState();
 
     realtimeSearch?.addEventListener('input', function () {
