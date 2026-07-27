@@ -1,223 +1,142 @@
 ﻿@extends('layouts.app')
 
 @section('content')
-<div class="card dashboard-card">
-    <style>
-        /* ==========================================================
-           LIGHT MODE (default) — tidak diubah
-           ========================================================== */
-        .category-card {
-<<<<<<< HEAD
-            background: #ffffff;
-            color: #111827;
-            border: 1px solid rgba(15, 23, 42, 0.12);
-            border-radius: 16px;
-            transition: background .2s ease, border-color .2s ease, color .2s ease;
-        }
+<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+    <div>
+        <h4 class="fw-semibold mb-1">Kategori</h4>
+        <p class="text-muted mb-0">Filter dan lihat barang berdasarkan kategori utama.</p>
+    </div>
 
-        html.dark .category-card {
-            background: #111827;
-            color: #f9fafb;
-            border-color: rgba(255,255,255,0.12);
-        }
+    <div class="d-flex flex-column flex-sm-row gap-2 w-100 w-lg-auto">
+        <form action="{{ route('categories.index') }}" method="GET" class="flex-fill">
+            <div class="input-group shadow-sm">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                <input type="search" name="search" value="{{ $query ?? '' }}" class="form-control border-start-0" placeholder="Cari kategori atau barang...">
+            </div>
+        </form>
 
-        .category-card .fw-semibold,
-        .category-card h5 {
-            color: #111827;
-        }
+        <button type="button" class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+            + Tambah Kategori
+        </button>
+    </div>
+</div>
 
-        html.dark .category-card .fw-semibold,
-        html.dark .category-card h5 {
-            color: #f9fafb !important;
-        }
-
-        .category-card .text-muted,
-        .category-product-meta {
-            color: #6b7280;
-        }
-
-        html.dark .category-card .text-muted,
-        html.dark .category-product-meta {
-            color: #d1d5db !important;
-=======
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            transition: background .2s ease, border-color .2s ease, box-shadow .2s ease;
-        }
-
-        .category-card:hover {
-            box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .1);
-        }
-
-        .category-title {
-            color: var(--text);
-        }
-
-        .category-subtitle,
-        .category-product-meta {
-            color: var(--muted);
->>>>>>> 2216918e6076e9594849353f7859f1ec38eb41cc
-        }
-
-        .category-product-item {
-            padding: 16px 0;
-<<<<<<< HEAD
-            border-bottom: 1px solid rgba(15, 23, 42, 0.12);
-        }
-
-        html.dark .category-product-item {
-            border-color: rgba(255,255,255,0.12);
-=======
-            border-bottom: 1px solid var(--border);
->>>>>>> 2216918e6076e9594849353f7859f1ec38eb41cc
-        }
-
-        .category-product-item:last-child {
-            border-bottom: none;
-        }
-
-<<<<<<< HEAD
-        html.dark .badge {
-            background-color: rgba(59, 130, 246, 0.2) !important;
-            color: #dbeafe !important;
-=======
-        .category-product-name,
-        .category-product-stock {
-            color: var(--text);
-        }
-
-        .category-badge {
-            background-color: #dbeafe;
-            color: #1d4ed8;
-        }
-
-        .category-search-icon {
-            color: var(--muted);
-        }
-
-        .category-search-input {
-            background: var(--card);
-            border-color: var(--border);
-            color: var(--text);
-        }
-
-        .category-search-input::placeholder {
-            color: var(--muted);
-        }
-
-        /* ==========================================================
-           DARK MODE — pakai selector html.dark, sesuai project ini
-           (bukan [data-bs-theme="dark"] — itu tidak dipakai project ini)
-           ========================================================== */
-        html.dark .category-card {
-            background: #1F2937;
-            border-color: #374151;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, .4);
-        }
-
-        html.dark .category-card:hover {
-            background: #273449;
-            box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .45);
-        }
-
-        html.dark .category-title {
-            color: #F9FAFB;
-        }
-
-        html.dark .category-subtitle,
-        html.dark .category-product-meta {
-            color: #9CA3AF;
-        }
-
-        html.dark .category-product-item {
-            border-color: #374151;
-        }
-
-        html.dark .category-product-name,
-        html.dark .category-product-stock {
-            color: #E5E7EB;
-        }
-
-        html.dark .category-badge {
-            background-color: rgba(59, 130, 246, 0.15);
-            color: #93C5FD;
-        }
-
-        html.dark .category-search-icon {
-            color: #9CA3AF;
-        }
-
-        html.dark .category-search-input {
-            background: #1F2937;
-            border-color: #374151;
-            color: #E5E7EB;
-        }
-
-        html.dark .category-search-input::placeholder {
-            color: #9CA3AF;
-        }
-
-        html.dark .category-search-input:focus {
-            background: #1F2937;
-            border-color: #4B5563;
-            color: #E5E7EB;
-            box-shadow: 0 0 0 .2rem rgba(59, 130, 246, .15);
->>>>>>> 2216918e6076e9594849353f7859f1ec38eb41cc
-        }
-    </style>
-
-    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
-        <div>
-            <h4 class="fw-semibold mb-1 category-title">Kategori</h4>
-            <p class="mb-0 category-subtitle">Filter dan lihat barang berdasarkan kategori utama.</p>
-        </div>
-
-        <div class="d-flex align-items-center gap-2 w-100 w-lg-auto">
-            <form action="{{ route('categories.index') }}" method="GET" class="position-relative search-box" style="max-width: 420px; width: 100%;">
-                <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 category-search-icon"></i>
-                <input type="text" name="search" value="{{ $query ?? '' }}" class="form-control rounded-pill category-search-input" placeholder="Cari kategori atau barang..." style="padding-left: 2.7rem;">
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCategoryModalLabel">Tambah Kategori Baru</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <form action="{{ route('categories.store') }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="category-name" class="form-label">Nama Kategori</label>
+                        <input id="category-name" type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}" required>
+                        @error('name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary rounded-pill">Simpan Kategori</button>
+                </div>
             </form>
         </div>
     </div>
+</div>
 
+@if($categories->isEmpty())
+    <div class="card shadow-sm p-4">
+        <div class="d-flex flex-column align-items-center text-center">
+            <i class="bi bi-tags fs-1 mb-3 text-muted"></i>
+            <h5 class="mb-2">Kategori tidak ditemukan</h5>
+            <p class="text-muted mb-0">Coba kata kunci lain atau periksa kembali data kategori.</p>
+        </div>
+    </div>
+@else
     <div class="row g-4">
         @foreach($categories as $category)
             <div class="col-12 col-md-6 col-xl-4">
-                <div class="category-card p-4 h-100">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div>
-                            <h5 class="fw-semibold mb-1 category-title">{{ $category->name }}</h5>
-                            <p class="mb-0 category-subtitle">{{ $category->count }} barang</p>
+                <div class="card h-100 shadow-sm border-0 category-card">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="fw-bold mb-1">{{ $category->name }}</h5>
+                                <p class="text-muted mb-0">{{ $category->products_count }} barang</p>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-link text-muted p-0" type="button" id="categoryMenu{{ $category->id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="categoryMenu{{ $category->id }}">
+                                    <li><a class="dropdown-item" href="{{ route('categories.edit', $category) }}">Edit</a></li>
+                                    <li>
+                                        <form action="{{ route('categories.destroy', $category) }}" method="POST" onsubmit="return confirm('Hapus kategori ini?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger">Hapus</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                        <span class="badge rounded-pill px-3 py-2 category-badge">Kategori Tetap</span>
-                    </div>
 
-                    @if($category->products->isEmpty())
-                        <div class="category-subtitle">Tidak ada barang pada kategori ini.</div>
-                    @else
-                        @foreach($category->products->take(5) as $product)
-                            <div class="category-product-item d-flex flex-column flex-sm-row justify-content-between gap-3">
-                                <div>
-                                    <div class="fw-semibold category-product-name">{{ $product->name }}</div>
-                                    <div class="category-product-meta">{{ $product->room ? 'Ruangan: ' . $product->room : 'Ruangan belum diisi' }}</div>
-                                </div>
-                                <div class="text-sm-end">
-                                    <div class="fw-semibold category-product-stock">{{ $product->stock }}</div>
-                                    <div class="category-product-meta">stok</div>
-                                </div>
-                            </div>
-                        @endforeach
-
-                        @if($category->count > 5)
-                            <div class="mt-3 text-center">
-                                <a href="{{ route('products.index', ['search' => $category->name]) }}" class="btn btn-sm btn-outline-primary rounded-pill">Lihat semua barang</a>
-                            </div>
+                        @if($category->products->isEmpty())
+                            <div class="text-muted">Belum ada barang dalam kategori ini.</div>
+                        @else
+                            <div class="small text-muted mb-2">Barang dalam kategori</div>
+                            <ul class="list-unstyled mb-3">
+                                @foreach($category->products->take(3) as $product)
+                                    <li class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                        <span>{{ $product->name }}</span>
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">{{ $product->stock }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
                         @endif
-                    @endif
+
+                        <a href="{{ route('products.index', ['search' => $category->name]) }}" class="mt-auto btn btn-sm btn-outline-primary">Lihat semua</a>
+                    </div>
                 </div>
             </div>
         @endforeach
     </div>
-</div>
+@endif
+@endsection
+
+@section('styles')
+<style>
+    .category-card {
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .category-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 1rem 2rem rgba(0, 0, 0, .08);
+    }
+
+    .category-product-item {
+        border-bottom: 1px solid rgba(0, 0, 0, .06);
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .category-product-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    html.dark .category-card {
+        background: #1F2937;
+        border-color: #374151;
+    }
+
+    html.dark .category-product-item {
+        border-color: #374151;
+    }
+</style>
 @endsection

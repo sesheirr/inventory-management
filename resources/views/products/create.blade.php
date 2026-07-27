@@ -19,10 +19,10 @@
 
         <div class="col-md-6">
             <label class="form-label">Kategori</label>
-            <select name="category" class="form-select" required>
+            <select name="category_id" class="form-select" required>
                 <option value="">Pilih kategori</option>
-                @foreach($categoryOptions as $option)
-                    <option value="{{ $option }}" @selected(old('category') === $option)>{{ $option }}</option>
+                @foreach($categories as $category)
+                    <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>{{ $category->name }}</option>
                 @endforeach
             </select>
         </div>

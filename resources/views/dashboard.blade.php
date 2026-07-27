@@ -1,88 +1,117 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="card dashboard-card">
-    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
-        <div>
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
             <h4 class="fw-semibold mb-1">Dashboard</h4>
-            <p class="text-muted mb-0">Ringkasan inventaris, statistik, dan mutasi barang.</p>
+            <p class="text-muted mb-0">Ringkasan inventaris dan aktivitas terbaru.</p>
         </div>
     </div>
 
-    <div class="row g-4 mb-4">
-        <div class="col-md-4">
-            <div class="stat-box p-4 rounded-4 shadow-sm">
-                <span class="text-muted">Total Barang</span>
-                <div class="fs-3 fw-semibold">{{ $totalProducts }}</div>
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3 mb-4">
+        <div class="col">
+            <div class="card rounded-4 shadow-sm border-0 h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-3 d-flex align-items-center justify-content-center" style="width:56px;height:56px;background:rgba(13,110,253,0.08);">
+                        <i class="fa fa-box fa-lg text-primary"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">Total Barang</small>
+                        <div class="fs-4 fw-semibold">{{ $totalProducts }}</div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="stat-box p-4 rounded-4 shadow-sm">
-                <span class="text-muted">Total Kategori</span>
-                <div class="fs-3 fw-semibold">{{ $totalCategories }}</div>
+
+        <div class="col">
+            <div class="card rounded-4 shadow-sm border-0 h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-3 d-flex align-items-center justify-content-center" style="width:56px;height:56px;background:rgba(25,135,84,0.08);">
+                        <i class="fa fa-tags fa-lg text-success"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">Total Kategori</small>
+                        <div class="fs-4 fw-semibold">{{ $totalCategories }}</div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="stat-box p-4 rounded-4 shadow-sm">
-                <span class="text-muted">Total Ruangan</span>
-                <div class="fs-3 fw-semibold">{{ $totalRuangan }}</div>
+
+        <div class="col">
+            <div class="card rounded-4 shadow-sm border-0 h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-3 d-flex align-items-center justify-content-center" style="width:56px;height:56px;background:rgba(255,193,7,0.08);">
+                        <i class="fa fa-building fa-lg text-warning"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">Total Ruangan</small>
+                        <div class="fs-4 fw-semibold">{{ $totalRooms }}</div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="stat-box p-4 rounded-4 shadow-sm">
-                <span class="text-muted">Total Mutasi</span>
-                <div class="fs-3 fw-semibold">{{ $totalMutations }}</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="stat-box p-4 rounded-4 shadow-sm">
-                <span class="text-muted">Barang Aktif</span>
-                <div class="fs-3 fw-semibold">{{ $totalActive }}</div>
+
+        <div class="col">
+            <div class="card rounded-4 shadow-sm border-0 h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-3 d-flex align-items-center justify-content-center" style="width:56px;height:56px;background:rgba(111,66,193,0.08);">
+                        <i class="fa fa-exchange-alt fa-lg text-secondary"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">Total Mutasi</small>
+                        <div class="fs-4 fw-semibold">{{ $totalMutations }}</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="card p-4 mb-4 rounded-4 shadow-sm">
-        <form method="GET" action="{{ route('dashboard') }}" class="row g-3 align-items-end">
-            <div class="col-md-3">
-                <label class="form-label">Dari</label>
-                <input type="date" name="date_from" value="{{ $dateFrom }}" class="form-control">
+    <div class="card rounded-4 shadow-sm border-0">
+        <div class="card-body">
+            <h5 class="fw-semibold mb-3">Aktivitas Terbaru</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>User</th>
+                            <th>Aktivitas</th>
+                            <th>Detail Data</th>
+                            <th>Tanggal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($activityLogs as $log)
+                            <tr>
+                                <td class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle bg-secondary-subtle text-secondary d-flex align-items-center justify-content-center" style="width:36px;height:36px;">
+                                        <i class="fa fa-user"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold">{{ $log->user?->name ?? 'System' }}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if($log->action === 'created')
+                                        <span class="badge rounded-pill bg-success-subtle text-success">Created</span>
+                                    @elseif($log->action === 'updated')
+                                        <span class="badge rounded-pill bg-primary-subtle text-primary">Updated</span>
+                                    @elseif($log->action === 'deleted')
+                                        <span class="badge rounded-pill bg-danger-subtle text-danger">Deleted</span>
+                                    @else
+                                        <span class="badge rounded-pill bg-secondary">{{ ucfirst($log->action) }}</span>
+                                    @endif
+                                </td>
+                                <td>{{ $log->description }}</td>
+                                <td>{{ $log->created_at->format('d/m/Y') }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="4" class="text-center text-muted py-4">Tidak ada aktivitas terbaru.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
-            <div class="col-md-3">
-                <label class="form-label">Sampai</label>
-                <input type="date" name="date_to" value="{{ $dateTo }}" class="form-control">
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Kategori</label>
-                <select name="category_id" class="form-select">
-                    <option value="">Semua</option>
-                    @foreach($categories as $category)
-                        <option value="{{ $category->id }}" @selected($categoryId == $category->id)>{{ $category->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Ruangan</label>
-                <select name="room_id" class="form-select">
-                    <option value="">Semua</option>
-                    @foreach($rooms as $room)
-                        <option value="{{ $room->id }}" @selected($roomId == $room->id)>{{ $room->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label class="form-label">Kondisi</label>
-                <select name="condition" class="form-select">
-                    <option value="all" @selected($condition === 'all')>Semua</option>
-                    <option value="active" @selected($condition === 'active')>Aktif</option>
-                    <option value="inactive" @selected($condition === 'inactive')>Tidak Aktif</option>
-                </select>
-            </div>
-            <div class="col-md-12 text-end">
-                <button type="submit" class="btn btn-primary rounded-pill">Saring</button>
-            </div>
-        </form>
+        </div>
     </div>
-
 </div>
 @endsection

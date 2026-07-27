@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\BarangExport;
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -39,16 +40,16 @@ class ProductController extends Controller
 
     public function create()
     {
-        return view('products.create', [
-            'categoryOptions' => $this->categoryOptions(),
-        ]);
+        $categories = Category::orderBy('name')->get();
+
+        return view('products.create', compact('categories'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
-            'category' => ['required', 'string', Rule::in($this->categoryOptions())],
+            'category_id' => ['required', 'integer', 'exists:categories,id'],
             'subcategory' => ['nullable', 'string', 'max:100'],
             'room' => ['nullable', 'string', 'max:150'],
             'edition' => ['nullable', 'string', 'max:100'],
@@ -57,6 +58,9 @@ class ProductController extends Controller
             'status' => ['required', 'in:active,inactive,out_of_stock'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
+
+        $category = Category::findOrFail($data['category_id']);
+        $data['category'] = $category->name;
 
         
 
@@ -95,17 +99,16 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        return view('products.edit', [
-            'product' => $product,
-            'categoryOptions' => $this->categoryOptions(),
-        ]);
+        $categories = Category::orderBy('name')->get();
+
+        return view('products.edit', compact('product', 'categories'));
     }
 
     public function update(Request $request, Product $product)
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
-            'category' => ['required', 'string', Rule::in($this->categoryOptions())],
+            'category_id' => ['required', 'integer', 'exists:categories,id'],
             'subcategory' => ['nullable', 'string', 'max:100'],
             'room' => ['nullable', 'string', 'max:150'],
             'edition' => ['nullable', 'string', 'max:100'],
@@ -114,6 +117,9 @@ class ProductController extends Controller
             'status' => ['required', 'in:active,inactive,out_of_stock'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
+
+        $category = Category::findOrFail($data['category_id']);
+        $data['category'] = $category->name;
 
     
 

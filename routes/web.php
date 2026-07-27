@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MutationController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
@@ -66,7 +68,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Rute Dashboard & Settings
-    Route::get('/dashboard', [ReportController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::view('/settings', 'settings')->name('settings');
 
     // Rute Laporan
@@ -81,7 +83,8 @@ Route::middleware('auth')->group(function () {
     Route::get('products/export-excel', [ProductController::class, 'exportExcel'])->name('products.export');
     Route::resource('products', ProductController::class);
     
-    // Rute Manajemen Kategori & Ruangan
+    // Rute Manajemen Kategori, Ruangan, dan Mutasi
     Route::resource('categories', CategoryController::class);
     Route::resource('rooms', RoomController::class);
+    Route::resource('mutations', MutationController::class);
 });
