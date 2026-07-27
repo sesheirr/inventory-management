@@ -1319,3 +1319,67 @@ html.dark .btn-back-circle:hover {
     background: rgba(255, 255, 255, 0.16);
     color: #eef2ff;
 }
+
+/* ============ Profile pill jadi link (navbar) ============ */
+.profile-pill-link {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.profile-pill-link:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+    transform: translateY(-1px);
+}
+
+html.dark .profile-pill-link:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.profile-pill-link:active {
+    transform: translateY(0);
+}
+
+/* ============ Sidebar bagian bawah ============ */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.nav-links-bottom {
+    margin-top: auto;
+    padding-top: 8px;
+}
+
+.sidebar-divider {
+    border: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    margin: 8px 16px 12px;
+}
+
+html.dark .sidebar-divider {
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+.nav-link-logout,
+.nav-link-logout i {
+    color: #f87171; /* merah default, terlihat jelas di sidebar dark */
+}
+
+.nav-link-logout {
+    width: 100%;
+    background: transparent;
+    border: none;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.nav-link-logout:hover,
+.nav-link-logout:hover i {
+    background-color: rgba(220, 53, 69, 0.15);
+    color: #fca5a5; /* sedikit lebih terang saat hover */
+}

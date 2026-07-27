@@ -16,4 +16,17 @@
         <a href="{{ route('rooms.index') }}" class="nav-link {{ request()->routeIs('rooms.*') ? 'active' : '' }}"><i class="bi bi-building"></i><span>Ruangan</span></a>
         <a href="{{ route('mutations.index') }}" class="nav-link {{ request()->routeIs('mutations.*') ? 'active' : '' }}"><i class="bi bi-arrow-left-right"></i><span>Mutasi Barang</span></a>
     </nav>
+
+    <!-- Bagian bawah sidebar: Pengaturan & Logout -->
+    <div class="nav-links nav-links-bottom">
+        <hr class="sidebar-divider">
+
+        <a href="{{ route('settings') }}" class="nav-link {{ request()->routeIs('settings') ? 'active' : '' }}">
+            <i class="bi bi-gear"></i><span>Pengaturan</span>
+        </a>
+
+        <button type="button" class="nav-link nav-link-logout" data-bs-toggle="modal" data-bs-target="#logoutModal">
+            <i class="bi bi-box-arrow-right"></i><span>Logout</span>
+        </button>
+    </div>
 </aside>
