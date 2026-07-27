@@ -6,6 +6,7 @@ use App\Exports\BarangExport;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 use Cloudinary\Cloudinary;
@@ -60,28 +61,24 @@ class ProductController extends Controller
         
 
         if ($request->hasFile('image')) {
-            try {
-                $cloudinary = $this->getCloudinary();
-                $uploadedFile = $cloudinary->uploadApi()->upload($request->file('image')->getRealPath());
-                $data['image'] = $uploadedFile['secure_url'] ?? null;
-                $data['image_public_id'] = $uploadedFile['public_id'] ?? null;
-            } catch (\Throwable $e) {
-                $storedImage = $request->file('image')->store('products', 'public');
-                $data['image'] = $storedImage;
-                $data['image_public_id'] = null;
+            $file = $request->file('image');
+            $response = Http::withOptions(['verify' => false])
+                ->asMultipart()
+                ->post(
+                    'https://api.cloudinary.com/v1_1/' . env('CLOUDINARY_CLOUD_NAME') . '/image/upload',
+                    [
+                        'file' => fopen($file->getRealPath(), 'r'),
+                        'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET', 'q46tbsqz'),
+                    ]
+                );
 
-                // create thumbnail for local image
-                try {
-                    Storage::disk('public')->makeDirectory('products/thumbs');
-                    $originalPath = storage_path('app/public/' . $storedImage);
-                    $thumbPath = storage_path('app/public/products/thumbs/' . basename($storedImage));
-                    Image::make($originalPath)->fit(300, 300, function ($constraint) {
-                        $constraint->upsize();
-                    })->save($thumbPath);
-                } catch (\Throwable $ei) {
-                    // ignore thumbnail generation errors
-                }
+            if (! $response->successful()) {
+                throw new \Exception('Gagal upload: ' . $response->body());
             }
+
+            $uploadedFile = $response->json();
+            $data['image'] = $uploadedFile['secure_url'] ?? null;
+            $data['image_public_id'] = $uploadedFile['public_id'] ?? null;
         }
 
         $data['kode_barang'] = 'BRG-' . strtoupper(Str::random(6));
@@ -136,28 +133,24 @@ class ProductController extends Controller
                 Storage::disk('public')->delete($product->image);
             }
 
-            try {
-                $cloudinary = $this->getCloudinary();
-                $uploadedFile = $cloudinary->uploadApi()->upload($request->file('image')->getRealPath());
-                $data['image'] = $uploadedFile['secure_url'] ?? null;
-                $data['image_public_id'] = $uploadedFile['public_id'] ?? null;
-            } catch (\Throwable $e) {
-                $storedImage = $request->file('image')->store('products', 'public');
-                $data['image'] = $storedImage;
-                $data['image_public_id'] = null;
+            $file = $request->file('image');
+            $response = Http::withOptions(['verify' => false])
+                ->asMultipart()
+                ->post(
+                    'https://api.cloudinary.com/v1_1/' . env('CLOUDINARY_CLOUD_NAME') . '/image/upload',
+                    [
+                        'file' => fopen($file->getRealPath(), 'r'),
+                        'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET', 'q46tbsqz'),
+                    ]
+                );
 
-                // create thumbnail for local image
-                try {
-                    Storage::disk('public')->makeDirectory('products/thumbs');
-                    $originalPath = storage_path('app/public/' . $storedImage);
-                    $thumbPath = storage_path('app/public/products/thumbs/' . basename($storedImage));
-                    Image::make($originalPath)->fit(300, 300, function ($constraint) {
-                        $constraint->upsize();
-                    })->save($thumbPath);
-                } catch (\Throwable $ei) {
-                    // ignore thumbnail generation errors
-                }
+            if (! $response->successful()) {
+                throw new \Exception('Gagal upload: ' . $response->body());
             }
+
+            $uploadedFile = $response->json();
+            $data['image'] = $uploadedFile['secure_url'] ?? null;
+            $data['image_public_id'] = $uploadedFile['public_id'] ?? null;
         } elseif ($request->boolean('remove_image')) {
             // delete from Cloudinary if exists
             if (!empty($product->image_public_id)) {

@@ -60,15 +60,17 @@ class ProfileController extends Controller
 
     private function uploadAvatarToCloudinary($file)
     {
-        $response = Http::asMultipart()->post('https://api.cloudinary.com/v1_1/' . env('CLOUDINARY_CLOUD_NAME') . '/image/upload', [
-            'file' => fopen($file->getRealPath(), 'r'),
-            'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET', 'q46tbsqz'),
-        ]);
+        $response = Http::withOptions(['verify' => false])
+            ->asMultipart()
+            ->post('https://api.cloudinary.com/v1_1/' . env('CLOUDINARY_CLOUD_NAME') . '/image/upload', [
+                'file' => fopen($file->getRealPath(), 'r'),
+                'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET', 'q46tbsqz'),
+            ]);
 
         if ($response->successful()) {
             return $response->json()['secure_url'];
         }
 
-        throw new \Exception('Gagal upload ke Cloudinary: ' . $response->body());
+        throw new \Exception('Gagal upload: ' . $response->body());
     }
 }

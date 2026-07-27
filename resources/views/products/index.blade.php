@@ -47,17 +47,7 @@
                         <td>
                             <div class="d-flex align-items-center gap-3">
                                 <div class="product-thumb">
-                                    @if($product->image)
-                                        @php
-                                            $isRemote = \Illuminate\Support\Str::startsWith($product->image, ['http://','https://']);
-                                            $thumbCandidate = 'products/thumbs/' . basename($product->image);
-                                            $thumbExists = !$isRemote && file_exists(storage_path('app/public/' . $thumbCandidate));
-                                            $imageSrc = $thumbExists ? asset('storage/' . $thumbCandidate) : ($isRemote ? $product->image : asset('storage/' . ltrim($product->image, '/')));
-                                        @endphp
-                                        <img src="{{ $imageSrc }}" alt="{{ $product->name }}" onerror="this.onerror=null; this.src='https://placehold.co/100x100?text=No+Image';">
-                                    @else
-                                        <i class="bi bi-box2 text-muted fs-5"></i>
-                                    @endif
+                                    <img src="{{ $product->image ?? asset('images/no-image.png') }}" alt="{{ $product->name }}" onerror="this.onerror=null; this.src='https://placehold.co/100x100?text=No+Image';">
                                 </div>
                                 <div>
                                     <div class="fw-semibold">{{ $product->name }}</div>

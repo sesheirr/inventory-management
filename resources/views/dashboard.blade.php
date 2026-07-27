@@ -25,7 +25,7 @@
         <div class="col-md-4">
             <div class="stat-box p-4 rounded-4 shadow-sm">
                 <span class="text-muted">Total Ruangan</span>
-                <div class="fs-3 fw-semibold">{{ $totalRooms }}</div>
+                <div class="fs-3 fw-semibold">{{ $totalRuangan }}</div>
             </div>
         </div>
         <div class="col-md-4">

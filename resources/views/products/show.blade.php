@@ -44,13 +44,7 @@
         <div class="col-lg-4 text-center">
             <div class="detail-image d-flex align-items-center justify-content-center overflow-hidden p-2">
                 @if($product->image)
-                    @php
-                        // Cek apakah gambar menggunakan URL Cloudinary / Eksternal
-                        $imageSrc = \Illuminate\Support\Str::startsWith($product->image, ['http://', 'https://'])
-                            ? $product->image
-                            : asset('storage/' . ltrim($product->image, '/'));
-                    @endphp
-                    <img src="{{ $imageSrc }}"
+                    <img src="{{ $product->image }}"
                          alt="{{ $product->name }}"
                          class="rounded-3"
                          onerror="this.onerror=null; this.src='https://placehold.co/400x300?text=Gambar+Error';">

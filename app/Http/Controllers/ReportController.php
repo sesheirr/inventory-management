@@ -51,6 +51,8 @@ class ReportController extends Controller
             ->distinct('room')
             ->count('room');
 
+        $totalRuangan = $totalRooms;
+
         $mutationQuery = Mutation::with(['product.category', 'product.room']);
 
         if ($dateFrom) {
@@ -124,7 +126,8 @@ class ReportController extends Controller
             'categoryLabels',
             'categoryValues',
             'mutationLabels',
-            'mutationValues'
+            'mutationValues',
+            'totalRuangan'
         ));
     }
 
