@@ -35,6 +35,10 @@
         $pageTitle = 'Ruangan';
         $breadcrumb = 'Inventory / Ruangan';
         $showBackButton = true;
+    } elseif (Route::is('mutations.index') || Route::is('mutations.*')) {
+        $pageTitle = 'Mutasi Barang';
+        $breadcrumb = 'Inventory / Mutasi Barang';
+        $showBackButton = true;
     } elseif (Route::is('profile')) {
         $pageTitle = 'Profile';
         $breadcrumb = 'Inventory / Profile';

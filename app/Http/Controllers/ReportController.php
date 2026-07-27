@@ -55,18 +55,36 @@ class ReportController extends Controller
 
         $mutationQuery = Mutation::with(['product.category', 'product.room']);
 
+        if ($categoryId || ($condition && $condition !== 'all') || $roomId) {
+            $filteredProductsForMutation = Product::query();
+
+            if ($categoryId) {
+                $filteredProductsForMutation->where('category_id', $categoryId);
+            }
+
+            if ($roomId) {
+                $filteredProductsForMutation->where('room_id', $roomId);
+            }
+
+            if ($condition && $condition !== 'all') {
+                $filteredProductsForMutation->where('status', $condition);
+            }
+
+            $productIds = $filteredProductsForMutation->pluck('id')->toArray();
+
+            if (count($productIds) === 0) {
+                $totalMutations = 0;
+            } else {
+                $mutationQuery->whereIn('product_id', $productIds);
+            }
+        }
+
         if ($dateFrom) {
             $mutationQuery->where('mutation_date', '>=', $dateFrom);
         }
 
         if ($dateTo) {
             $mutationQuery->where('mutation_date', '<=', $dateTo);
-        }
-
-        if ($categoryId) {
-            $mutationQuery->whereHas('product', function ($query) use ($categoryId) {
-                $query->where('category_id', $categoryId);
-            });
         }
 
         if ($roomId) {
@@ -76,13 +94,9 @@ class ReportController extends Controller
             });
         }
 
-        if ($condition && $condition !== 'all') {
-            $mutationQuery->whereHas('product', function ($query) use ($condition) {
-                $query->where('status', $condition);
-            });
+        if (!isset($totalMutations)) {
+            $totalMutations = (clone $mutationQuery)->count();
         }
-
-        $totalMutations = (clone $mutationQuery)->count();
 
         $categoryCounts = (clone $filteredProducts)
             ->get()

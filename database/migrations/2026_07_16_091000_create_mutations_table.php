@@ -11,12 +11,15 @@ return new class extends Migration
         Schema::create('mutations', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->enum('type', ['masuk', 'keluar', 'pindah_ruang'])->default('masuk');
+            $table->integer('quantity')->default(0);
             $table->foreignId('from_room_id')->nullable()->constrained('rooms')->nullOnDelete();
             $table->foreignId('to_room_id')->nullable()->constrained('rooms')->nullOnDelete();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->date('mutation_date');
+            $table->dateTime('mutation_date');
             $table->text('note')->nullable();
             $table->timestamps();
+            $table->index(['type', 'mutation_date']);
         });
     }
 
