@@ -42,7 +42,12 @@
     } elseif (Route::is('settings')) {
         $pageTitle = 'Settings';
         $breadcrumb = 'Inventory / Settings';
-        $showBackButton = false;
+        $showBackButton = true;
+    }
+
+    $backUrl = url()->previous();
+    if (!$backUrl || $backUrl === url()->current()) {
+        $backUrl = route('dashboard');
     }
 @endphp
 
@@ -50,9 +55,9 @@
     <div class="d-flex align-items-center gap-3">
 
         @if($showBackButton)
-            <button class="btn btn-light rounded-circle p-2 border-0 shadow-sm" type="button" onclick="window.history.back()">
+            <a href="{{ $backUrl }}" class="btn-back-circle" aria-label="Kembali">
                 <i class="bi bi-arrow-left"></i>
-            </button>
+            </a>
         @endif
 
         <div>

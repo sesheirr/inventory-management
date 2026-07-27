@@ -1276,3 +1276,46 @@ html.dark .profile-page .btn-outline-light:hover {
     background-color: rgba(255, 255, 255, 0.12);
     color: #ffffff;
 }
+
+/* ===========================
+   BACK BUTTON (circle) — dipakai di header semua halaman
+   yang showBackButton = true (Products, Categories, Rooms,
+   Reports, Profile, Settings)
+   =========================== */
+.btn-back-circle {
+    width: 43px;
+    height: 43px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 1.05rem;
+    transition: transform 0.25s ease, background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.btn-back-circle:hover {
+    transform: translateX(-3px);
+    background: #e5e7eb;
+    color: var(--text);
+}
+
+.btn-back-circle:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+html.dark .btn-back-circle {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.16);
+    color: #eef2ff;
+}
+
+html.dark .btn-back-circle:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: #eef2ff;
+}
