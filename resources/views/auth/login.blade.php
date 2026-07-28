@@ -17,7 +17,7 @@
             <div class="flex justify-center mb-3">
                 <div class="w-16 h-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center shadow-lg overflow-hidden shrink-0">
                     <img 
-                        src="{{ asset('storage/images/logo.png') }}" 
+                        src="{{ asset('images/logo.png') }}" 
                         alt="Logo" 
                         class="w-full h-full object-cover rounded-full"
                     >
