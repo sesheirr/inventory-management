@@ -80,56 +80,25 @@
 
         @php $currentUser = auth()->user(); @endphp
 
-        <!-- PROFILE DROPDOWN -->
-        <div class="dropdown">
-            <div class="profile-pill dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;">
-                <div class="avatar" style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                    @if(!empty($currentUser?->avatar))
-                        <img src="{{ $currentUser->avatar }}" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover; display: block;">
-                    @else
-                        <span class="fw-bold">{{ strtoupper(substr($currentUser->name ?? 'U', 0, 2)) }}</span>
-                    @endif
-                </div>
-                <div>
-                    <div class="fw-semibold">{{ $currentUser->name ?? 'User' }}</div>
-                    <small class="profile-role-label">
-                        @if(($currentUser->role ?? '') === 'admin' || ($currentUser->role ?? '') === 'Administrator')
-                            Administrator
-                        @else
-                            User
-                        @endif
-                    </small>
-                </div>
+        <!-- PROFILE BUTTON — langsung ke halaman profile, tanpa dropdown -->
+        <a href="{{ route('profile') }}" class="profile-pill profile-pill-link" aria-label="Buka halaman profil">
+            <div class="avatar" style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                @if(!empty($currentUser?->avatar))
+                    <img src="{{ $currentUser->avatar }}" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                @else
+                    <span class="fw-bold">{{ strtoupper(substr($currentUser->name ?? 'U', 0, 2)) }}</span>
+                @endif
             </div>
-
-            <ul class="dropdown-menu dropdown-menu-end rounded-3 shadow-sm border-0 profile-dropdown-menu">
-                <li class="dropdown-header px-3 py-2">
-                    <div class="fw-semibold">{{ $currentUser->name ?? 'User' }}</div>
-                    <small class="text-muted">{{ $currentUser->email ?? '' }}</small>
-                </li>
-
-                <li><hr class="dropdown-divider"></li>
-
-                <li>
-                    <a class="dropdown-item" href="{{ route('profile') }}">
-                        <i class="bi bi-person me-2"></i> Profile
-                    </a>
-                </li>
-
-                <li>
-                    <a class="dropdown-item" href="{{ route('settings') }}">
-                        <i class="bi bi-gear me-2"></i> Settings
-                    </a>
-                </li>
-
-                <li><hr class="dropdown-divider"></li>
-
-                <li>
-                    <button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#logoutModal" style="background:none;border:none;width:100%;text-align:left;">
-                        <i class="bi bi-box-arrow-right me-2"></i> Logout
-                    </button>
-                </li>
-            </ul>
-        </div>
+            <div>
+                <div class="fw-semibold">{{ $currentUser->name ?? 'User' }}</div>
+                <small class="profile-role-label">
+                    @if(($currentUser->role ?? '') === 'admin' || ($currentUser->role ?? '') === 'Administrator')
+                        Administrator
+                    @else
+                        User
+                    @endif
+                </small>
+            </div>
+        </a>
     </div>
 </header>
