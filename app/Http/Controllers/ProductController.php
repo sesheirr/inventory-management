@@ -49,7 +49,8 @@ class ProductController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
-            'category_id' => ['required', 'integer', 'exists:categories,id'],
+            'category_id' => ['nullable', 'integer', 'exists:categories,id'],
+            'category' => ['nullable', 'string', 'max:100'],
             'subcategory' => ['nullable', 'string', 'max:100'],
             'room' => ['nullable', 'string', 'max:150'],
             'edition' => ['nullable', 'string', 'max:100'],
@@ -59,37 +60,18 @@ class ProductController extends Controller
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
-        $category = Category::findOrFail($data['category_id']);
-        $data['category'] = $category->name;
-
-        
+        $data = $this->resolveCategoryData($data, $request);
+        $data['room'] = $request->filled('room') ? trim($request->input('room')) : null;
 
         if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            $response = Http::withOptions(['verify' => false])
-                ->asMultipart()
-                ->post(
-                    'https://api.cloudinary.com/v1_1/' . env('CLOUDINARY_CLOUD_NAME') . '/image/upload',
-                    [
-                        'file' => fopen($file->getRealPath(), 'r'),
-                        'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET', 'q46tbsqz'),
-                    ]
-                );
-
-            if (! $response->successful()) {
-                throw new \Exception('Gagal upload: ' . $response->body());
-            }
-
-            $uploadedFile = $response->json();
-            $data['image'] = $uploadedFile['secure_url'] ?? null;
-            $data['image_public_id'] = $uploadedFile['public_id'] ?? null;
+            [$data['image'], $data['image_public_id']] = $this->handleProductImageUpload($request->file('image'));
         }
 
         $data['kode_barang'] = 'BRG-' . strtoupper(Str::random(6));
 
         Product::create($data);
 
-        return redirect()->route('products.index')->with('success', 'Product created successfully.');
+        return redirect()->route('products.index')->with('success', 'Barang berhasil disimpan.');
     }
 
     public function show(Product $product)
@@ -108,7 +90,8 @@ class ProductController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
-            'category_id' => ['required', 'integer', 'exists:categories,id'],
+            'category_id' => ['nullable', 'integer', 'exists:categories,id'],
+            'category' => ['nullable', 'string', 'max:100'],
             'subcategory' => ['nullable', 'string', 'max:100'],
             'room' => ['nullable', 'string', 'max:150'],
             'edition' => ['nullable', 'string', 'max:100'],
@@ -118,47 +101,29 @@ class ProductController extends Controller
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
-        $category = Category::findOrFail($data['category_id']);
-        $data['category'] = $category->name;
-
-    
+        $data = $this->resolveCategoryData($data, $request);
 
         if ($request->hasFile('image')) {
-            // remove previous Cloudinary image if exists
-            if (!empty($product->image_public_id)) {
-                try {
-                    $cloudinary = $this->getCloudinary();
-                    $cloudinary->uploadApi()->destroy($product->image_public_id);
-                } catch (\Throwable $e) {
-                    // ignore cloudinary deletion errors
+            try {
+                if (!empty($product->image_public_id)) {
+                    try {
+                        $cloudinary = $this->getCloudinary();
+                        $cloudinary->uploadApi()->destroy($product->image_public_id);
+                    } catch (\Throwable $e) {
+                        // ignore cloudinary deletion errors
+                    }
                 }
+
+                if ($product->image && $this->isLocalImage($product->image) && Storage::disk('public')->exists($product->image)) {
+                    Storage::disk('public')->delete($product->image);
+                }
+
+                [$data['image'], $data['image_public_id']] = $this->handleProductImageUpload($request->file('image'));
+            } catch (\Throwable $e) {
+                $data['image'] = null;
+                $data['image_public_id'] = null;
             }
-
-            // remove previous local file if exists
-            if ($product->image && $this->isLocalImage($product->image) && Storage::disk('public')->exists($product->image)) {
-                Storage::disk('public')->delete($product->image);
-            }
-
-            $file = $request->file('image');
-            $response = Http::withOptions(['verify' => false])
-                ->asMultipart()
-                ->post(
-                    'https://api.cloudinary.com/v1_1/' . env('CLOUDINARY_CLOUD_NAME') . '/image/upload',
-                    [
-                        'file' => fopen($file->getRealPath(), 'r'),
-                        'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET', 'q46tbsqz'),
-                    ]
-                );
-
-            if (! $response->successful()) {
-                throw new \Exception('Gagal upload: ' . $response->body());
-            }
-
-            $uploadedFile = $response->json();
-            $data['image'] = $uploadedFile['secure_url'] ?? null;
-            $data['image_public_id'] = $uploadedFile['public_id'] ?? null;
         } elseif ($request->boolean('remove_image')) {
-            // delete from Cloudinary if exists
             if (!empty($product->image_public_id)) {
                 try {
                     $cloudinary = $this->getCloudinary();
@@ -168,7 +133,6 @@ class ProductController extends Controller
             }
 
             if ($product->image && $this->isLocalImage($product->image) && Storage::disk('public')->exists($product->image)) {
-                // delete image and thumbnail
                 Storage::disk('public')->delete($product->image);
                 $thumb = 'products/thumbs/' . basename($product->image);
                 if (Storage::disk('public')->exists($thumb)) {
@@ -182,7 +146,7 @@ class ProductController extends Controller
 
         $product->update($data);
 
-        return redirect()->route('products.index')->with('success', 'Product updated successfully.');
+        return redirect()->route('products.index')->with('success', 'Barang berhasil diperbarui.');
     }
 
     public function destroy(Product $product)
@@ -215,6 +179,81 @@ class ProductController extends Controller
         Product::whereIn('id', $ids)->delete();
 
         return redirect()->route('products.index')->with('success', 'Selected products deleted successfully.');
+    }
+
+    private function resolveCategoryData(array $data, Request $request): array
+    {
+        if ($request->filled('category_id')) {
+            $category = Category::find($request->input('category_id'));
+            if ($category) {
+                $data['category_id'] = $category->id;
+                $data['category'] = $category->name;
+
+                return $data;
+            }
+        }
+
+        if ($request->filled('category')) {
+            $name = trim((string) $request->input('category'));
+            $category = Category::where('name', $name)->first();
+
+            if (!$category) {
+                $category = Category::create([
+                    'name' => $name,
+                    'description' => null,
+                ]);
+            }
+
+            $data['category_id'] = $category->id;
+            $data['category'] = $category->name;
+
+            return $data;
+        }
+
+        $category = Category::query()->first();
+        if ($category) {
+            $data['category_id'] = $category->id;
+            $data['category'] = $category->name;
+
+            return $data;
+        }
+
+        $data['category_id'] = null;
+        $data['category'] = null;
+
+        return $data;
+    }
+
+    private function handleProductImageUpload($file): array
+    {
+        $cloudName = env('CLOUDINARY_CLOUD_NAME');
+        $uploadPreset = env('CLOUDINARY_UPLOAD_PRESET', 'q46tbsqz');
+
+        if (!empty($cloudName) && !empty($uploadPreset)) {
+            try {
+                $response = Http::withOptions(['verify' => false])
+                    ->asMultipart()
+                    ->post(
+                        'https://api.cloudinary.com/v1_1/' . $cloudName . '/image/upload',
+                        [
+                            'file' => fopen($file->getRealPath(), 'r'),
+                            'upload_preset' => $uploadPreset,
+                        ]
+                    );
+
+                if ($response->successful()) {
+                    $uploadedFile = $response->json();
+
+                    return [$uploadedFile['secure_url'] ?? null, $uploadedFile['public_id'] ?? null];
+                }
+            } catch (\Throwable $e) {
+                // fall back to local storage
+            }
+        }
+
+        $path = $file->store('products', 'public');
+
+        return [$path, null];
     }
 
     private function categoryOptions(): array
