@@ -9,29 +9,18 @@ class RoomController extends Controller
 {
     public function index(Request $request)
     {
-        // New behavior: derive room names from products table (distinct room values)
         $query = trim((string) $request->input('search', ''));
 
-        // get distinct non-empty room names from products
-        $roomNamesQuery = \App\Models\Product::query()
-            ->whereNotNull('room')
-            ->where('room', '<>', '');
-
-        if ($query !== '') {
-            $roomNamesQuery->where('room', 'like', "%{$query}%");
-        }
-
-        $roomNames = $roomNamesQuery->select('room')->distinct()->pluck('room');
-
-        // build rooms collection where each item contains name and products list
-        $rooms = $roomNames->map(function ($name) {
-            $products = \App\Models\Product::where('room', $name)->latest()->get();
-            return (object) [
-                'name' => $name,
-                'products' => $products,
-                'count' => $products->count(),
-            ];
-        });
+        $rooms = Room::with('products')
+            ->withCount('products')
+            ->when($query !== '', function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhereHas('products', function ($productQuery) use ($query) {
+                        $productQuery->where('name', 'like', "%{$query}%");
+                    });
+            })
+            ->orderBy('name')
+            ->get();
 
         return view('rooms.index', compact('rooms', 'query'));
     }
@@ -52,7 +41,7 @@ class RoomController extends Controller
 
         Room::create($data);
 
-        return redirect()->route('rooms.index')->with('success', 'Room created successfully.');
+        return redirect()->route('rooms.index')->with('success', 'Ruangan berhasil dibuat.');
     }
 
     public function show(Room $room)
@@ -76,13 +65,18 @@ class RoomController extends Controller
 
         $room->update($data);
 
-        return redirect()->route('rooms.index')->with('success', 'Room updated successfully.');
+        return redirect()->route('rooms.index')->with('success', 'Ruangan berhasil diperbarui.');
     }
 
     public function destroy(Room $room)
     {
+        $productCount = $room->products()->count();
+        if ($productCount > 0) {
+            return redirect()->route('rooms.index')->with('error', 'Ruangan tidak bisa dihapus karena masih digunakan oleh ' . $productCount . ' barang.');
+        }
+
         $room->delete();
 
-        return redirect()->route('rooms.index')->with('success', 'Room deleted successfully.');
+        return redirect()->route('rooms.index')->with('success', 'Ruangan berhasil dihapus.');
     }
 }

@@ -38,11 +38,15 @@
 
         <div class="col-md-4" id="toRoomField">
             <label class="form-label">Ruangan Tujuan</label>
-            <select name="to_room_id" class="form-select">
-                <option value="">Pilih ruangan tujuan</option>
-                @foreach($rooms as $room)
-                    <option value="{{ $room->id }}" @selected(old('to_room_id') == $room->id)>{{ $room->name }}</option>
-                @endforeach
+            <select name="to_room_id" id="to_room_id" class="form-select">
+                <option value="" selected disabled>Pilih ruangan tujuan</option>
+                @if($rooms->isEmpty())
+                    <option value="" disabled>Belum ada data ruangan (Tambahkan di menu Ruangan)</option>
+                @else
+                    @foreach($rooms as $room)
+                        <option value="{{ $room->id }}" @selected(old('to_room_id') == $room->id)>{{ $room->name }}</option>
+                    @endforeach
+                @endif
             </select>
         </div>
 

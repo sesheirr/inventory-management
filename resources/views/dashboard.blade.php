@@ -4,7 +4,7 @@
 <div class="container">
     <div class="row mb-4">
         <div class="col-12">
-            <h4 class="fw-semibold mb-1">Dashboard</h4>
+            <h4 class="fw-semibold mb-1">Sistem Informasi Inventarisasi Barang dan Aset</h4>
             <p class="text-muted mb-0">Ringkasan inventaris dan aktivitas terbaru.</p>
         </div>
     </div>

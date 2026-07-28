@@ -1,51 +1,51 @@
 @php
     // Determine page title and breadcrumb based on current route
     $pageTitle = 'Dashboard';
-    $breadcrumb = 'Inventory / Dashboard';
+    $breadcrumb = 'Inventaris / Dashboard';
     $showBackButton = false;
 
     if (Route::is('dashboard')) {
         $pageTitle = 'Dashboard';
-        $breadcrumb = 'Inventory / Dashboard';
+        $breadcrumb = 'Inventaris / Dashboard';
     } elseif (Route::is('reports.index') || Route::is('reports.*')) {
         $pageTitle = 'Laporan';
-        $breadcrumb = 'Inventory / Laporan';
+        $breadcrumb = 'Inventaris / Laporan';
         $showBackButton = true;
     } elseif (Route::is('products.index')) {
         $pageTitle = 'Barang';
-        $breadcrumb = 'Inventory / Barang';
+        $breadcrumb = 'Inventaris / Barang';
         $showBackButton = false;
     } elseif (Route::is('products.*')) {
         $pageTitle = 'Barang';
-        $breadcrumb = 'Inventory / Barang';
+        $breadcrumb = 'Inventaris / Barang';
         $showBackButton = true;
     } elseif (Route::is('categories.index')) {
         $pageTitle = 'Kategori';
-        $breadcrumb = 'Inventory / Kategori';
+        $breadcrumb = 'Inventaris / Kategori';
         $showBackButton = false;
     } elseif (Route::is('categories.*')) {
         $pageTitle = 'Kategori';
-        $breadcrumb = 'Inventory / Kategori';
+        $breadcrumb = 'Inventaris / Kategori';
         $showBackButton = true;
     } elseif (Route::is('rooms.index')) {
         $pageTitle = 'Ruangan';
-        $breadcrumb = 'Inventory / Ruangan';
+        $breadcrumb = 'Inventaris / Ruangan';
         $showBackButton = false;
     } elseif (Route::is('rooms.*')) {
         $pageTitle = 'Ruangan';
-        $breadcrumb = 'Inventory / Ruangan';
+        $breadcrumb = 'Inventaris / Ruangan';
         $showBackButton = true;
     } elseif (Route::is('mutations.index') || Route::is('mutations.*')) {
         $pageTitle = 'Mutasi Barang';
-        $breadcrumb = 'Inventory / Mutasi Barang';
+        $breadcrumb = 'Inventaris / Mutasi Barang';
         $showBackButton = true;
     } elseif (Route::is('profile')) {
         $pageTitle = 'Profile';
-        $breadcrumb = 'Inventory / Profile';
+        $breadcrumb = 'Inventaris / Profile';
         $showBackButton = true;
     } elseif (Route::is('settings')) {
         $pageTitle = 'Settings';
-        $breadcrumb = 'Inventory / Settings';
+        $breadcrumb = 'Inventaris / Settings';
         $showBackButton = true;
     }
 
@@ -80,25 +80,56 @@
 
         @php $currentUser = auth()->user(); @endphp
 
-        <!-- PROFILE BUTTON — langsung ke halaman profile, tanpa dropdown -->
-        <a href="{{ route('profile') }}" class="profile-pill profile-pill-link" aria-label="Buka halaman profil">
-            <div class="avatar">
-                @if(!empty($currentUser?->avatar))
-                    <img src="{{ $currentUser->avatar }}" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                @else
-                    {{ strtoupper(substr($currentUser->name ?? 'U', 0, 2)) }}
-                @endif
-            </div>
-            <div>
-                <div class="fw-semibold">{{ $currentUser->name ?? 'User' }}</div>
-                <small class="profile-role-label">
-                    @if(($currentUser->role ?? '') === 'admin' || ($currentUser->role ?? '') === 'Administrator')
-                        Administrator
+        <!-- PROFILE DROPDOWN -->
+        <div class="dropdown">
+            <div class="profile-pill dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;">
+                <div class="avatar" style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    @if(!empty($currentUser?->avatar))
+                        <img src="{{ $currentUser->avatar }}" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover; display: block;">
                     @else
-                        User
+                        <span class="fw-bold">{{ strtoupper(substr($currentUser->name ?? 'U', 0, 2)) }}</span>
                     @endif
-                </small>
+                </div>
+                <div>
+                    <div class="fw-semibold">{{ $currentUser->name ?? 'User' }}</div>
+                    <small class="profile-role-label">
+                        @if(($currentUser->role ?? '') === 'admin' || ($currentUser->role ?? '') === 'Administrator')
+                            Administrator
+                        @else
+                            User
+                        @endif
+                    </small>
+                </div>
             </div>
-        </a>
+
+            <ul class="dropdown-menu dropdown-menu-end rounded-3 shadow-sm border-0 profile-dropdown-menu">
+                <li class="dropdown-header px-3 py-2">
+                    <div class="fw-semibold">{{ $currentUser->name ?? 'User' }}</div>
+                    <small class="text-muted">{{ $currentUser->email ?? '' }}</small>
+                </li>
+
+                <li><hr class="dropdown-divider"></li>
+
+                <li>
+                    <a class="dropdown-item" href="{{ route('profile') }}">
+                        <i class="bi bi-person me-2"></i> Profile
+                    </a>
+                </li>
+
+                <li>
+                    <a class="dropdown-item" href="{{ route('settings') }}">
+                        <i class="bi bi-gear me-2"></i> Settings
+                    </a>
+                </li>
+
+                <li><hr class="dropdown-divider"></li>
+
+                <li>
+                    <button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#logoutModal" style="background:none;border:none;width:100%;text-align:left;">
+                        <i class="bi bi-box-arrow-right me-2"></i> Logout
+                    </button>
+                </li>
+            </ul>
+        </div>
     </div>
 </header>

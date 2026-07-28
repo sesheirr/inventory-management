@@ -15,7 +15,7 @@
 
             <!-- MODAL BODY -->
             <div class="modal-body text-center pt-2">
-                <p class="mb-0 text-muted">Apakah Anda yakin ingin keluar dari sistem Inventory Management?</p>
+                <p class="mb-0 text-muted">Apakah Anda yakin ingin keluar dari Sistem Inventaris Diskominfo?</p>
             </div>
 
             <!-- MODAL FOOTER -->

@@ -1,11 +1,11 @@
 <aside class="sidebar">
-    <div class="brand">
-        <div class="brand-icon">
-            <i class="bi bi-box-seam"></i>
+    <div class="brand d-flex align-items-center gap-2">
+        <div class="brand-logo-container">
+            <img src="{{ asset('images/logo-diskominfo.png') }}" alt="Logo Diskominfo Garut">
         </div>
         <div>
-            <h5 class="mb-0">Inventory Management</h5>
-            <small>System</small>
+            <div class="fw-bold">Inventaris</div>
+            <div class="small" style="color: rgba(255, 255, 255, 0.65);">Diskominfo Garut</div>
         </div>
     </div>
 

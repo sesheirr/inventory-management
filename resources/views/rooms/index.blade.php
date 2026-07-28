@@ -73,17 +73,83 @@
         }
     </style>
 
-    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
             <h4 class="fw-semibold mb-1">Ruangan</h4>
-            <p class="text-muted mb-0">Lihat dan filter barang berdasarkan ruangan (diambil dari data barang).</p>
+            <p class="text-muted mb-0">Lihat dan filter barang berdasarkan ruangan.</p>
         </div>
 
-        <div class="d-flex align-items-center gap-2">
-            <form action="{{ route('rooms.index') }}" method="GET" class="position-relative search-box" style="max-width: 420px; width: 100%;">
-                <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-                <input type="text" name="search" value="{{ $query ?? '' }}" class="form-control rounded-pill" placeholder="Cari ruangan..." style="padding-left: 2.7rem;">
+        <div class="d-flex flex-column flex-sm-row align-items-stretch gap-2 w-100 w-sm-auto">
+            <form action="{{ route('rooms.index') }}" method="GET" class="flex-fill">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" name="search" value="{{ $query ?? '' }}" class="form-control" placeholder="Cari ruangan...">
+                </div>
             </form>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahRuangan">
+                <i class="fa fa-plus me-2"></i> Tambah Ruangan
+            </button>
+        </div>
+    </div>
+
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    <div class="modal fade" id="modalTambahRuangan" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4">
+                <form method="POST" action="{{ route('rooms.store') }}">
+                    @csrf
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title fw-bold">Tambah Ruangan</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nama Ruangan <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}" required>
+                            @error('name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Lokasi</label>
+                            <input type="text" name="location" class="form-control @error('location') is-invalid @enderror" value="{{ old('location') }}">
+                            @error('location')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Penanggung Jawab</label>
+                            <input type="text" name="person_in_charge" class="form-control @error('person_in_charge') is-invalid @enderror" value="{{ old('person_in_charge') }}">
+                            @error('person_in_charge')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Deskripsi</label>
+                            <textarea name="description" class="form-control @error('description') is-invalid @enderror" rows="3">{{ old('description') }}</textarea>
+                            @error('description')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -141,4 +207,13 @@
         @endif
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        @if($errors->any())
+            var modal = new bootstrap.Modal(document.getElementById('modalTambahRuangan'));
+            modal.show();
+        @endif
+    });
+</script>
 @endsection
