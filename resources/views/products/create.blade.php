@@ -47,7 +47,6 @@
             <select name="status" class="form-select" required>
                 <option value="active" @selected(old('status') === 'active')>Aktif</option>
                 <option value="inactive" @selected(old('status') === 'inactive')>Tidak Aktif</option>
-                <option value="out_of_stock" @selected(old('status') === 'out_of_stock')>Stok Habis</option>
             </select>
         </div>
 
