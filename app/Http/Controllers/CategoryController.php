@@ -18,7 +18,6 @@ class CategoryController extends Controller
                     ->orWhereHas('products', function ($productQuery) use ($query) {
                         $productQuery->where('name', 'like', "%{$query}%")
                             ->orWhere('subcategory', 'like', "%{$query}%")
-                            ->orWhere('room', 'like', "%{$query}%")
                             ->orWhere('description', 'like', "%{$query}%")
                             ->orWhereHas('room', function ($roomQuery) use ($query) {
                                 $roomQuery->where('name', 'like', "%{$query}%");

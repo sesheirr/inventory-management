@@ -28,4 +28,14 @@ class DashboardController extends Controller
             'activityLogs'
         ));
     }
+
+    /**
+     * Menghapus seluruh riwayat aktivitas
+     */
+    public function clearHistory()
+    {
+        ActivityLog::truncate();
+
+        return redirect()->back()->with('success', 'Semua riwayat aktivitas berhasil dibersihkan!');
+    }
 }

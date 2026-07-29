@@ -66,7 +66,7 @@
                 <div class="col-md-6">
                     <div class="stat-box">
                         <span class="text-muted">Ruangan</span>
-                        <div class="fw-semibold">{{ $product->room ?: 'Belum diisi' }}</div>
+                        <div class="fw-semibold">{{ $product->room_name ?: 'Belum diisi' }}</div>
                     </div>
                 </div>
                 <div class="col-md-6">

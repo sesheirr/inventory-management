@@ -69,6 +69,7 @@ Route::middleware('auth')->group(function () {
 
     // Rute Dashboard & Settings
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::delete('/dashboard/clear-history', [DashboardController::class, 'clearHistory'])->name('dashboard.clear-history'); // <-- Rute Clear History
     Route::view('/settings', 'settings')->name('settings');
 
     // Rute Laporan
@@ -87,4 +88,5 @@ Route::middleware('auth')->group(function () {
     Route::resource('categories', CategoryController::class);
     Route::resource('rooms', RoomController::class);
     Route::resource('mutations', MutationController::class);
+    
 });

@@ -18,7 +18,6 @@ class Product extends Model
         'category',
         'category_id',
         'room_id',
-        'room',
         'subcategory',
         'edition',
         'description',
@@ -38,6 +37,15 @@ class Product extends Model
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class);
+    }
+
+    public function getRoomNameAttribute(): ?string
+    {
+        if ($this->room_id !== null) {
+            return $this->room()->first()?->name;
+        }
+
+        return $this->getAttribute('room');
     }
 
     public function mutations(): HasMany

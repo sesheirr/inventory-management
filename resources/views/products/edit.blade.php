@@ -35,7 +35,12 @@
 
         <div class="col-md-6">
             <label class="form-label">Ruangan</label>
-            <input type="text" name="room" class="form-control" value="{{ old('room', $product->room) }}" placeholder="Nama ruangan atau lokasi">
+            <select name="room_id" class="form-select" required>
+                <option value="" selected disabled>Pilih ruangan</option>
+                @foreach($rooms as $room)
+                    <option value="{{ $room->id }}" @selected(old('room_id', $product->room_id) == $room->id)>{{ $room->name }}</option>
+                @endforeach
+            </select>
         </div>
 
         <div class="col-md-6">

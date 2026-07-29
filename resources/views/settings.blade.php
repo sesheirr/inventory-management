@@ -91,7 +91,7 @@
                 <div class="settings-card-action settings-card-info">
                     <div class="info-row">
                         <span class="info-label">Nama Aplikasi</span>
-                        <span class="info-value">Inventory Management</span>
+                        <span class="info-value">Sistem Informasi Inventarisasi Barang dan Aset</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Versi</span>
@@ -99,7 +99,7 @@
                     </div>
                     <div class="info-row">
                         <span class="info-label">Developer</span>
-                        <span class="info-value">Tim Inventaris</span>
+                        <span class="info-value">RPL SMKN 1 Garut</span>
                     </div>
                 </div>
             </div>

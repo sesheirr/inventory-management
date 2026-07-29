@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\BarangExport;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Room;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
@@ -27,9 +28,9 @@ class ProductController extends Controller
                 $q->where('name', 'like', "%{$query}%")
                     ->orWhere('category', 'like', "%{$query}%")
                     ->orWhere('subcategory', 'like', "%{$query}%")
-                    ->orWhere('room', 'like', "%{$query}%")
                     ->orWhere('edition', 'like', "%{$query}%")
-                    ->orWhere('description', 'like', "%{$query}%");
+                    ->orWhere('description', 'like', "%{$query}%")
+                    ->orWhereHas('room', fn ($rq) => $rq->where('name', 'like', "%{$query}%"));
             });
         }
 
@@ -41,8 +42,9 @@ class ProductController extends Controller
     public function create()
     {
         $categories = Category::orderBy('name')->get();
+        $rooms = Room::orderBy('name')->get();
 
-        return view('products.create', compact('categories'));
+        return view('products.create', compact('categories', 'rooms'));
     }
 
     public function store(Request $request)
@@ -52,7 +54,7 @@ class ProductController extends Controller
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'category' => ['nullable', 'string', 'max:100'],
             'subcategory' => ['nullable', 'string', 'max:100'],
-            'room' => ['nullable', 'string', 'max:150'],
+            'room_id' => ['required', 'integer', 'exists:rooms,id'],
             'edition' => ['nullable', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
             'stock' => ['required', 'integer', 'min:0'],
@@ -61,7 +63,6 @@ class ProductController extends Controller
         ]);
 
         $data = $this->resolveCategoryData($data, $request);
-        $data['room'] = $request->filled('room') ? trim($request->input('room')) : null;
 
         if ($request->hasFile('image')) {
             [$data['image'], $data['image_public_id']] = $this->handleProductImageUpload($request->file('image'));
@@ -82,8 +83,9 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $categories = Category::orderBy('name')->get();
+        $rooms = Room::orderBy('name')->get();
 
-        return view('products.edit', compact('product', 'categories'));
+        return view('products.edit', compact('product', 'categories', 'rooms'));
     }
 
     public function update(Request $request, Product $product)

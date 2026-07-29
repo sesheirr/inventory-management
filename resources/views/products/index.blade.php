@@ -140,7 +140,7 @@
                             </div>
                         </td>
                         <td><span class="badge category-badge bg-primary-subtle text-primary-emphasis px-3 py-2 rounded-pill text-wrap">{{ $product->category }}</span></td>
-                        <td><span class="badge room-badge bg-secondary-subtle text-secondary-emphasis px-3 py-2 rounded-pill text-wrap">{{ $product->room ?: 'Belum diisi' }}</span></td>
+                        <td><span class="badge room-badge bg-secondary-subtle text-secondary-emphasis px-3 py-2 rounded-pill text-wrap">{{ $product->room_name ?: 'Belum diisi' }}</span></td>
                         <td><span class="fw-semibold">{{ $product->stock ?? 0 }}</span></td>
                         <td>
                             @if(($product->stock ?? 0) > 0 && $product->status !== 'inactive')

@@ -9,6 +9,14 @@
         </div>
     </div>
 
+    {{-- Alert Notifikasi Sukses --}}
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm mb-4" role="alert">
+            <i class="fa fa-check-circle me-2"></i>{{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3 mb-4">
         <div class="col">
             <div class="card rounded-4 shadow-sm border-0 h-100">
@@ -69,7 +77,21 @@
 
     <div class="card rounded-4 shadow-sm border-0">
         <div class="card-body">
-            <h5 class="fw-semibold mb-3">Aktivitas Terbaru</h5>
+            {{-- Header Tabel + Tombol Clear History --}}
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-semibold mb-0">Aktivitas Terbaru</h5>
+                
+                @if($activityLogs->count() > 0)
+                    <form action="{{ route('dashboard.clear-history') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus seluruh riwayat aktivitas?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-3">
+                            <i class="fa fa-trash me-1"></i> Clear History
+                        </button>
+                    </form>
+                @endif
+            </div>
+
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
                     <thead class="table-light">
@@ -84,9 +106,27 @@
                         @forelse($activityLogs as $log)
                             <tr>
                                 <td class="d-flex align-items-center gap-2">
-                                    <div class="rounded-circle bg-secondary-subtle text-secondary d-flex align-items-center justify-content-center" style="width:36px;height:36px;">
-                                        <i class="fa fa-user"></i>
-                                    </div>
+                                    <!-- Cek Foto Profil / Avatar -->
+                                    @if($log->user && $log->user->avatar)
+                                        {{-- Cek apakah avatar berupa URL Cloudinary/Hosting atau file lokal --}}
+                                        @php
+                                            $avatarUrl = \Illuminate\Support\Str::startsWith($log->user->avatar, ['http://', 'https://'])
+                                                ? $log->user->avatar
+                                                : asset('storage/' . $log->user->avatar);
+                                        @endphp
+
+                                        <img src="{{ $avatarUrl }}" 
+                                             alt="{{ $log->user->name }}" 
+                                             class="rounded-circle" 
+                                             width="36" height="36" 
+                                             style="object-fit: cover;">
+                                    @else
+                                        <!-- Inisial Nama / Default System -->
+                                        <div class="rounded-circle bg-secondary-subtle text-secondary d-flex align-items-center justify-content-center fw-semibold" style="width:36px;height:36px; font-size: 14px;">
+                                            {{ strtoupper(substr($log->user?->name ?? 'S', 0, 1)) }}
+                                        </div>
+                                    @endif
+
                                     <div>
                                         <div class="fw-semibold">{{ $log->user?->name ?? 'System' }}</div>
                                     </div>

@@ -46,10 +46,9 @@ class ReportController extends Controller
             ->count('category');
 
         $totalRooms = Product::query()
-            ->whereNotNull('room')
-            ->where('room', '!=', '')
-            ->distinct('room')
-            ->count('room');
+            ->whereNotNull('room_id')
+            ->distinct('room_id')
+            ->count('room_id');
 
         $totalRuangan = $totalRooms;
 
