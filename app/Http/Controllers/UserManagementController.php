@@ -30,4 +30,18 @@ class UserManagementController extends Controller
         return redirect()->route('users.index')
             ->with('success', "Role {$user->name} berhasil diubah menjadi {$request->role}.");
     }
+
+    public function destroy(User $user)
+    {
+        if ($user->id === auth()->id()) {
+            return redirect()->route('users.index')
+                ->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
+        }
+
+        $userName = $user->name;
+        $user->delete();
+
+        return redirect()->route('users.index')
+            ->with('success', "Akun {$userName} berhasil dihapus.");
+    }
 }

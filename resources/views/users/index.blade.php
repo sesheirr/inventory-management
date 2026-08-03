@@ -40,18 +40,29 @@
                                 @if($user->id === auth()->id())
                                     <span class="text-muted small fst-italic">Ini akun Anda</span>
                                 @else
-                                    <form method="POST" action="{{ route('users.update-role', $user) }}" class="d-flex gap-2">
-                                        @csrf
-                                        @method('PUT')
-                                        <select name="role" class="form-select form-select-sm" style="width: auto;">
-                                            <option value="user" @selected($user->role === 'user')>User</option>
-                                            <option value="admin" @selected($user->role === 'admin')>Admin</option>
-                                        </select>
-                                        <button type="submit" class="btn btn-sm btn-outline-primary"
-                                                onclick="return confirm('Ubah role {{ $user->name }} menjadi peran yang dipilih?')">
-                                            Simpan
-                                        </button>
-                                    </form>
+                                    <div class="d-flex gap-2">
+                                        <form method="POST" action="{{ route('users.update-role', $user) }}" class="d-flex gap-2">
+                                            @csrf
+                                            @method('PUT')
+                                            <select name="role" class="form-select form-select-sm" style="width: auto;">
+                                                <option value="user" @selected($user->role === 'user')>User</option>
+                                                <option value="admin" @selected($user->role === 'admin')>Admin</option>
+                                            </select>
+                                            <button type="submit" class="btn btn-sm btn-outline-primary"
+                                                    onclick="return confirm('Ubah role {{ $user->name }} menjadi peran yang dipilih?')">
+                                                Simpan
+                                            </button>
+                                        </form>
+
+                                        <form method="POST" action="{{ route('users.destroy', $user) }}"
+                                              onsubmit="return confirm('Yakin ingin menghapus akun {{ $user->name }}? Tindakan ini tidak bisa dibatalkan.')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fa fa-trash"></i> Hapus
+                                            </button>
+                                        </form>
+                                    </div>
                                 @endif
                             </td>
                         </tr>

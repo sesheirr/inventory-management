@@ -112,4 +112,5 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // User management (admin only)
     Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
     Route::put('/users/{user}/role', [UserManagementController::class, 'updateRole'])->name('users.update-role');
+    Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
 });
