@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
@@ -69,7 +70,6 @@ Route::middleware('auth')->group(function () {
 
     // Rute Dashboard & Settings
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::delete('/dashboard/clear-history', [DashboardController::class, 'clearHistory'])->name('dashboard.clear-history'); // <-- Rute Clear History
     Route::view('/settings', 'settings')->name('settings');
 
     // Rute Laporan
@@ -78,15 +78,29 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
-    // Rute Manajemen Produk (Fitur Hapus Massal, Ekspor Excel & CRUD)
+    // Rute Manajemen Produk (CRUD tanpa delete untuk semua user)
+    Route::get('products/export-excel', [ProductController::class, 'exportExcel'])->name('products.export');
+    Route::resource('products', ProductController::class)->except(['destroy']);
+
+    // Rute Manajemen Kategori dan Ruangan untuk semua user (read-only)
+    Route::resource('categories', CategoryController::class)->only(['index', 'show']);
+    Route::resource('rooms', RoomController::class)->only(['index', 'show']);
+
+    // Rute Manajemen Mutasi untuk semua user kecuali hapus
+    Route::resource('mutations', MutationController::class)->except(['destroy']);
+});
+
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::delete('/dashboard/clear-history', [DashboardController::class, 'clearHistory'])->name('dashboard.clear-history');
+
     Route::post('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected');
     Route::delete('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected.delete');
-    Route::get('products/export-excel', [ProductController::class, 'exportExcel'])->name('products.export');
-    Route::resource('products', ProductController::class);
-    
-    // Rute Manajemen Kategori, Ruangan, dan Mutasi
-    Route::resource('categories', CategoryController::class);
-    Route::resource('rooms', RoomController::class);
-    Route::resource('mutations', MutationController::class);
-    
+    Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+
+    Route::resource('categories', CategoryController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
+    Route::resource('rooms', RoomController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
+
+    Route::delete('mutations/{mutation}', [MutationController::class, 'destroy'])->name('mutations.destroy');
+
+    Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
 });

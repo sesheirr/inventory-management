@@ -89,14 +89,16 @@
                                 <button class="btn btn-link text-secondary p-0" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></button>
                                 <ul class="dropdown-menu dropdown-menu-end rounded-3 shadow-sm border-0">
                                     <li><a class="dropdown-item py-2" href="{{ route('mutations.show', $mutation) }}"><i class="bi bi-eye me-2 text-muted"></i> Lihat</a></li>
-                                    <li><hr class="dropdown-divider opacity-50"></li>
-                                    <li>
-                                        <form action="{{ route('mutations.destroy', $mutation) }}" method="POST" class="m-0">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="dropdown-item py-2 text-danger">Hapus</button>
-                                        </form>
-                                    </li>
+                                    @if(auth()->user()->isAdmin())
+                                        <li><hr class="dropdown-divider opacity-50"></li>
+                                        <li>
+                                            <form action="{{ route('mutations.destroy', $mutation) }}" method="POST" class="m-0">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="dropdown-item py-2 text-danger">Hapus</button>
+                                            </form>
+                                        </li>
+                                    @endif
                                 </ul>
                             </div>
                         </td>

@@ -15,9 +15,11 @@
             </div>
         </form>
 
-        <button type="button" class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
-            + Tambah Kategori
-        </button>
+        @if(auth()->user()->isAdmin())
+            <button type="button" class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                + Tambah Kategori
+            </button>
+        @endif
     </div>
 </div>
 
@@ -72,15 +74,19 @@
                                     <i class="bi bi-three-dots-vertical"></i>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="categoryMenu{{ $category->id }}">
-                                    <li><a class="dropdown-item" href="{{ route('categories.edit', $category) }}">Edit</a></li>
-                                    <li>
-                                        <form action="{{ route('categories.destroy', $category) }}" method="POST" onsubmit="return confirm('Hapus kategori ini?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="dropdown-item text-danger">Hapus</button>
-                                        </form>
-                                    </li>
-                                </ul>
+                            @if(auth()->user()->isAdmin())
+                                <li><a class="dropdown-item" href="{{ route('categories.edit', $category) }}">Edit</a></li>
+                                <li>
+                                    <form action="{{ route('categories.destroy', $category) }}" method="POST" onsubmit="return confirm('Hapus kategori ini?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="dropdown-item text-danger">Hapus</button>
+                                    </form>
+                                </li>
+                            @else
+                                <li><span class="dropdown-item text-muted">Akses terbatas</span></li>
+                            @endif
+                        </ul>
                             </div>
                         </div>
 

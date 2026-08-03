@@ -155,29 +155,33 @@
                             <div class="dropdown">
                                 <button class="btn btn-link text-secondary p-0" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></button>
                                 <ul class="dropdown-menu dropdown-menu-end rounded-3 shadow-sm border-0">
-                                    <li><a class="dropdown-item py-2" href="{{ route('products.show', $product) }}"><i class="bi bi-eye me-2 text-muted"></i> Lihat Detail</a></li>
-                                    <li><a class="dropdown-item py-2" href="{{ route('products.edit', $product) }}"><i class="bi bi-pencil me-2 text-muted"></i> Edit Barang</a></li>
+                                <li><a class="dropdown-item py-2" href="{{ route('products.show', $product) }}"><i class="bi bi-eye me-2 text-muted"></i> Lihat Detail</a></li>
+                                <li><a class="dropdown-item py-2" href="{{ route('products.edit', $product) }}"><i class="bi bi-pencil me-2 text-muted"></i> Edit Barang</a></li>
+                                @if(auth()->user()->isAdmin())
                                     <li><hr class="dropdown-divider opacity-50"></li>
                                     <li><button type="button" class="dropdown-item py-2 text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $product->id }}"><i class="bi bi-trash me-2"></i> Hapus</button></li>
-                                </ul>
+                                @endif
+                            </ul>
                             </div>
 
-                            <!-- Delete Modal -->
-                            <div class="modal fade" id="deleteModal{{ $product->id }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered">
-                                    <div class="modal-content rounded-4">
-                                        <div class="modal-header border-0">
-                                            <h5 class="modal-title">Hapus barang?</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">Ini akan menghapus {{ $product->name }} dari inventaris.</div>
-                                        <div class="modal-footer border-0">
-                                            <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
-                                            <form action="{{ route('products.destroy', $product) }}" method="POST">@csrf @method('DELETE')<button type="submit" class="btn btn-danger rounded-pill">Hapus</button></form>
+                            @if(auth()->user()->isAdmin())
+                                <!-- Delete Modal -->
+                                <div class="modal fade" id="deleteModal{{ $product->id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content rounded-4">
+                                            <div class="modal-header border-0">
+                                                <h5 class="modal-title">Hapus barang?</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">Ini akan menghapus {{ $product->name }} dari inventaris.</div>
+                                            <div class="modal-footer border-0">
+                                                <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
+                                                <form action="{{ route('products.destroy', $product) }}" method="POST">@csrf @method('DELETE')<button type="submit" class="btn btn-danger rounded-pill">Hapus</button></form>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            @endif
                         </td>
                     </tr>
                 @empty

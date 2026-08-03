@@ -15,6 +15,10 @@
         <a href="{{ route('categories.index') }}" class="nav-link {{ request()->routeIs('categories.*') ? 'active' : '' }}"><i class="bi bi-tags"></i><span>Kategori</span></a>
         <a href="{{ route('rooms.index') }}" class="nav-link {{ request()->routeIs('rooms.*') ? 'active' : '' }}"><i class="bi bi-building"></i><span>Ruangan</span></a>
         <a href="{{ route('mutations.index') }}" class="nav-link {{ request()->routeIs('mutations.*') ? 'active' : '' }}"><i class="bi bi-arrow-left-right"></i><span>Mutasi Barang</span></a>
+
+        @if(auth()->user()->isAdmin())
+            <a href="{{ route('activity-logs.index') }}" class="nav-link {{ request()->routeIs('activity-logs.index') ? 'active' : '' }}"><i class="fa fa-clock-rotate-left"></i><span>Log Aktivitas</span></a>
+        @endif
     </nav>
 
     <!-- Bagian bawah sidebar: Pengaturan & Logout -->

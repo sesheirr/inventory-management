@@ -86,9 +86,11 @@
                     <input type="text" name="search" value="{{ $query ?? '' }}" class="form-control" placeholder="Cari ruangan...">
                 </div>
             </form>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahRuangan">
-                <i class="fa fa-plus me-2"></i> Tambah Ruangan
-            </button>
+            @if(auth()->user()->isAdmin())
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahRuangan">
+                    <i class="fa fa-plus me-2"></i> Tambah Ruangan
+                </button>
+            @endif
         </div>
     </div>
 

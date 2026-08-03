@@ -18,7 +18,13 @@ class DashboardController extends Controller
         $totalRooms = Room::count();
         $totalMutations = Mutation::count();
 
-        $activityLogs = ActivityLog::with('user')->latest()->limit(10)->get();
+        $activityLogsQuery = ActivityLog::with('user')->latest();
+
+        if (! auth()->user()->isAdmin()) {
+            $activityLogsQuery->where('user_id', auth()->id());
+        }
+
+        $activityLogs = $activityLogsQuery->limit(10)->get();
 
         return view('dashboard', compact(
             'totalProducts',
