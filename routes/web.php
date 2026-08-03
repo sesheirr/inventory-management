@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
@@ -103,4 +104,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('mutations/{mutation}', [MutationController::class, 'destroy'])->name('mutations.destroy');
 
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+    
+    // User management (admin only)
+    Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
+    Route::put('/users/{user}/role', [UserManagementController::class, 'updateRole'])->name('users.update-role');
 });
