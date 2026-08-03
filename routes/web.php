@@ -71,7 +71,11 @@ Route::middleware('auth')->group(function () {
 
     // Rute Dashboard & Settings
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::view('/settings', 'settings')->name('settings');
+    // Return settings view with the currently authenticated user so the view
+    // can access $user (used by the Edit Profile modal).
+    Route::get('/settings', function () {
+        return view('settings', ['user' => auth()->user()]);
+    })->name('settings');
 
     // Rute Laporan
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');

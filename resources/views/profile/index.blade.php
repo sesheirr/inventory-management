@@ -103,14 +103,7 @@
                                 </div>
                             </div>
                             <div class="col-lg-4 text-lg-end">
-                                <div class="d-flex flex-wrap justify-content-lg-end gap-2">
-                                    <button type="button" class="btn btn-edit-profile-hero btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#editProfileModal">
-                                        <i class="fa-solid fa-pen me-2"></i>Edit Profile
-                                    </button>
-                                    <a href="#" class="btn btn-info text-white btn-sm rounded-pill px-3">
-                                        <i class="fa-solid fa-key me-2"></i>Ubah Password
-                                    </a>
-                                </div>
+                                <!-- Read-only profile: action buttons moved to Settings page -->
                             </div>
                         </div>
                     </div>
@@ -225,110 +218,4 @@
         </div>
     </div>
 </div>
-
-<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4 border-0 shadow">
-            <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="modal-header border-0">
-                    <h5 class="modal-title fw-semibold" id="editProfileModalLabel">Edit Profil</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3 text-center">
-                        <label class="form-label">Foto Profil</label>
-                        <div class="d-flex flex-column align-items-center gap-2">
-                            <div class="avatar-circle shadow overflow-hidden" style="width: 90px; height: 90px; font-size: 2rem;">
-                                @if(!empty($user->avatar))
-                                    <img id="profilePreviewImage" src="{{ $user->avatar }}" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover; display: block;">
-                                    <span id="profilePreviewFallback" class="fw-bold d-none">{{ strtoupper(substr($user->name ?? 'U', 0, 2)) }}</span>
-                                @else
-                                    <img id="profilePreviewImage" src="" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover; display: none;">
-                                    <span id="profilePreviewFallback" class="fw-bold">{{ strtoupper(substr($user->name ?? 'U', 0, 2)) }}</span>
-                                @endif
-                            </div>
-                            <input type="file" id="avatarInput" name="avatar" class="form-control" accept="image/*">
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Nama Lengkap</label>
-                        <input type="text" name="name" class="form-control" value="{{ old('name', $user->name) }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" name="email" class="form-control" value="{{ old('email', $user->email) }}" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Nomor HP</label>
-                        <input type="text" name="phone" class="form-control" value="{{ old('phone', $user->phone ?? '') }}">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Jenis Kelamin</label>
-                        <select name="gender" class="form-select">
-                            <option value="" @selected(empty($user->gender))>-- Pilih --</option>
-                            <option value="Laki-laki" @selected($user->gender === 'Laki-laki')>Laki-laki</option>
-                            <option value="Perempuan" @selected($user->gender === 'Perempuan')>Perempuan</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Tanggal Lahir</label>
-                        @php
-                            $birthDateValue = old('birth_date');
-                            if (empty($birthDateValue) && !empty($user->birth_date)) {
-                                try {
-                                    $parsedBirthDate = \Carbon\Carbon::parse($user->birth_date);
-                                    $birthDateValue = $parsedBirthDate->format('Y-m-d');
-                                } catch (\Throwable $e) {
-                                    $birthDateValue = (string) $user->birth_date;
-                                }
-                            }
-                            if (!empty($birthDateValue)) {
-                                $birthDateValue = substr((string) $birthDateValue, 0, 10);
-                            }
-                        @endphp
-                        <input type="date" name="birth_date" class="form-control" value="{{ $birthDateValue ?? '' }}">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Alamat</label>
-                        <textarea name="address" class="form-control" rows="3">{{ old('address', $user->address ?? '') }}</textarea>
-                    </div>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary rounded-pill">Simpan</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const avatarInput = document.getElementById('avatarInput');
-    const previewImage = document.getElementById('profilePreviewImage');
-    const previewFallback = document.getElementById('profilePreviewFallback');
-
-    if (!avatarInput || !previewImage || !previewFallback) {
-        return;
-    }
-
-    avatarInput.addEventListener('change', function (event) {
-        const [file] = event.target.files || [];
-
-        if (!file) {
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            previewImage.src = e.target.result;
-            previewImage.style.display = 'block';
-            previewFallback.classList.add('d-none');
-        };
-
-        reader.readAsDataURL(file);
-    });
-});
-</script>
 @endsection
