@@ -42,32 +42,7 @@
         </section>
 
         <!-- Ubah Password card (keamanan) -->
-        <section class="settings-card">
-            <div class="settings-card-inner">
-                <div class="settings-card-meta">
-                    <div class="settings-card-icon settings-card-icon-green">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="6" y="11" width="12" height="9" rx="2"></rect>
-                            <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <h2 class="settings-card-title">Ubah Password</h2>
-                        <p class="settings-card-text">Ubah password akun Anda secara berkala untuk menjaga keamanan.</p>
-                    </div>
-                </div>
-
-                <div class="settings-card-action">
-                    <button type="button" class="btn-ghost">
-                        Ubah Password
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon">
-                            <path d="M5 12h14"></path>
-                            <path d="m13 6 6 6-6 6"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </section>
+        <!-- REMOVED: Ubah Password card (feature unused) -->
 
         <!-- Tentang Aplikasi (unchanged) -->
         <section class="settings-card">
