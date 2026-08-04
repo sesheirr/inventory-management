@@ -39,7 +39,7 @@
             @if(auth()->user()->isSuperAdmin())
                 <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}"><i class="fa fa-users-gear"></i><span>Manajemen User</span></a>
             @endif
-96189f54183f607200cb19f2544a7942a48b64fe
+
         @endif
     </nav>
 
