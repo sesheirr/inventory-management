@@ -28,18 +28,15 @@
                 Barang</span></a>
 
         @if(auth()->user()->isAdmin())
-
             <a href="{{ route('activity-logs.index') }}"
                 class="nav-link {{ request()->routeIs('activity-logs.index') ? 'active' : '' }}"><i
                     class="fa fa-clock-rotate-left"></i><span>Log Aktivitas</span></a>
-            <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}"><i
-                    class="fa fa-users-gear"></i><span>Manajemen User</span></a>
 
-            <a href="{{ route('activity-logs.index') }}" class="nav-link {{ request()->routeIs('activity-logs.index') ? 'active' : '' }}"><i class="fa fa-clock-rotate-left"></i><span>Log Aktivitas</span></a>
             @if(auth()->user()->isSuperAdmin())
-                <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}"><i class="fa fa-users-gear"></i><span>Manajemen User</span></a>
+                <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}"><i
+                        class="fa fa-users-gear"></i><span>Manajemen User</span></a>
             @endif
-
+96189f54183f607200cb19f2544a7942a48b64fe
         @endif
     </nav>
 
