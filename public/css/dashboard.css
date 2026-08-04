@@ -35,8 +35,8 @@ html.dark {
     --sidebar-active-text: #ffffff;
 
     --main-bg: #0f172a;
-    --card-bg: #131e3a;
-    --card-border: #1e293b;
+    --card-bg: #172033;
+    --card-border: #374151;
     --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     --text-primary: #e2e8f0;
     --text-secondary: #94a3b8;
@@ -257,6 +257,34 @@ html.dark .btn-secondary {
 
 html.dark .btn-link {
     color: #dbe4ff !important;
+}
+
+/* Category card / product list dark-mode improvements */
+html.dark .category-card {
+    background: #1f2937 !important;
+    border: 1px solid #334155 !important;
+}
+
+html.dark .category-product-item {
+    border-bottom: 1px solid #475569 !important;
+}
+
+html.dark .category-card .category-product-item > span {
+    color: #ffffff !important;
+}
+
+html.dark .category-card .category-product-item .badge {
+    background: #2563eb !important;
+    color: #ffffff !important;
+}
+
+html.dark .category-card .btn.btn-outline-primary {
+    border: 1px solid #3b82f6 !important;
+    color: #ffffff !important;
+}
+html.dark .category-card .btn.btn-outline-primary {
+    border-color: rgba(255,255,255,0.14) !important;
+    color: #eef2ff !important;
 }
 
 html.dark .form-control,

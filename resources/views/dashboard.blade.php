@@ -81,7 +81,7 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="fw-semibold mb-0">Aktivitas Terbaru</h5>
                 
-                @if(auth()->user()->isAdmin() && $activityLogs->count() > 0)
+                @if(auth()->user()->isSuperAdmin() && $activityLogs->count() > 0)
                     <form action="{{ route('dashboard.clear-history') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus seluruh riwayat aktivitas?');">
                         @csrf
                         @method('DELETE')

@@ -17,12 +17,17 @@ class UserManagementController extends Controller
     public function updateRole(Request $request, User $user)
     {
         $request->validate([
-            'role' => 'required|in:admin,user',
+            'role' => 'required|in:superadmin,admin,user',
         ]);
 
         if ($user->id === auth()->id()) {
             return redirect()->route('users.index')
                 ->with('error', 'Anda tidak bisa mengubah role akun Anda sendiri.');
+        }
+
+        if ($user->isSuperAdmin()) {
+            return redirect()->route('users.index')
+                ->with('error', 'Role akun Super Admin tidak bisa diubah oleh Super Admin lain.');
         }
 
         $user->update(['role' => $request->role]);
@@ -36,6 +41,11 @@ class UserManagementController extends Controller
         if ($user->id === auth()->id()) {
             return redirect()->route('users.index')
                 ->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
+        }
+
+        if ($user->isSuperAdmin()) {
+            return redirect()->route('users.index')
+                ->with('error', 'Akun Super Admin tidak bisa dihapus.');
         }
 
         $userName = $user->name;

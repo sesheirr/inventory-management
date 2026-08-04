@@ -92,10 +92,6 @@
                         <span class="info-value">Sistem Informasi Inventarisasi Barang dan Aset</span>
                     </div>
                     <div class="info-row">
-                        <span class="info-label">Versi</span>
-                        <span class="info-value">v1.0.0</span>
-                    </div>
-                    <div class="info-row">
                         <span class="info-label">Developer</span>
                         <span class="info-value">RPL SMKN 1 Garut</span>
                     </div>
