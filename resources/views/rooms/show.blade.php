@@ -24,11 +24,7 @@
                 <div class="fw-semibold">{{ $room->person_in_charge }}</div>
             </div>
         </div>
-        <div class="col-12">
-            <div class="stat-box p-4">
-                <span class="text-muted">Deskripsi</span>
-                <div class="fw-semibold">{{ $room->description }}</div>
-            </div>
+       
         </div>
     </div>
 </div>

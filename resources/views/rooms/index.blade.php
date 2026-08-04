@@ -132,13 +132,7 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Deskripsi</label>
-                            <textarea name="description" class="form-control @error('description') is-invalid @enderror" rows="3">{{ old('description') }}</textarea>
-                            @error('description')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                       
                     </div>
                     <div class="modal-footer border-0">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
@@ -158,9 +152,17 @@
                     <div class="room-card border-0 rounded-4 shadow-sm h-100">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
-                                <h5 class="mb-1 fw-semibold">{{ $room->name }}</h5>
-                                <small class="text-muted">{{ $room->count }} barang</small>
-                            </div>
+    <h5 class="mb-1 fw-semibold">{{ $room->name }}</h5>
+
+    <small class="text-muted d-block">
+        Penanggung Jawab:
+        {{ $room->person_in_charge ?? '-' }}
+    </small>
+
+    <small class="text-muted d-block">
+        {{ $room->products_count }} Barang
+    </small>
+</div>
                             <div>
                                 <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#roomProducts{{ md5($room->name) }}" aria-expanded="false" aria-controls="roomProducts{{ md5($room->name) }}">
                                     <i class="bi bi-eye"></i> Lihat

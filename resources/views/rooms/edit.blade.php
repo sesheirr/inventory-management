@@ -31,13 +31,7 @@
             @enderror
         </div>
 
-        <div class="col-12">
-            <label class="form-label">Deskripsi</label>
-            <textarea name="description" rows="4" class="form-control @error('description') is-invalid @enderror">{{ old('description', $room->description) }}</textarea>
-            @error('description')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-        </div>
+       
 
         <div class="col-12 d-flex justify-content-end gap-2">
             <button type="submit" class="btn btn-primary rounded-pill px-4">Perbarui Ruangan</button>
