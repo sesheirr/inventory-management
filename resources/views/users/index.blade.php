@@ -32,21 +32,24 @@
                             <td class="ps-4">{{ $user->name }}</td>
                             <td class="text-muted">{{ $user->email }}</td>
                             <td>
-                                <span class="badge rounded-pill {{ $user->role === 'admin' ? 'bg-primary-subtle text-primary' : 'bg-secondary-subtle text-secondary' }} px-3 py-2">
+                                <span class="badge rounded-pill px-3 py-2 {{ $user->role === 'superadmin' ? 'bg-danger-subtle text-danger' : ($user->role === 'admin' ? 'bg-primary-subtle text-primary' : 'bg-secondary-subtle text-secondary') }}">
                                     {{ ucfirst($user->role) }}
                                 </span>
                             </td>
                             <td class="pe-4">
                                 @if($user->id === auth()->id())
                                     <span class="text-muted small fst-italic">Ini akun Anda</span>
+                                @elseif($user->isSuperAdmin())
+                                    <span class="text-muted small fst-italic">Akun Super Admin tidak dapat diubah di sini</span>
                                 @else
-                                    <div class="d-flex gap-2">
-                                        <form method="POST" action="{{ route('users.update-role', $user) }}" class="d-flex gap-2">
+                                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                                        <form method="POST" action="{{ route('users.update-role', $user) }}" class="d-flex gap-2 align-items-center">
                                             @csrf
                                             @method('PUT')
                                             <select name="role" class="form-select form-select-sm" style="width: auto;">
                                                 <option value="user" @selected($user->role === 'user')>User</option>
                                                 <option value="admin" @selected($user->role === 'admin')>Admin</option>
+                                                <option value="superadmin" @selected($user->role === 'superadmin')>Superadmin</option>
                                             </select>
                                             <button type="submit" class="btn btn-sm btn-outline-primary"
                                                     onclick="return confirm('Ubah role {{ $user->name }} menjadi peran yang dipilih?')">
@@ -54,14 +57,16 @@
                                             </button>
                                         </form>
 
-                                        <form method="POST" action="{{ route('users.destroy', $user) }}"
-                                              onsubmit="return confirm('Yakin ingin menghapus akun {{ $user->name }}? Tindakan ini tidak bisa dibatalkan.')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                <i class="fa fa-trash"></i> Hapus
-                                            </button>
-                                        </form>
+                                        @if($user->id !== auth()->id() && !$user->isSuperAdmin())
+                                            <form method="POST" action="{{ route('users.destroy', $user) }}" class="d-inline"
+                                                  onsubmit="return confirm('Yakin ingin menghapus akun {{ $user->name }}? Tindakan ini tidak bisa dibatalkan.')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="fa fa-trash"></i> Hapus
+                                                </button>
+                                            </form>
+                                        @endif
                                     </div>
                                 @endif
                             </td>

@@ -95,9 +95,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('mutations', MutationController::class)->except(['destroy']);
 });
 
-Route::middleware(['auth', 'admin'])->group(function () {
+Route::middleware(['auth', 'superadmin'])->group(function () {
     Route::delete('/dashboard/clear-history', [DashboardController::class, 'clearHistory'])->name('dashboard.clear-history');
+});
 
+Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected');
     Route::delete('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected.delete');
     Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
@@ -108,8 +110,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('mutations/{mutation}', [MutationController::class, 'destroy'])->name('mutations.destroy');
 
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
-    
-    // User management (admin only)
+});
+
+Route::middleware(['auth', 'superadmin'])->group(function () {
     Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
     Route::put('/users/{user}/role', [UserManagementController::class, 'updateRole'])->name('users.update-role');
     Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');

@@ -18,7 +18,9 @@
 
         @if(auth()->user()->isAdmin())
             <a href="{{ route('activity-logs.index') }}" class="nav-link {{ request()->routeIs('activity-logs.index') ? 'active' : '' }}"><i class="fa fa-clock-rotate-left"></i><span>Log Aktivitas</span></a>
-            <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}"><i class="fa fa-users-gear"></i><span>Manajemen User</span></a>
+            @if(auth()->user()->isSuperAdmin())
+                <a href="{{ route('users.index') }}" class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}"><i class="fa fa-users-gear"></i><span>Manajemen User</span></a>
+            @endif
         @endif
     </nav>
 
