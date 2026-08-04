@@ -20,13 +20,7 @@
             @enderror
         </div>
 
-        <div class="col-md-6">
-            <label class="form-label">Lokasi</label>
-            <input type="text" name="location" class="form-control @error('location') is-invalid @enderror" value="{{ old('location') }}">
-            @error('location')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-        </div>
+       
 
         <div class="col-md-6">
             <label class="form-label">Penanggung Jawab</label>

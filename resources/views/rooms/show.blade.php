@@ -16,11 +16,7 @@
                 <div class="fw-semibold">{{ $room->name }}</div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="stat-box p-4">
-                <span class="text-muted">Lokasi</span>
-                <div class="fw-semibold">{{ $room->location }}</div>
-            </div>
+      
         </div>
         <div class="col-md-6">
             <div class="stat-box p-4">
