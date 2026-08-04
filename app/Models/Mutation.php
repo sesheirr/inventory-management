@@ -21,10 +21,15 @@ class Mutation extends Model
         'to_room_id',
         'mutation_date',
         'note',
+        'status',
+        'rejection_note',
+        'approved_by',
+        'approved_at',
     ];
 
     protected $casts = [
         'mutation_date' => 'datetime',
+        'approved_at'   => 'datetime',
     ];
 
     // Activity log defaults for Mutation
@@ -57,5 +62,35 @@ class Mutation extends Model
     public function toRoom(): BelongsTo
     {
         return $this->belongsTo(Room::class, 'to_room_id');
+    }
+
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending');
+    }
+
+    public function statusBadgeClass(): string
+    {
+        return match ($this->status) {
+            'pending'  => 'bg-warning text-dark',
+            'approved' => 'bg-success',
+            'rejected' => 'bg-danger',
+            default    => 'bg-secondary',
+        };
+    }
+
+    public function statusLabel(): string
+    {
+        return match ($this->status) {
+            'pending'  => 'Menunggu',
+            'approved' => 'Disetujui',
+            'rejected' => 'Ditolak',
+            default    => ucfirst($this->status),
+        };
     }
 }

@@ -10,9 +10,11 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoomController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+
 
 // ==========================================
 // AUTH ROUTES (Untuk Orang Yang BELUM Login / Guest)
@@ -116,4 +118,24 @@ Route::middleware(['auth', 'superadmin'])->group(function () {
     Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
     Route::put('/users/{user}/role', [UserManagementController::class, 'updateRole'])->name('users.update-role');
     Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
+});
+
+Route::middleware(['auth'])->group(function () {
+
+    Route::resource('mutations', MutationController::class);
+
+    // Approval routes — dibatasi role admin & superadmin (lihat middleware di controller)
+    Route::patch('mutations/{mutation}/approve', [MutationController::class, 'approve'])
+        ->name('mutations.approve');
+
+    Route::patch('mutations/{mutation}/reject', [MutationController::class, 'reject'])
+        ->name('mutations.reject');
+});
+
+Route::middleware(['auth'])->group(function () {
+    // Route Notifikasi
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
+    Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 });
