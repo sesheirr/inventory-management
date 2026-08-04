@@ -96,7 +96,7 @@
                             <div class="small text-muted mb-2">Barang dalam kategori</div>
                             <ul class="list-unstyled mb-3">
                                 @foreach($category->products->take(3) as $product)
-                                    <li class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                    <li class="category-product-item d-flex justify-content-between align-items-center py-2">
                                         <span>{{ $product->name }}</span>
                                         <span class="badge bg-secondary bg-opacity-10 text-secondary">{{ $product->stock }}</span>
                                     </li>
@@ -142,7 +142,16 @@
     }
 
     html.dark .category-product-item {
-        border-color: #374151;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+    }
+
+    html.dark .category-card .category-product-item > span {
+        color: #e2e8f0;
+    }
+
+    html.dark .category-card .category-product-item .badge {
+        color: #cbd5e1 !important;
+        background-color: rgba(148, 163, 184, 0.12) !important;
     }
 </style>
 @endsection
