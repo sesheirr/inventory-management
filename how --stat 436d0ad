@@ -1,0 +1,25 @@
+[33mcommit f5cce7425b5fb03a03c611b9b86c3d740332c484[m
+Author: sesheirr <sheirafitria45@gmail.com>
+Date:   Tue Jul 28 11:24:01 2026 +0700
+
+    feat: add mutation, activity log, and UI/UX overhaul (dashboard, category, room, sidebar)
+    
+    - Implement full CRUD for item mutations with auto stock/location update
+    - Add global activity log system (audit trail) via Eloquent model events
+    - Redesign dashboard, category, and sidebar UI with Diskominfo Garut branding
+    - Add room creation modal
+    - Fix column mismatch and trait property conflict bugs
+    - Unify light/dark mode color scheme
+
+ app/Http/Controllers/RoomController.php           |  42 [32m++[m[31m---[m
+ public/css/dashboard.css                          | 192 [32m++++++++++++++++[m[31m------[m
+ public/images/logo-diskominfo.png                 | Bin [31m0[m -> [32m130440[m bytes
+ resources/views/components/logout-modal.blade.php |   2 [32m+[m[31m-[m
+ resources/views/dashboard.blade.php               |   2 [32m+[m[31m-[m
+ resources/views/layouts/app.blade.php             |   4 [32m+[m[31m-[m
+ resources/views/layouts/auth.blade.php            |   2 [32m+[m[31m-[m
+ resources/views/mutations/create.blade.php        |  14 [32m+[m[31m-[m
+ resources/views/partials/navbar.blade.php         |  89 [32m++++++[m[31m----[m
+ resources/views/partials/sidebar.blade.php        |  10 [32m+[m[31m-[m
+ resources/views/rooms/index.blade.php             |  87 [32m+++++++++[m[31m-[m
+ 11 files changed, 322 insertions(+), 122 deletions(-)

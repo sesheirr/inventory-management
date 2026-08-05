@@ -1,0 +1,69 @@
+[33m19c14b9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m tambah fitur approve/reject mutasi barang
+[33m48ba526[m menambah kan penanggung jawab di ruangan dan merapihkanya
+[33m3ec7cf5[m memperbaiki error
+[33m66dcadd[m Merge branch 'main' of https://github.com/sesheirr/inventory-management
+[33m229deaa[m Update sidebar
+[33m0413252[m memperbaiki bug
+[33md8bd6aa[m menghapus fitur ubah password di settings
+[33m686a76f[m Merge branch 'main' of github.com:sesheirr/inventory-management
+[33m568c787[m Resolve merge conflict
+[33m5e5469c[m menghapus fitur lokasi dan merapihkanya
+[33m436d0ad[m menambahkan transisi
+[33m96189f5[m memperbaiki card kategori
+[33mbd3875c[m time error fix
+[33me2eebdb[m menambahkan role super admin
+[33m3ce5e07[m tambah fitur hapus pada halaman management user
+[33m77cf2b8[m memindagkan edit profil ke halaman pengaturan, dan menghapus fitur tampilan di setinngs
+[33m4b5d2d1[m feat: tambah halaman Manajemen User (ubah role admin/user)
+[33maf5c866[m feat:implementasi kontrol akses berbasis role admin&user
+[33mb19c1ba[m feat: tambah fitur hapus kolom room dan fitur clear history activity logs
+[33m118a798[m replace favicon
+[33mde590ba[m error fix
+[33m77a68be[m menambahkan logo pada login dan memeperbaiki navbar
+[33mf5cce74[m feat: add mutation, activity log, and UI/UX overhaul (dashboard, category, room, sidebar)
+[33m5c4fcfe[m fix error
+[33m6745614[m refactor(navbar): pindahkan Settings & Logout ke sidebar, sederhanakan navbar
+[33me765cdb[m Merge branch 'main' of https://github.com/sesheirr/inventory-management
+[33m1984ea1[m Update produk: sembunyikan export/tambah saat mode hapus
+[33me45fa4e[m refactor: pembaruan tampilan dan integrasi data
+[33mf20a31e[m menambahkan fitur back di settings
+[33mecae3d1[m memperbaiki checkbox
+[33m17e6270[m Resolve merge conflict
+[33m28f5f01[m Perbaikan fitur inventory
+[33m039c4f8[m menambahkan fitur forgot passwoard di halaman login
+[33mac46947[m fitur: perbaiki desain dan auto close toast notification
+[33m6a80423[m Tambah fitur bulk delete
+[33m29a0e31[m error fix
+[33m81b0805[m error fix
+[33m2216918[m mengubah tampilan login dan menambahkan register
+[33m88b5568[m mengubah tampilan login dan menambahkan register
+[33m979ec11[m memperbaiki mode dark/light kategori
+[33m5a19d49[m error fix
+[33m3c4039a[m memperbaiki halaman login
+[33me971d8e[m Perbaikan: bersihkan tampilan produk, tambah upload gambar & thumbnail, perbaiki test PHPUnit
+[33m852c402[m Resolve merge conflicts: products index and profile tests
+[33mec79ca1[m fitur: update dan perbaikan halaman profil
+[33m4680e61[m Menambahkan input file di form create/edit produk dan opsi hapus gambar
+[33m13221e8[m perbaiki frofil
+[33md5d02ca[m update profil
+[33m0dbf793[m fix: hapus form duplikat jumlah dan status di edit/create agar data tersimpan benar
+[33mfbe32f8[m fix ui ruangan
+[33m5f46564[m Fix cache view issue and update profile blade styling
+[33maf9cba7[m membenrarkan halaman profile
+[33m88438bf[m Merge branch 'main' of https://github.com/sesheirr/inventory-management
+[33m2f4881e[m memperbaiki bagian upload image
+[33mbfcb553[m memperbaiki bagian yang error
+[33mc089297[m menyesuaikan tampilan label administrator pada profil agar warna teks mengikuti mode terang dan gelap
+[33mcfe2bb8[m menambahkan profile
+[33m4b1987e[m menambahkan fitur setinggs
+[33mc774a63[m Integrasi Cloudinary untuk upload gambar
+[33ma503cd6[m menghapus stok barang dan memperbaiki foto
+[33md518b49[m menghapus bagian mutasi di dashboard
+[33mf5514a9[m mengubah judul di setiap halaman
+[33mca29fd0[m menghapus yang tidak penting
+[33ma5ceb9f[m Remove damaged product status and logout button from sidebar
+[33m289a775[m membuat login admin dan user
+[33m95fe332[m Merge: Resolve stash conflicts - use upstream product views and stashed navbar dropdown
+[33mfa120b5[m Mengubah bahasa menjadi bahasa Indonesia
+[33m21ac732[m memindahkan isi report ke dashboard,menghapus report,memperbaiki mode dark
+[33m8de07c3[m style: hapus input,icon notification dan tampilan edisi dari halaman create, edit, dan show produk

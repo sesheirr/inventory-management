@@ -1337,6 +1337,18 @@ html.dark .profile-dropdown-menu .dropdown-item.text-danger:hover {
     flex-shrink: 0;
 }
 
+/* Ensure the text container inside .info-item can shrink and wrap long words/emails */
+.info-item > div {
+    min-width: 0;
+}
+
+/* Make profile info values wrap cleanly and not overflow their card */
+.text-profile-body {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+}
+
 .icon-badge {
     width: 42px;
     height: 42px;
