@@ -59,8 +59,6 @@
     }
 
     $currentUser = auth()->user();
-    $unreadCount = $currentUser?->unreadNotifications->count() ?? 0;
-    $recentNotifications = $currentUser?->notifications()->take(5)->get() ?? collect();
 @endphp
 
 <header class="topbar">
@@ -91,80 +89,6 @@
         <button id="darkModeToggle" class="icon-btn d-none d-lg-inline-flex" type="button">
             <i id="themeIcon" class="bi bi-moon"></i>
         </button>
-
-        {{-- DROPDOWN NOTIFIKASI DI NAVBAR --}}
-        <div class="dropdown">
-            <button class="icon-btn position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifikasi">
-                <i class="bi bi-bell"></i>
-                @if($unreadCount > 0)
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
-                        {{ $unreadCount > 99 ? '99+' : $unreadCount }}
-                    </span>
-                @endif
-            </button>
-
-            <div class="dropdown-menu dropdown-menu-end dropdown-menu-dark p-0 rounded-4 shadow border border-secondary border-opacity-25" style="width: 320px; max-height: 420px;">
-                {{-- Header Dropdown --}}
-                <div class="d-flex align-items-center justify-content-between p-3 border-bottom border-secondary border-opacity-25">
-                    <h6 class="mb-0 fw-bold text-white small">Notifikasi</h6>
-                    @if($unreadCount > 0)
-                        <form action="{{ route('notifications.markAllAsRead') }}" method="POST" class="m-0">
-                            @csrf
-                            @method('PATCH')
-                            <button type="submit" class="btn btn-link text-primary text-decoration-none p-0 style="font-size: 0.75rem;">
-                                Tandai dibaca
-                            </button>
-                        </form>
-                    @endif
-                </div>
-
-                {{-- List Notifikasi Singkat --}}
-                <div class="overflow-auto" style="max-height: 280px;">
-                    @forelse($recentNotifications as $notif)
-                        @php
-                            $isUnread = is_null($notif->read_at);
-                            $data = $notif->data;
-                        @endphp
-                        <a href="{{ $data['url'] ?? route('notifications.index') }}" 
-                           class="dropdown-item p-3 border-bottom border-secondary border-opacity-10 d-flex gap-2 align-items-start {{ $isUnread ? 'bg-primary bg-opacity-10' : '' }}" 
-                           style="white-space: normal;">
-                            <div class="rounded-circle p-1 d-flex align-items-center justify-content-center flex-shrink-0 mt-1" 
-                                 style="width: 28px; height: 28px; background-color: {{ isset($data['type']) && $data['type'] == 'rejected' ? 'rgba(220, 53, 69, 0.2)' : 'rgba(13, 110, 253, 0.2)' }};">
-                                @if(isset($data['type']) && $data['type'] == 'rejected')
-                                    <i class="bi bi-x-circle text-danger small"></i>
-                                @elseif(isset($data['type']) && $data['type'] == 'approved')
-                                    <i class="bi bi-check-circle text-success small"></i>
-                                @else
-                                    <i class="bi bi-bell text-primary small"></i>
-                                @endif
-                            </div>
-                            <div class="flex-grow-1 overflow-hidden">
-                                <div class="d-flex align-items-center justify-content-between mb-1">
-                                    <strong class="text-white small d-block text-truncate">{{ $data['title'] ?? 'Notifikasi' }}</strong>
-                                    @if($isUnread)
-                                        <span class="badge bg-primary rounded-circle p-1 ms-1"></span>
-                                    @endif
-                                </div>
-                                <p class="text-secondary mb-1 lh-sm" style="font-size: 0.75rem;">{{ $data['message'] ?? '-' }}</p>
-                                <small class="text-secondary font-monospace" style="font-size: 0.65rem;">{{ $notif->created_at->diffForHumans() }}</small>
-                            </div>
-                        </a>
-                    @empty
-                        <div class="text-center py-4 text-secondary">
-                            <i class="bi bi-bell-slash fs-4 d-block mb-1 opacity-50"></i>
-                            <span style="font-size: 0.75rem;">Tidak ada notifikasi</span>
-                        </div>
-                    @endforelse
-                </div>
-
-                {{-- Footer Dropdown --}}
-                <div class="p-2 text-center border-top border-secondary border-opacity-25">
-                    <a href="{{ route('notifications.index') }}" class="text-primary text-decoration-none fw-semibold" style="font-size: 0.75rem;">
-                        Lihat Semua Notifikasi <i class="bi bi-arrow-right ms-1"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
 
         {{-- PROFILE BUTTON --}}
         <a href="{{ route('profile') }}" class="profile-pill profile-pill-link" aria-label="Buka halaman profil">
