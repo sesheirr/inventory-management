@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Administrator',
             'email' => 'admin@inventory.local',
             'password' => bcrypt('admin123'),
-            'role' => 'administrator',
+            'role' => 'admin',
         ]);
 
         // Create Regular User
