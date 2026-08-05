@@ -28,42 +28,36 @@
             border-radius: 50px !important;
             padding: 8px 24px 8px 10px !important;
             display: flex;
-            /* Tanpa !important agar JS bisa menyembunyikannya */
             align-items: center;
             gap: 12px;
             border: none !important;
             width: auto !important;
             max-width: 450px;
             transition: all 0.4s ease-in-out;
-            /* Transisi halus saat hilang */
             animation: slideDownBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
         }
 
         /* Variasi Warna Tema */
         .toast-pill.toast-success {
             background-color: #c9f0d9 !important;
-            /* Hijau pastel */
             color: #1a6b3f !important;
             box-shadow: 0 10px 30px rgba(25, 135, 84, 0.25) !important;
         }
 
         .toast-pill.toast-danger {
             background-color: #f8d7da !important;
-            /* Merah pastel */
             color: #842029 !important;
             box-shadow: 0 10px 30px rgba(220, 53, 69, 0.25) !important;
         }
 
         .toast-pill.toast-warning {
             background-color: #fff3cd !important;
-            /* Kuning pastel */
             color: #664d03 !important;
             box-shadow: 0 10px 30px rgba(255, 193, 7, 0.25) !important;
         }
 
         .toast-pill.toast-info {
             background-color: #cff4fc !important;
-            /* Biru pastel */
             color: #055160 !important;
             box-shadow: 0 10px 30px rgba(13, 202, 240, 0.25) !important;
         }
@@ -82,39 +76,19 @@
             animation: popIcon 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .toast-success .toast-icon-circle {
-            background-color: #198754;
-        }
+        .toast-success .toast-icon-circle { background-color: #198754; }
+        .toast-danger .toast-icon-circle { background-color: #dc3545; }
+        .toast-warning .toast-icon-circle { background-color: #ffc107; color: #000; }
+        .toast-info .toast-icon-circle { background-color: #0dcaf0; color: #000; }
 
-        .toast-danger .toast-icon-circle {
-            background-color: #dc3545;
-        }
-
-        .toast-warning .toast-icon-circle {
-            background-color: #ffc107;
-            color: #000;
-        }
-
-        .toast-info .toast-icon-circle {
-            background-color: #0dcaf0;
-            color: #000;
-        }
-
-        /* Class khusus saat notifikasi menutup */
         .toast-pill.toast-hide {
             opacity: 0 !important;
             transform: translateY(-30px) scale(0.9) !important;
         }
 
-        /* Animasi */
         @keyframes popIcon {
-            0% {
-                transform: scale(0);
-            }
-
-            100% {
-                transform: scale(1);
-            }
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
         }
 
         @keyframes slideDownBounce {
@@ -122,7 +96,6 @@
                 transform: translateY(-50px) scale(0.8);
                 opacity: 0;
             }
-
             100% {
                 transform: translateY(0) scale(1);
                 opacity: 1;
@@ -142,7 +115,6 @@
             backdrop-filter: blur(16px) saturate(140%);
             clip-path: inset(0 100% 0 0 round 0 24px 24px 0);
             transition: transform 0.68s cubic-bezier(0.22, 1, 0.36, 1), clip-path 0.68s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.32s ease;
-            will-change: transform, clip-path, opacity;
         }
 
         .page-transition-overlay.active {
@@ -151,31 +123,31 @@
             clip-path: inset(0 0 0 0 round 0 0 0 0);
         }
 
+        /* --- FIX PERBAIKAN STACKING CONTEXT UNTUK MODAL --- */
         .main-panel {
-            will-change: transform, opacity;
+            /* Menghapus will-change agar tidak mengunci modal */
+            will-change: auto !important;
         }
 
         .route-transitioning .content-area {
             opacity: 0.18;
-            transform: translateX(-22px) scale(0.985);
             filter: blur(1.6px);
-            transition: opacity 0.35s ease, transform 0.48s cubic-bezier(0.22, 1, 0.36, 1), filter 0.48s ease;
+            transition: opacity 0.35s ease, filter 0.48s ease;
         }
 
         .content-area {
-            animation: moduleContentIn 0.58s cubic-bezier(0.22, 1, 0.36, 1);
-            will-change: transform, opacity;
+            animation: moduleContentIn 0.58s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
 
         @keyframes moduleContentIn {
             0% {
                 opacity: 0;
-                transform: translateY(18px) scale(0.985);
+                transform: translateY(18px);
             }
-
             100% {
                 opacity: 1;
-                transform: translateY(0) scale(1);
+                /* Mengembalikan transform ke none agar modal fixed bekerja sempurna terhadap viewport */
+                transform: none !important;
             }
         }
     </style>
@@ -230,21 +202,24 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ asset('js/app.js') }}"></script>
 
-    <!-- Script Auto-Close Murni (100% Pasti Hilang Otomatis) -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Auto close toast
             const toastEl = document.getElementById('liveToast');
             if (toastEl) {
-                // Tampil selama 3 detik (3000ms), lalu jalankan efek hilang
                 setTimeout(() => {
                     toastEl.classList.add('toast-hide');
-
-                    // Hapus elemen dari HTML setelah animasi memudar selesai (400ms)
                     setTimeout(() => {
                         toastEl.remove();
                     }, 400);
                 }, 3000);
             }
+
+            // Pindahkan seluruh modal Bootstrap ke level <body> secara otomatis
+            // Ini mencegah modal tertutup backdrop hitam jika berada di dalam container dengan CSS transform
+            document.querySelectorAll('.modal').forEach(modal => {
+                document.body.appendChild(modal);
+            });
         });
     </script>
 </body>
