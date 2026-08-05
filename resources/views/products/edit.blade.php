@@ -73,7 +73,7 @@
             @endif
         </div>
 
-        <div class="col-12 d-flex justify-content-end gap-2">
+        <div class="col-12 d-flex justify-content-end gap-2 form-actions">
             <button type="submit" class="btn btn-primary rounded-pill px-4">Perbarui Barang</button>
         </div>
     </form>

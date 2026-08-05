@@ -4,13 +4,12 @@ document.addEventListener('DOMContentLoaded', () => {
         searchInput.setAttribute('autocomplete', 'off');
     }
 });
-
 // Dark/Light theme toggle on layout and settings page
 document.addEventListener('DOMContentLoaded', () => {
     const toggle = document.getElementById('darkModeToggle');
+    const mobileToggle = document.getElementById('darkModeToggleMobile');
     const icon = document.getElementById('themeIcon');
     const themeButtons = document.querySelectorAll('.segment-button');
-
     function updateSegmentButtons(theme) {
         themeButtons.forEach(button => {
             if (button.dataset.theme === theme) {
@@ -20,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-
     function applyTheme(theme) {
         const docEl = document.documentElement;
         docEl.classList.remove('light', 'dark');
@@ -31,25 +29,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         updateSegmentButtons(theme);
     }
-
     function getPreferredTheme() {
         const stored = localStorage.getItem('theme');
         if (stored === 'dark' || stored === 'light') return stored;
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
         return 'light';
     }
-
     const current = getPreferredTheme();
     applyTheme(current);
-
-    if (toggle) {
-        toggle.addEventListener('click', () => {
-            const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
-            localStorage.setItem('theme', newTheme);
-            applyTheme(newTheme);
-        });
+    function handleToggleClick() {
+        const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+        localStorage.setItem('theme', newTheme);
+        applyTheme(newTheme);
     }
-
+    if (toggle) {
+        toggle.addEventListener('click', handleToggleClick);
+    }
+    if (mobileToggle) {
+        mobileToggle.addEventListener('click', handleToggleClick);
+    }
     themeButtons.forEach(button => {
         button.addEventListener('click', () => {
             const selectedTheme = button.dataset.theme;
@@ -58,7 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
             applyTheme(selectedTheme);
         });
     });
-
     window.addEventListener('pageshow', (event) => {
     if (event.persisted) {
         applyTheme(getPreferredTheme());

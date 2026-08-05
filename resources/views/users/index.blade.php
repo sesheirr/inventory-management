@@ -16,8 +16,9 @@
     @endif
 
     <div class="card border-0 shadow-sm rounded-4">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+        <div class="d-none d-md-block">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
                         <th class="ps-4">Nama</th>
@@ -42,7 +43,7 @@
                                 @elseif($user->isSuperAdmin())
                                     <span class="text-muted small fst-italic">Akun Super Admin tidak dapat diubah di sini</span>
                                 @else
-                                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                                    <div class="d-flex gap-2 align-items-center flex-wrap form-actions">
                                         <form method="POST" action="{{ route('users.update-role', $user) }}" class="d-flex gap-2 align-items-center">
                                             @csrf
                                             @method('PUT')
@@ -73,8 +74,57 @@
                         </tr>
                     @endforeach
                 </tbody>
-            </table>
+                </table>
+            </div>
         </div>
+
+        {{-- Mobile card list --}}
+        <div class="d-md-none">
+            <div class="list-group list-group-flush">
+                @foreach($users as $user)
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-semibold">{{ $user->name }}</div>
+                                <div class="text-muted small">{{ $user->email }}</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="mb-2">
+                                    <span class="badge rounded-pill px-3 py-2 {{ $user->role === 'superadmin' ? 'bg-danger-subtle text-danger' : ($user->role === 'admin' ? 'bg-primary-subtle text-primary' : 'bg-secondary-subtle text-secondary') }}">{{ ucfirst($user->role) }}</span>
+                                </div>
+                                <div>
+                                    @if($user->id === auth()->id())
+                                        <small class="text-muted fst-italic">Ini akun Anda</small>
+                                    @else
+                                        <div class="d-flex gap-2 form-actions">
+                                            <form method="POST" action="{{ route('users.update-role', $user) }}" class="d-flex gap-2">
+                                                @csrf
+                                                @method('PUT')
+                                                <select name="role" class="form-select form-select-sm" style="width: auto;">
+                                                    <option value="user" @selected($user->role === 'user')>User</option>
+                                                    <option value="admin" @selected($user->role === 'admin')>Admin</option>
+                                                    <option value="superadmin" @selected($user->role === 'superadmin')>Superadmin</option>
+                                                </select>
+                                                <button type="submit" class="btn btn-sm btn-outline-primary">Simpan</button>
+                                            </form>
+
+                                            @if($user->id !== auth()->id() && !$user->isSuperAdmin())
+                                                <form method="POST" action="{{ route('users.destroy', $user) }}" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus akun {{ $user->name }}?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Hapus</button>
+                                                </form>
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
         <div class="card-body">
             {{ $users->links() }}
         </div>

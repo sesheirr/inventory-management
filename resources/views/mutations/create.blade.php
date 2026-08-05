@@ -60,7 +60,7 @@
             <textarea name="note" rows="4" class="form-control">{{ old('note') }}</textarea>
         </div>
 
-        <div class="col-12 d-flex justify-content-end gap-2">
+        <div class="col-12 d-flex justify-content-end gap-2 form-actions">
             <a href="{{ route('mutations.index') }}" class="btn btn-secondary rounded-pill">Batal</a>
             <button type="submit" class="btn btn-primary rounded-pill px-4">Simpan Mutasi</button>
         </div>

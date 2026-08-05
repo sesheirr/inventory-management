@@ -92,8 +92,9 @@
                 @endif
             </div>
 
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
+            <div class="d-none d-md-block">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
                             <th>User</th>
@@ -149,7 +150,47 @@
                             <tr><td colspan="4" class="text-center text-muted py-4">Tidak ada aktivitas terbaru.</td></tr>
                         @endforelse
                     </tbody>
-                </table>
+                    </table>
+                </div>
+            </div>
+
+            {{-- Mobile recent activity cards --}}
+            <div class="d-md-none">
+                <div class="list-group list-group-flush">
+                    @forelse($activityLogs as $log)
+                        <div class="list-group-item">
+                            <div class="d-flex align-items-start gap-3 activity-item">
+                                @if($log->user && $log->user->avatar)
+                                    @php
+                                        $avatarUrl = 
+                                            
+                                            \Illuminate\Support\Str::startsWith($log->user->avatar, ['http://', 'https://'])
+                                                ? $log->user->avatar
+                                                : asset('storage/' . $log->user->avatar);
+                                    @endphp
+                                    <img src="{{ $avatarUrl }}" alt="{{ $log->user->name }}" class="rounded-circle" width="44" height="44" style="object-fit:cover;">
+                                @else
+                                    <div class="rounded-circle bg-secondary-subtle text-secondary d-flex align-items-center justify-content-center fw-semibold" style="width:44px;height:44px; font-size: 14px;">
+                                        {{ strtoupper(substr($log->user?->name ?? 'S', 0, 1)) }}
+                                    </div>
+                                @endif
+
+                                <div class="flex-grow-1 activity-item-body">
+                                    <div class="activity-item-row">
+                                        <div class="activity-item-meta">
+                                            <div class="fw-semibold">{{ $log->user?->name ?? 'System' }}</div>
+                                            <div class="small text-muted">{{ ucfirst($log->action) }}</div>
+                                        </div>
+                                        <div class="small text-muted activity-item-timestamp">{{ $log->created_at?->format('d/m/Y H:i') ?? '-' }}</div>
+                                    </div>
+                                    <div class="mt-2 activity-item-description">{{ $log->description }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="list-group-item text-center text-muted">Tidak ada aktivitas terbaru.</div>
+                    @endforelse
+                </div>
             </div>
         </div>
     </div>

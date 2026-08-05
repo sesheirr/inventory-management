@@ -25,6 +25,32 @@
     --muted: var(--text-secondary);
 }
 
+/* Mobile: stack modal footer buttons and action groups for better tap targets */
+@media (max-width: 576px) {
+    .modal-footer {
+        display: flex !important;
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+        display: block;
+    }
+
+    /* Form action groups: make buttons full-width and stacked on mobile */
+    .form-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .form-actions .btn {
+        width: 100%;
+    }
+}
+
 /* Dark theme variables when `dark` class applied on <html> */
 html.dark {
     --sidebar-bg: #0b1329;
@@ -282,6 +308,7 @@ html.dark .category-card .btn.btn-outline-primary {
     border: 1px solid #3b82f6 !important;
     color: #ffffff !important;
 }
+
 html.dark .category-card .btn.btn-outline-primary {
     border-color: rgba(255,255,255,0.14) !important;
     color: #eef2ff !important;
@@ -361,15 +388,23 @@ body {
 }
 
 .sidebar {
-    width: 220px;
+    /* Visual styles only: do NOT control positioning here so Bootstrap offcanvas can manage show/hide */
     background: var(--sidebar-bg-gradient);
     color: var(--sidebar-text);
-    padding: 24px 16px;
+    padding: 16px 12px;
     display: flex;
     flex-direction: column;
-    position: sticky;
-    top: 0;
-    height: 100vh;
+}
+
+@media (min-width: 992px) {
+    /* Desktop-only layout: allow fixed/sticky sidebar on large screens */
+    .sidebar {
+        width: 220px;
+        padding: 24px 16px;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+    }
 }
 
 .brand {
@@ -522,6 +557,9 @@ html.dark .sidebar .nav-link.active svg {
     border-radius: 50%;
     background: #fff;
     box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .profile-pill {
@@ -599,6 +637,47 @@ html.dark .profile-pill .text-muted {
     min-width: 320px;
     padding-left: 44px;
 }
+
+/* Recent activity mobile overflow fixes */
+.activity-item {
+    min-width: 0;
+}
+
+.activity-item-body {
+    min-width: 0;
+}
+
+.activity-item-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.activity-item-meta {
+    min-width: 0;
+    flex: 1;
+}
+
+.activity-item-description {
+    margin-top: 0.75rem;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    color: var(--text-secondary);
+}
+
+.activity-item-timestamp {
+    flex-shrink: 0;
+    white-space: nowrap;
+    color: var(--text-secondary);
+}
+
+html.dark .activity-item-description,
+html.dark .activity-item-timestamp {
+    color: rgba(226, 232, 240, 0.75);
+}
+
 
 .search-box {
     position: relative;
@@ -691,12 +770,6 @@ html.dark .profile-pill .text-muted {
 @media (max-width: 991px) {
     .app-shell {
         flex-direction: column;
-    }
-
-    .sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
     }
 
     .topbar {
@@ -830,12 +903,6 @@ html.dark .profile-dropdown-menu {
     margin: 10px 0 0;
     color: var(--muted);
     font-size: 1rem;
-}
-
-.settings-breadcrumb {
-    margin: 0;
-    font-size: 0.92rem;
-    color: var(--muted);
 }
 
 .settings-title {
@@ -1477,45 +1544,29 @@ html.dark .profile-pill-link:hover {
     transform: translateY(0);
 }
 
-/* ============ Sidebar bagian bawah ============ */
-.sidebar {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
+/* ===========================
+   DARK MODE TOGGLE MOBILE
+   =========================== */
+#darkModeToggleMobile {
+    background-color: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    color: #ffffff;
 }
 
-.nav-links-bottom {
-    margin-top: auto;
-    padding-top: 8px;
+#darkModeToggleMobile i {
+    color: #ffffff;
 }
 
-.sidebar-divider {
-    border: none;
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
-    margin: 8px 16px 12px;
+#darkModeToggleMobile:hover,
+#darkModeToggleMobile:focus,
+#darkModeToggleMobile:active,
+#darkModeToggleMobile:focus-visible {
+    background-color: rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.7) !important;
+    color: #ffffff !important;
 }
 
-html.dark .sidebar-divider {
-    border-top-color: rgba(255, 255, 255, 0.08);
-}
-
-.nav-link-logout,
-.nav-link-logout i {
-    color: #f87171; /* merah default, terlihat jelas di sidebar dark */
-}
-
-.nav-link-logout {
-    width: 100%;
-    background: transparent;
-    border: none;
-    text-align: left;
-    font: inherit;
-    cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.nav-link-logout:hover,
-.nav-link-logout:hover i {
-    background-color: rgba(220, 53, 69, 0.15);
-    color: #fca5a5; /* sedikit lebih terang saat hover */
+#darkModeToggleMobile:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.8);
+    outline-offset: 2px;
 }

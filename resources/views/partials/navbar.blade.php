@@ -82,8 +82,13 @@
     </div>
 
     <div class="d-flex align-items-center gap-2">
-        {{-- DARK MODE TOGGLE --}}
-        <button id="darkModeToggle" class="icon-btn" type="button">
+        {{-- HAMBURGER (mobile only) --}}
+        <button class="btn btn-outline-secondary d-lg-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
+            <i class="fa fa-bars"></i>
+        </button>
+
+        {{-- DARK MODE TOGGLE (desktop only) --}}
+        <button id="darkModeToggle" class="icon-btn d-none d-lg-inline-flex" type="button">
             <i id="themeIcon" class="bi bi-moon"></i>
         </button>
 

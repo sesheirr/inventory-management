@@ -102,52 +102,22 @@
             }
         }
 
-        .page-transition-overlay {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 2050;
-            opacity: 0;
-            transform: translateX(-112%);
-            background:
-                linear-gradient(135deg, rgba(255, 255, 255, 0.14), transparent 40%),
-                radial-gradient(circle at var(--fx, 50%) var(--fy, 50%), var(--nav-accent, rgba(56, 189, 248, 0.42)) 0%, rgba(8, 18, 42, 0.58) 48%, rgba(3, 6, 18, 0.96) 100%);
-            backdrop-filter: blur(16px) saturate(140%);
-            clip-path: inset(0 100% 0 0 round 0 24px 24px 0);
-            transition: transform 0.68s cubic-bezier(0.22, 1, 0.36, 1), clip-path 0.68s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.32s ease;
-        }
-
-        .page-transition-overlay.active {
-            opacity: 1;
-            transform: translateX(0);
-            clip-path: inset(0 0 0 0 round 0 0 0 0);
-        }
-
-        /* --- FIX PERBAIKAN STACKING CONTEXT UNTUK MODAL --- */
+        /* --- Modal stacking context helpers only --- */
         .main-panel {
             /* Menghapus will-change agar tidak mengunci modal */
             will-change: auto !important;
         }
 
-        .route-transitioning .content-area {
-            opacity: 0.18;
-            filter: blur(1.6px);
-            transition: opacity 0.35s ease, filter 0.48s ease;
-        }
-
         .content-area {
-            animation: moduleContentIn 0.58s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            animation: fadeIn 0.3s ease forwards;
         }
 
-        @keyframes moduleContentIn {
-            0% {
+        @keyframes fadeIn {
+            from {
                 opacity: 0;
-                transform: translateY(18px);
             }
-            100% {
+            to {
                 opacity: 1;
-                /* Mengembalikan transform ke none agar modal fixed bekerja sempurna terhadap viewport */
-                transform: none !important;
             }
         }
     </style>

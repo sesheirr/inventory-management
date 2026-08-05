@@ -108,7 +108,7 @@
     @endif
 
     <div class="modal fade" id="modalTambahRuangan" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content rounded-4">
                 <form method="POST" action="{{ route('rooms.store') }}">
                     @csrf
@@ -134,7 +134,7 @@
                         </div>
                        
                     </div>
-                    <div class="modal-footer border-0">
+                    <div class="modal-footer border-0 form-actions">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
                         <button type="submit" class="btn btn-primary">Simpan</button>
                     </div>

@@ -24,7 +24,7 @@
 </div>
 
 <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="addCategoryModalLabel">Tambah Kategori Baru</h5>
@@ -41,7 +41,7 @@
                         @enderror
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer form-actions">
                     <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
                     <button type="submit" class="btn btn-primary rounded-pill">Simpan Kategori</button>
                 </div>

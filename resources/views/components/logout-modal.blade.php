@@ -1,6 +1,6 @@
 <!-- LOGOUT MODAL -->
 <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-dialog modal-dialog-centered modal-sm modal-dialog-scrollable">
         <div class="modal-content rounded-4 border-0 shadow-lg">
             <!-- MODAL HEADER -->
             <div class="modal-header border-0 pb-0">
@@ -19,7 +19,7 @@
             </div>
 
             <!-- MODAL FOOTER -->
-            <div class="modal-footer border-0 pt-0 gap-2">
+            <div class="modal-footer border-0 pt-0 gap-2 form-actions">
                 <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
                     Batal
                 </button>

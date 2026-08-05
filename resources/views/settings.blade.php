@@ -77,7 +77,7 @@
 
     <!-- Moved Edit Profile modal from Profile page so edit action is accessible from Settings -->
     <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content rounded-4 border-0 shadow">
                 <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
                     @csrf
@@ -144,7 +144,7 @@
                             <textarea name="address" class="form-control" rows="3">{{ old('address', $user->address ?? '') }}</textarea>
                         </div>
                     </div>
-                    <div class="modal-footer border-0">
+                    <div class="modal-footer border-0 form-actions">
                         <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
                         <button type="submit" class="btn btn-primary rounded-pill">Simpan</button>
                     </div>

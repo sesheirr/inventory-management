@@ -111,8 +111,9 @@
         </div>
     </div>
 
-    <div class="table-responsive">
-        <table class="table align-middle">
+    <div class="d-none d-md-block">
+        <div class="table-responsive">
+            <table class="table align-middle">
             <thead>
                 <tr>
                     <th style="width:42px;" class="delete-mode-cell d-none"><input type="checkbox" id="select-all-checkbox" class="form-check-input select-all-checkbox" @if($products->isEmpty()) disabled @endif></th>
@@ -163,36 +164,89 @@
                                 @endif
                             </ul>
                             </div>
-
-                            @if(auth()->user()->isAdmin())
-                                <!-- Delete Modal -->
-                                <div class="modal fade" id="deleteModal{{ $product->id }}" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content rounded-4">
-                                            <div class="modal-header border-0">
-                                                <h5 class="modal-title">Hapus barang?</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">Ini akan menghapus {{ $product->name }} dari inventaris.</div>
-                                            <div class="modal-footer border-0">
-                                                <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
-                                                <form action="{{ route('products.destroy', $product) }}" method="POST">@csrf @method('DELETE')<button type="submit" class="btn btn-danger rounded-pill">Hapus</button></form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
                         </td>
                     </tr>
                 @empty
                     <tr><td colspan="7" class="text-center py-5 text-muted">Tidak ada barang ditemukan.</td></tr>
                 @endforelse
             </tbody>
-        </table>
+</table>
+        </div>
     </div>
 
+    {{-- Mobile: Card list --}}
+    <div class="d-md-none">
+        <div class="row g-3">
+            @forelse($products as $product)
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body d-flex gap-3 align-items-start">
+                            <div class="product-thumb flex-shrink-0">
+                                <img src="{{ $product->image ?? asset('images/no-image.png') }}" alt="{{ $product->name }}" onerror="this.onerror=null; this.src='https://placehold.co/100x100?text=No+Image';">
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="fw-semibold">{{ $product->name }}</div>
+                                        @if($product->subcategory)<div class="text-muted small">{{ $product->subcategory }}</div>@endif
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-semibold">{{ $product->stock ?? 0 }}</div>
+                                    </div>
+                                </div>
+                                <div class="mt-2 d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="badge category-badge bg-primary-subtle text-primary-emphasis px-3 py-2 rounded-pill text-wrap">{{ $product->category }}</span>
+                                    <span class="badge room-badge bg-secondary-subtle text-secondary-emphasis px-3 py-2 rounded-pill text-wrap">{{ $product->room_name ?: 'Belum diisi' }}</span>
+                                    <div class="ms-auto">
+                                        @if(($product->stock ?? 0) > 0 && $product->status !== 'inactive')
+                                            <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill">Aktif</span>
+                                        @elseif($product->status === 'inactive')
+                                            <span class="badge bg-warning-subtle text-warning px-3 py-2 rounded-pill">Tidak Aktif</span>
+                                        @else
+                                            <span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill">Stok Habis</span>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <div class="mt-3 d-flex gap-2">
+                                    <a href="{{ route('products.show', $product) }}" class="btn btn-sm btn-outline-secondary">Lihat</a>
+                                    @if(auth()->user()->isAdmin())
+                                        <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $product->id }}">Hapus</button>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="col-12 text-center py-5 text-muted">Tidak ada barang ditemukan.</div>
+            @endforelse
+        </div>
+    </div>
+
+    @if(auth()->user()->isAdmin())
+        @foreach($products as $product)
+            <div class="modal fade" id="deleteModal{{ $product->id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content rounded-4">
+                        <div class="modal-header border-0">
+                            <h5 class="modal-title">Hapus barang?</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">Ini akan menghapus {{ $product->name }} dari inventaris.</div>
+                        <div class="modal-footer border-0 form-actions">
+                            <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
+                            <form action="{{ route('products.destroy', $product) }}" method="POST">@csrf @method('DELETE')<button type="submit" class="btn btn-danger rounded-pill">Hapus</button></form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endforeach
+    @endif
+
     <div class="modal fade" id="bulkDeleteModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content rounded-4">
                 <div class="modal-header border-0">
                     <h5 class="modal-title">Hapus semua barang?</h5>
@@ -201,7 +255,7 @@
                 <div class="modal-body">
                     <p class="mb-0">Yakin ingin menghapus <span id="bulk-delete-count">0</span> barang?</p>
                 </div>
-                <div class="modal-footer border-0">
+                <div class="modal-footer border-0 form-actions">
                     <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
                     <form id="bulk-delete-form" action="{{ route('products.destroySelected') }}" method="POST">
                         @csrf
@@ -317,7 +371,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }));
     syncSelectionState();
 
+    let isUserTyping = false;
+
+    realtimeSearch?.addEventListener('focus', () => {
+        isUserTyping = true;
+    });
+
     realtimeSearch?.addEventListener('input', function () {
+        if (!isUserTyping) return;
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
             const q = encodeURIComponent(this.value || '');

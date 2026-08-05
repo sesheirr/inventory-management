@@ -81,9 +81,10 @@
         </form>
     </div>
 
-    {{-- Data Table --}}
-    <div class="table-responsive">
-        <table class="table table-sm align-middle table-hover small mb-0">
+    {{-- Data Table (desktop) --}}
+    <div class="d-none d-md-block">
+        <div class="table-responsive">
+            <table class="table table-sm align-middle table-hover small mb-0">
             <thead>
                 <tr class="border-bottom border-secondary-subtle">
                     <th scope="col" class="py-2 text-muted">Tanggal</th>
@@ -210,7 +211,67 @@
                     </tr>
                 @endforelse
             </tbody>
-        </table>
+            </table>
+        </div>
+    </div>
+
+    {{-- Mobile: Card list --}}
+    <div class="d-md-none">
+        <div class="row g-3">
+            @forelse($mutations as $mutation)
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="fw-semibold">{{ $mutation->product->name ?? '-' }}</div>
+                                    <small class="text-muted">{{ optional($mutation->mutation_date)->format('d/m/Y') }} • {{ $mutation->product->kode_barang ?? '' }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-semibold">{{ $mutation->quantity }}</div>
+                                    @switch($mutation->type)
+                                        @case('masuk')
+                                            <span class="badge bg-success-subtle text-success rounded-pill mt-1">Masuk</span>
+                                            @break
+                                        @case('keluar')
+                                            <span class="badge bg-danger-subtle text-danger rounded-pill mt-1">Keluar</span>
+                                            @break
+                                        @case('pindah_ruang')
+                                            <span class="badge bg-info-subtle text-info rounded-pill mt-1">Pindah</span>
+                                            @break
+                                        @default
+                                            <span class="badge bg-secondary-subtle text-secondary rounded-pill mt-1">{{ ucfirst(str_replace('_',' ',$mutation->type)) }}</span>
+                                    @endswitch
+                                </div>
+                            </div>
+
+                            <div class="mt-2 d-flex gap-2 flex-wrap">
+                                <div class="text-muted small">Dari: <strong>{{ $mutation->fromRoom?->name ?? '-' }}</strong></div>
+                                <div class="text-muted small">Ke: <strong>{{ $mutation->toRoom?->name ?? '-' }}</strong></div>
+                            </div>
+
+                            <div class="mt-2 d-flex justify-content-between align-items-center">
+                                <div class="text-truncate" style="max-width: 60%;">{{ $mutation->note ?? '-' }}</div>
+                                <div class="d-flex align-items-center gap-2">
+                                    @if($mutation->status === 'pending' && (auth()->user()->isAdmin() || auth()->user()->isSuperAdmin()))
+                                        <form action="{{ route('mutations.approve', $mutation) }}" method="POST" class="m-0">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" class="btn btn-sm btn-success rounded-pill">Setujui</button>
+                                        </form>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ $mutation->id }}">Tolak</button>
+                                    @endif
+
+                                    <a href="{{ route('mutations.show', $mutation) }}" class="btn btn-sm btn-outline-secondary">Lihat</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="col-12 text-center py-4 text-muted small">Tidak ada data mutasi yang ditemukan.</div>
+            @endforelse
+        </div>
     </div>
 
     {{-- Footer Pagination --}}
@@ -229,7 +290,7 @@
     {{-- Modal Tolak Pengajuan (Khusus Admin/SuperAdmin) --}}
     @if($mutation->status === 'pending' && (auth()->user()->isAdmin() || auth()->user()->isSuperAdmin()))
         <div class="modal fade" id="rejectModal{{ $mutation->id }}" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-dialog modal-dialog-centered modal-sm modal-dialog-scrollable">
                 <div class="modal-content rounded-4 border border-secondary-subtle shadow">
                     <form action="{{ route('mutations.reject', $mutation) }}" method="POST">
                         @csrf
@@ -246,7 +307,7 @@
                                           placeholder="Tulis alasan singkat..."></textarea>
                             </div>
                         </div>
-                        <div class="modal-footer border-0 pt-0">
+                        <div class="modal-footer border-0 pt-0 form-actions">
                             <button type="button" class="btn btn-light btn-sm rounded-pill px-3" data-bs-dismiss="modal">Batal</button>
                             <button type="submit" class="btn btn-danger btn-sm rounded-pill px-3">Tolak</button>
                         </div>

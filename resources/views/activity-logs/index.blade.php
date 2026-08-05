@@ -11,8 +11,9 @@
 
     <div class="card rounded-4 shadow-sm border-0">
         <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
+            <div class="d-none d-md-block">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
                             <th>User</th>
@@ -35,7 +36,28 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
+                    </table>
+                </div>
+            </div>
+
+            {{-- Mobile: activity cards --}}
+            <div class="d-md-none">
+                <div class="list-group list-group-flush">
+                    @forelse($activityLogs as $log)
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="fw-semibold">{{ $log->user?->name ?? 'System' }}</div>
+                                    <div class="text-muted small">{{ ucfirst($log->action) }}</div>
+                                </div>
+                                <div class="text-end small text-muted">{{ $log->created_at?->format('d/m/Y H:i') ?? '-' }}</div>
+                            </div>
+                            <div class="mt-2 text-truncate" style="max-width:100%;">{{ $log->description }}</div>
+                        </div>
+                    @empty
+                        <div class="list-group-item text-center text-muted">Tidak ada log aktivitas.</div>
+                    @endforelse
+                </div>
             </div>
         </div>
     </div>

@@ -4,43 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
         searchInput.setAttribute('autocomplete', 'off');
     }
 
-    const transitionOverlay = document.createElement('div');
-    transitionOverlay.className = 'page-transition-overlay';
-    transitionOverlay.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(transitionOverlay);
-
-    document.querySelectorAll('.nav-link[data-nav-transition="true"]').forEach((link) => {
-        link.addEventListener('click', (event) => {
-            const href = link.getAttribute('href');
-            if (!href || href.startsWith('#')) {
-                return;
-            }
-
-            const targetUrl = new URL(href, window.location.origin).href;
-            if (window.location.href === targetUrl) {
-                return;
-            }
-
-            event.preventDefault();
-
-            const rect = link.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-
-            transitionOverlay.style.setProperty('--fx', `${centerX}px`);
-            transitionOverlay.style.setProperty('--fy', `${centerY}px`);
-            transitionOverlay.style.setProperty('--nav-accent', link.dataset.navAccent || 'rgba(56, 189, 248, 0.48)');
-
-            const mainPanel = document.querySelector('.main-panel');
-            mainPanel?.classList.add('route-transitioning');
-            transitionOverlay.classList.add('active');
-
-            setTimeout(() => {
-                window.location.assign(href);
-            }, 260);
-        });
-    });
-
    // Auto-close Notifikasi Toast
 document.querySelectorAll('.toast').forEach((toastElement) => {
     // 1. Set waktu tunggu 3 detik (3000 ms)
@@ -70,9 +33,10 @@ document.querySelectorAll('.btn-close').forEach((button) => {
 });
 });
 
-// Dark/Light theme toggle
+// Dark/Light theme toggle (shared for desktop and mobile toggles)
 document.addEventListener('DOMContentLoaded', () => {
-    const toggle = document.getElementById('darkModeToggle');
+    const desktopToggle = document.getElementById('darkModeToggle');
+    const mobileToggle = document.getElementById('darkModeToggleMobile');
     const icon = document.getElementById('themeIcon');
     const themeButtons = document.querySelectorAll('.segment-button');
 
@@ -115,14 +79,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const current = getPreferredTheme();
     applyTheme(current);
 
-    // Toggle on button click
-    if (toggle) {
-        toggle.addEventListener('click', () => {
+    function attachToggle(el) {
+        if (!el) return;
+        el.addEventListener('click', () => {
             const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
             localStorage.setItem('theme', newTheme);
             applyTheme(newTheme);
         });
     }
+
+    attachToggle(desktopToggle);
+    attachToggle(mobileToggle);
 
     themeButtons.forEach(button => {
         button.addEventListener('click', () => {
