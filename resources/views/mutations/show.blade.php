@@ -2,12 +2,9 @@
 
 @section('content')
 <div class="card dashboard-card">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h4 class="fw-semibold mb-1">Detail Mutasi</h4>
-            <p class="text-muted mb-0">Informasi lengkap mutasi barang.</p>
-        </div>
-        <a href="{{ route('mutations.index') }}" class="btn btn-secondary rounded-pill">Kembali</a>
+    <div class="mb-4">
+        <h4 class="fw-semibold mb-1">Detail Mutasi</h4>
+        <p class="text-muted mb-0">Informasi lengkap mutasi barang.</p>
     </div>
 
     <div class="row g-4">
@@ -33,7 +30,7 @@
         <div class="col-md-6">
             <div class="card p-4 rounded-4 shadow-sm">
                 <h5 class="fw-semibold">Tanggal Mutasi</h5>
-                <p class="mb-0">{{ optional($mutation->mutation_date)->format('Y-m-d H:i') }}</p>
+                <p class="mb-0">{{ optional($mutation->mutation_date)->format('Y-m-d') }}</p>
             </div>
         </div>
         <div class="col-md-6">

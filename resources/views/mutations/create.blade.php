@@ -50,10 +50,10 @@
             </select>
         </div>
 
-        <div class="col-md-4">
-            <label class="form-label">Tanggal Mutasi</label>
-            <input type="datetime-local" name="mutation_date" class="form-control" value="{{ old('mutation_date', now()->format('Y-m-d\TH:i')) }}" required>
-        </div>
+     <div class="col-md-4">
+        <label class="form-label">Tanggal Mutasi</label>
+        <input type="date" name="mutation_date" class="form-control" value="{{ old('mutation_date', date('Y-m-d')) }}" required>
+    </div>
 
         <div class="col-12">
             <label class="form-label">Catatan</label>

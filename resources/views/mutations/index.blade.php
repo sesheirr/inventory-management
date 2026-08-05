@@ -103,7 +103,6 @@
                         <td class="text-nowrap text-muted">{{ optional($mutation->mutation_date)->format('d/m/Y') }}</td>
                         <td>
                             <div class="fw-semibold">{{ $mutation->product->name ?? '-' }}</div>
-                            <small class="text-muted font-monospace" style="font-size: 0.75rem;">{{ $mutation->product->kode_barang ?? '' }}</small>
                         </td>
                         <td>
                             @switch($mutation->type)
@@ -143,11 +142,16 @@
                                     <span class="badge bg-secondary rounded-pill px-2">{{ ucfirst($mutation->status) }}</span>
                             @endswitch
 
-                            @if($mutation->status === 'rejected' && $mutation->rejection_note)
+                            {{-- Tombol Alasan Penolakan (Modal Trigger) --}}
+                            @if($mutation->status === 'rejected')
                                 <div class="mt-1">
-                                    <small class="text-danger cursor-pointer" style="font-size: 0.7rem;" data-bs-toggle="tooltip" title="Alasan: {{ $mutation->rejection_note }}">
+                                    <button type="button" 
+                                            class="btn btn-link p-0 text-danger border-0 text-decoration-none d-inline-flex align-items-center" 
+                                            style="font-size: 0.725rem;" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#reasonModal{{ $mutation->id }}">
                                         <i class="bi bi-info-circle me-1"></i>Alasan
-                                    </small>
+                                    </button>
                                 </div>
                             @endif
                         </td>
@@ -220,8 +224,9 @@
     </div>
 </div>
 
-{{-- Modals Container (Ditaruh diluar card/table agar penumpukan backdrop modal rapi) --}}
+{{-- Modals Container --}}
 @foreach($mutations as $mutation)
+    {{-- Modal Tolak Pengajuan (Khusus Admin/SuperAdmin) --}}
     @if($mutation->status === 'pending' && (auth()->user()->isAdmin() || auth()->user()->isSuperAdmin()))
         <div class="modal fade" id="rejectModal{{ $mutation->id }}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -246,6 +251,31 @@
                             <button type="submit" class="btn btn-danger btn-sm rounded-pill px-3">Tolak</button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Modal Lihat Alasan Penolakan (Bisa Dilihat Semua User) --}}
+    @if($mutation->status === 'rejected')
+        <div class="modal fade" id="reasonModal{{ $mutation->id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content rounded-4 border border-danger-subtle shadow">
+                    <div class="modal-header border-0 pb-0">
+                        <h6 class="modal-title fw-semibold text-danger d-flex align-items-center gap-1">
+                            <i class="bi bi-exclamation-triangle-fill"></i> Alasan Penolakan
+                        </h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body py-3">
+                        <p class="small text-muted mb-2">Barang: <strong>{{ $mutation->product->name ?? '-' }}</strong></p>
+                        <div class="p-3 bg-danger-subtle text-danger-emphasis rounded-3 border border-danger-subtle small">
+                            {{ $mutation->rejection_note ?? 'Tidak ada catatan alasan penolakan yang dicantumkan.' }}
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">Tutup</button>
+                    </div>
                 </div>
             </div>
         </div>

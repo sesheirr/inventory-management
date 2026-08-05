@@ -28,7 +28,7 @@ class Mutation extends Model
     ];
 
     protected $casts = [
-        'mutation_date' => 'datetime',
+        'mutation_date' => 'date', // Mengubah menjadi tipe 'date' agar waktu/jam tidak ikut tampil
         'approved_at'   => 'datetime',
     ];
 
