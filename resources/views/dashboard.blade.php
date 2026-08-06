@@ -17,7 +17,7 @@
         </div>
     @endif
 
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3 mb-4">
+    <div class="row row-cols-2 row-cols-lg-4 g-3 mb-4">
         <div class="col">
             <div class="card rounded-4 shadow-sm border-0 h-100">
                 <div class="card-body d-flex align-items-center gap-3">

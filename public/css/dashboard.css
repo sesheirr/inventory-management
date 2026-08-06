@@ -396,6 +396,19 @@ body {
     flex-direction: column;
 }
 
+.offcanvas.sidebar {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-height: 100vh;
+}
+
+.offcanvas.sidebar .offcanvas-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    min-height: 0;
+}
+
 @media (min-width: 992px) {
     /* Desktop-only layout: allow fixed/sticky sidebar on large screens */
     .sidebar {
