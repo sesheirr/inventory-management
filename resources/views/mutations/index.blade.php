@@ -222,48 +222,41 @@
                 <div class="col-12">
                     <div class="card">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <div>
-                                    <div class="fw-semibold">{{ $mutation->product->name ?? '-' }}</div>
-                                    <small class="text-muted">{{ optional($mutation->mutation_date)->format('d/m/Y') }} • {{ $mutation->product->kode_barang ?? '' }}</small>
-                                </div>
-                                <div class="text-end">
-                                    <div class="fw-semibold">{{ $mutation->quantity }}</div>
-                                    @switch($mutation->type)
-                                        @case('masuk')
-                                            <span class="badge bg-success-subtle text-success rounded-pill mt-1">Masuk</span>
-                                            @break
-                                        @case('keluar')
-                                            <span class="badge bg-danger-subtle text-danger rounded-pill mt-1">Keluar</span>
-                                            @break
-                                        @case('pindah_ruang')
-                                            <span class="badge bg-info-subtle text-info rounded-pill mt-1">Pindah</span>
-                                            @break
-                                        @default
-                                            <span class="badge bg-secondary-subtle text-secondary rounded-pill mt-1">{{ ucfirst(str_replace('_',' ',$mutation->type)) }}</span>
-                                    @endswitch
-                                </div>
+                            <div>
+                                <div class="fw-semibold">{{ $mutation->product->name ?? '-' }}</div>
+                                <div class="text-muted small">{{ optional($mutation->mutation_date)->format('d/m/Y') }} • {{ $mutation->product->kode_barang ?? '' }}</div>
                             </div>
-
-                            <div class="mt-2 d-flex gap-2 flex-wrap">
+                            <div class="mt-2">
+                                <span class="badge bg-secondary-subtle text-secondary rounded-pill">Qty: {{ $mutation->quantity }}</span>
+                                @switch($mutation->type)
+                                    @case('masuk')
+                                        <span class="badge bg-success-subtle text-success rounded-pill ms-2">Masuk</span>
+                                        @break
+                                    @case('keluar')
+                                        <span class="badge bg-danger-subtle text-danger rounded-pill ms-2">Keluar</span>
+                                        @break
+                                    @case('pindah_ruang')
+                                        <span class="badge bg-info-subtle text-info rounded-pill ms-2">Pindah</span>
+                                        @break
+                                    @default
+                                        <span class="badge bg-secondary-subtle text-secondary rounded-pill ms-2">{{ ucfirst(str_replace('_',' ',$mutation->type)) }}</span>
+                                @endswitch
+                            </div>
+                            <div class="mt-2 d-flex flex-column gap-1">
                                 <div class="text-muted small">Dari: <strong>{{ $mutation->fromRoom?->name ?? '-' }}</strong></div>
                                 <div class="text-muted small">Ke: <strong>{{ $mutation->toRoom?->name ?? '-' }}</strong></div>
                             </div>
-
-                            <div class="mt-2 d-flex justify-content-between align-items-center">
-                                <div class="text-truncate" style="max-width: 60%;">{{ $mutation->note ?? '-' }}</div>
-                                <div class="d-flex align-items-center gap-2">
-                                    @if($mutation->status === 'pending' && (auth()->user()->isAdmin() || auth()->user()->isSuperAdmin()))
-                                        <form action="{{ route('mutations.approve', $mutation) }}" method="POST" class="m-0">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit" class="btn btn-sm btn-success rounded-pill">Setujui</button>
-                                        </form>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ $mutation->id }}">Tolak</button>
-                                    @endif
-
-                                    <a href="{{ route('mutations.show', $mutation) }}" class="btn btn-sm btn-outline-secondary">Lihat</a>
-                                </div>
+                            <div class="mt-2 text-muted small" style="white-space: normal; word-break: break-word;">{{ $mutation->note ?? '-' }}</div>
+                            <div class="mt-3 d-flex flex-wrap gap-2">
+                                @if($mutation->status === 'pending' && (auth()->user()->isAdmin() || auth()->user()->isSuperAdmin()))
+                                    <form action="{{ route('mutations.approve', $mutation) }}" method="POST" class="m-0">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" class="btn btn-sm btn-success rounded-pill">Setujui</button>
+                                    </form>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ $mutation->id }}">Tolak</button>
+                                @endif
+                                <a href="{{ route('mutations.show', $mutation) }}" class="btn btn-sm btn-outline-secondary">Lihat</a>
                             </div>
                         </div>
                     </div>

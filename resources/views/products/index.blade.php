@@ -180,24 +180,20 @@
             @forelse($products as $product)
                 <div class="col-12">
                     <div class="card">
-                        <div class="card-body d-flex gap-3 align-items-start">
-                            <div class="product-thumb flex-shrink-0">
-                                <img src="{{ $product->image ?? asset('images/no-image.png') }}" alt="{{ $product->name }}" onerror="this.onerror=null; this.src='https://placehold.co/100x100?text=No+Image';">
-                            </div>
-                            <div class="flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <div class="fw-semibold">{{ $product->name }}</div>
-                                        @if($product->subcategory)<div class="text-muted small">{{ $product->subcategory }}</div>@endif
-                                    </div>
-                                    <div class="text-end">
-                                        <div class="fw-semibold">{{ $product->stock ?? 0 }}</div>
-                                    </div>
+                        <div class="card-body">
+                            <div class="d-flex gap-3 align-items-start">
+                                <div class="product-thumb flex-shrink-0">
+                                    <img src="{{ $product->image ?? asset('images/no-image.png') }}" alt="{{ $product->name }}" onerror="this.onerror=null; this.src='https://placehold.co/100x100?text=No+Image';">
                                 </div>
-                                <div class="mt-2 d-flex flex-wrap gap-2 align-items-center">
-                                    <span class="badge category-badge bg-primary-subtle text-primary-emphasis px-3 py-2 rounded-pill text-wrap">{{ $product->category }}</span>
-                                    <span class="badge room-badge bg-secondary-subtle text-secondary-emphasis px-3 py-2 rounded-pill text-wrap">{{ $product->room_name ?: 'Belum diisi' }}</span>
-                                    <div class="ms-auto">
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">{{ $product->name }}</div>
+                                    @if($product->subcategory)<div class="text-muted small">{{ $product->subcategory }}</div>@endif
+                                    <div class="text-muted small mt-2">Stok: {{ $product->stock ?? 0 }}</div>
+                                    <div class="mt-2 d-flex flex-wrap gap-2 align-items-start">
+                                        <span class="badge category-badge bg-primary-subtle text-primary-emphasis px-3 py-2 rounded-pill text-wrap">{{ $product->category }}</span>
+                                        <span class="badge room-badge bg-secondary-subtle text-secondary-emphasis px-3 py-2 rounded-pill text-wrap">{{ $product->room_name ?: 'Belum diisi' }}</span>
+                                    </div>
+                                    <div class="mt-2">
                                         @if(($product->stock ?? 0) > 0 && $product->status !== 'inactive')
                                             <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill">Aktif</span>
                                         @elseif($product->status === 'inactive')
@@ -206,14 +202,13 @@
                                             <span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill">Stok Habis</span>
                                         @endif
                                     </div>
-                                </div>
-
-                                <div class="mt-3 d-flex gap-2">
-                                    <a href="{{ route('products.show', $product) }}" class="btn btn-sm btn-outline-secondary">Lihat</a>
-                                    @if(auth()->user()->isAdmin())
-                                        <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                        <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $product->id }}">Hapus</button>
-                                    @endif
+                                    <div class="mt-3 d-flex flex-wrap gap-2">
+                                        <a href="{{ route('products.show', $product) }}" class="btn btn-sm btn-outline-secondary">Lihat</a>
+                                        @if(auth()->user()->isAdmin())
+                                            <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $product->id }}">Hapus</button>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>

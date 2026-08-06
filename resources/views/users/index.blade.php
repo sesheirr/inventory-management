@@ -83,41 +83,37 @@
             <div class="list-group list-group-flush">
                 @foreach($users as $user)
                     <div class="list-group-item">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <div class="fw-semibold">{{ $user->name }}</div>
-                                <div class="text-muted small">{{ $user->email }}</div>
+                        <div>
+                            <div class="fw-semibold">{{ $user->name }}</div>
+                            <div class="text-muted small">{{ $user->email }}</div>
+                            <div class="mt-2">
+                                <span class="badge rounded-pill px-3 py-2 {{ $user->role === 'superadmin' ? 'bg-danger-subtle text-danger' : ($user->role === 'admin' ? 'bg-primary-subtle text-primary' : 'bg-secondary-subtle text-secondary') }}">{{ ucfirst($user->role) }}</span>
                             </div>
-                            <div class="text-end">
-                                <div class="mb-2">
-                                    <span class="badge rounded-pill px-3 py-2 {{ $user->role === 'superadmin' ? 'bg-danger-subtle text-danger' : ($user->role === 'admin' ? 'bg-primary-subtle text-primary' : 'bg-secondary-subtle text-secondary') }}">{{ ucfirst($user->role) }}</span>
-                                </div>
-                                <div>
-                                    @if($user->id === auth()->id())
-                                        <small class="text-muted fst-italic">Ini akun Anda</small>
-                                    @else
-                                        <div class="d-flex gap-2 form-actions">
-                                            <form method="POST" action="{{ route('users.update-role', $user) }}" class="d-flex gap-2">
-                                                @csrf
-                                                @method('PUT')
-                                                <select name="role" class="form-select form-select-sm" style="width: auto;">
-                                                    <option value="user" @selected($user->role === 'user')>User</option>
-                                                    <option value="admin" @selected($user->role === 'admin')>Admin</option>
-                                                    <option value="superadmin" @selected($user->role === 'superadmin')>Superadmin</option>
-                                                </select>
-                                                <button type="submit" class="btn btn-sm btn-outline-primary">Simpan</button>
-                                            </form>
+                            <div class="mt-3">
+                                @if($user->id === auth()->id())
+                                    <small class="text-muted fst-italic">Ini akun Anda</small>
+                                @else
+                                    <div class="d-flex flex-column gap-2">
+                                        <form method="POST" action="{{ route('users.update-role', $user) }}" class="d-flex gap-2 flex-wrap">
+                                            @csrf
+                                            @method('PUT')
+                                            <select name="role" class="form-select form-select-sm" style="width: auto;">
+                                                <option value="user" @selected($user->role === 'user')>User</option>
+                                                <option value="admin" @selected($user->role === 'admin')>Admin</option>
+                                                <option value="superadmin" @selected($user->role === 'superadmin')>Superadmin</option>
+                                            </select>
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">Simpan</button>
+                                        </form>
 
-                                            @if($user->id !== auth()->id() && !$user->isSuperAdmin())
-                                                <form method="POST" action="{{ route('users.destroy', $user) }}" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus akun {{ $user->name }}?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Hapus</button>
-                                                </form>
-                                            @endif
-                                        </div>
-                                    @endif
-                                </div>
+                                        @if($user->id !== auth()->id() && !$user->isSuperAdmin())
+                                            <form method="POST" action="{{ route('users.destroy', $user) }}" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus akun {{ $user->name }}?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">Hapus</button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>

@@ -39,6 +39,14 @@
         $pageTitle = 'Mutasi Barang';
         $breadcrumb = 'Inventaris / Mutasi Barang';
         $showBackButton = true;
+    } elseif (Route::is('users.index') || Route::is('users.*')) {
+        $pageTitle = 'Manajemen User';
+        $breadcrumb = 'Inventaris / Manajemen User';
+        $showBackButton = true;
+    } elseif (Route::is('activity-logs.index') || Route::is('activity-logs.*')) {
+        $pageTitle = 'Log Aktivitas';
+        $breadcrumb = 'Inventaris / Log Aktivitas';
+        $showBackButton = true;
     } elseif (Route::is('notifications.index')) {
         $pageTitle = 'Notifikasi';
         $breadcrumb = 'Inventaris / Notifikasi';
@@ -48,8 +56,8 @@
         $breadcrumb = 'Inventaris / Profile';
         $showBackButton = true;
     } elseif (Route::is('settings')) {
-        $pageTitle = 'Settings';
-        $breadcrumb = 'Inventaris / Settings';
+        $pageTitle = 'Pengaturan';
+        $breadcrumb = 'Inventaris / Pengaturan';
         $showBackButton = true;
     }
 
