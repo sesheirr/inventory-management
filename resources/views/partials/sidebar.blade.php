@@ -44,7 +44,7 @@
                 <i class="bi bi-gear"></i><span>Pengaturan</span>
             </a>
 
-            <button type="button" class="nav-link nav-link-logout" data-bs-toggle="modal" data-bs-target="#logoutModal">
+            <button type="button" class="nav-link nav-link-logout text-danger" style="color: #ff4d4d !important;" data-bs-toggle="modal" data-bs-target="#logoutModal">
                 <i class="bi bi-box-arrow-right"></i><span>Logout</span>
             </button>
 
