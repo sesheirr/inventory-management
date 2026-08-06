@@ -673,10 +673,15 @@ html.dark .profile-pill .text-muted {
     flex: 1;
 }
 
+.activity-item-body {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
 .activity-item-description {
     margin-top: 0.75rem;
     overflow-wrap: break-word;
-    word-break: break-word;
+    white-space: normal;
     color: var(--text-secondary);
 }
 

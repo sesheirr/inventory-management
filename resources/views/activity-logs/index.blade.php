@@ -48,7 +48,7 @@
                             <div>
                                 <div class="fw-semibold">{{ $log->user?->name ?? 'System' }}</div>
                                 <div class="text-muted small">{{ ucfirst($log->action) }}</div>
-                                <div class="text-muted small mt-2" style="white-space: normal; word-break: break-word;">{{ $log->description }}</div>
+                                <div class="text-muted small mt-2" style="white-space: normal; overflow-wrap: break-word;">{{ $log->description }}</div>
                                 <div class="text-muted small mt-2">{{ $log->created_at?->format('d/m/Y H:i') ?? '-' }}</div>
                             </div>
                         </div>

@@ -168,9 +168,9 @@
                                                 ? $log->user->avatar
                                                 : asset('storage/' . $log->user->avatar);
                                     @endphp
-                                    <img src="{{ $avatarUrl }}" alt="{{ $log->user->name }}" class="rounded-circle" width="44" height="44" style="object-fit:cover;">
+                                    <img src="{{ $avatarUrl }}" alt="{{ $log->user->name }}" class="rounded-circle" width="44" height="44" style="object-fit:cover; flex-shrink:0;">
                                 @else
-                                    <div class="rounded-circle bg-secondary-subtle text-secondary d-flex align-items-center justify-content-center fw-semibold" style="width:44px;height:44px; font-size: 14px;">
+                                    <div class="rounded-circle bg-secondary-subtle text-secondary d-flex align-items-center justify-content-center fw-semibold" style="width:44px;height:44px; font-size: 14px; flex-shrink:0;">
                                         {{ strtoupper(substr($log->user?->name ?? 'S', 0, 1)) }}
                                     </div>
                                 @endif
