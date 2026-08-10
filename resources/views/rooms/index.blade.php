@@ -5,6 +5,8 @@
     <style>
         /* Room page: adaptive cards for light/dark themes */
         .room-card {
+            display: flex;
+            flex-direction: column;
             border-radius: 12px;
             padding: 16px;
             transition: background .2s ease, border-color .2s ease, color .2s ease;
@@ -145,32 +147,30 @@
 
     <div class="row g-3">
         @if($rooms->isEmpty())
-            <div class="col-12 text-center py-5 text-muted">Tidak ada ruangan ditemukan.</div>
+            <div id="roomsEmptyMessage" class="col-12 text-center py-5 text-muted">Tidak ada ruangan ditemukan.</div>
         @else
             @foreach($rooms as $room)
                 <div class="col-12 col-md-6 col-lg-4">
                     <div class="room-card border-0 rounded-4 shadow-sm h-100">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div>
-    <h5 class="mb-1 fw-semibold">{{ $room->name }}</h5>
-
-    <small class="text-muted d-block">
-        Penanggung Jawab:
-        {{ $room->person_in_charge ?? '-' }}
-    </small>
-
-    <small class="text-muted d-block">
-        {{ $room->products_count }} Barang
-    </small>
-</div>
-                            <div>
-                                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#roomProducts{{ md5($room->name) }}" aria-expanded="false" aria-controls="roomProducts{{ md5($room->name) }}">
-                                    <i class="bi bi-eye"></i> Lihat
-                                </button>
-                            </div>
+                        <div class="room-card-content">
+                            <h5 class="mb-1 fw-semibold">{{ $room->name }}</h5>
+                            <small class="text-muted d-block">
+                                Penanggung Jawab:
+                                {{ $room->person_in_charge ?? '-' }}
+                            </small>
+                            <small class="text-muted d-block">
+                                {{ $room->products_count }} Barang
+                            </small>
                         </div>
-
-                        <div class="collapse" id="roomProducts{{ md5($room->name) }}">
+                        <div class="mt-3 d-flex flex-wrap gap-2 align-items-center room-card-actions mt-auto">
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#roomProducts{{ md5($room->name) }}" aria-expanded="false" aria-controls="roomProducts{{ md5($room->name) }}">
+                                <i class="bi bi-eye"></i> Lihat
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger delete-room-button" data-room-id="{{ $room->id }}" data-room-name="{{ $room->name }}" data-delete-url="{{ route('rooms.destroy', $room) }}">
+                                <i class="bi bi-trash"></i> Hapus
+                            </button>
+                        </div>
+                        <div class="collapse mt-3" id="roomProducts{{ md5($room->name) }}">
                             <div class="room-products-card">
                                 @if($room->products->isEmpty())
                                     <div class="text-muted">Belum ada barang di ruangan ini.</div>
@@ -212,6 +212,70 @@
             var modal = new bootstrap.Modal(document.getElementById('modalTambahRuangan'));
             modal.show();
         @endif
+
+        document.querySelectorAll('.delete-room-button').forEach(function (button) {
+            button.addEventListener('click', function () {
+                var roomName = this.dataset.roomName || 'ruangan ini';
+                if (!confirm('Hapus ' + roomName + '? Aksi ini tidak dapat dibatalkan.')) {
+                    return;
+                }
+
+                var deleteUrl = this.dataset.deleteUrl;
+                var cardColumn = this.closest('.col-12.col-md-6.col-lg-4');
+                var token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+                fetch(deleteUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token,
+                        'Accept': 'application/json'
+                    },
+                })
+                .then(function (response) {
+                    if (!response.ok) {
+                        return response.json().then(function (data) {
+                            throw new Error(data.message || 'Gagal menghapus ruangan.');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(function (data) {
+                    if (cardColumn) {
+                        cardColumn.remove();
+                    }
+
+                    var roomCards = document.querySelectorAll('.col-12.col-md-6.col-lg-4');
+                    if (roomCards.length === 0) {
+                        var emptyMessage = document.getElementById('roomsEmptyMessage');
+                        if (!emptyMessage) {
+                            var row = document.querySelector('.row.g-3');
+                            if (row) {
+                                var message = document.createElement('div');
+                                message.id = 'roomsEmptyMessage';
+                                message.className = 'col-12 text-center py-5 text-muted';
+                                message.textContent = 'Tidak ada ruangan ditemukan.';
+                                row.appendChild(message);
+                            }
+                        }
+                    }
+
+                    if (data.success) {
+                        var alertWrapper = document.createElement('div');
+                        alertWrapper.className = 'alert alert-success alert-dismissible fade show rounded-3';
+                        alertWrapper.setAttribute('role', 'alert');
+                        alertWrapper.innerHTML = data.success + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+                        var container = document.querySelector('.card.dashboard-card');
+                        if (container) {
+                            container.insertBefore(alertWrapper, container.firstChild);
+                        }
+                    }
+                })
+                .catch(function (error) {
+                    alert(error.message);
+                });
+            });
+        });
     });
 </script>
 @endsection

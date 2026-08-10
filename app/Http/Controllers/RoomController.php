@@ -68,14 +68,24 @@ class RoomController extends Controller
         return redirect()->route('rooms.index')->with('success', 'Ruangan berhasil diperbarui.');
     }
 
-    public function destroy(Room $room)
+    public function destroy(Request $request, Room $room)
     {
         $productCount = $room->products()->count();
         if ($productCount > 0) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'Ruangan tidak bisa dihapus karena masih digunakan oleh ' . $productCount . ' barang.'
+                ], 422);
+            }
+
             return redirect()->route('rooms.index')->with('error', 'Ruangan tidak bisa dihapus karena masih digunakan oleh ' . $productCount . ' barang.');
         }
 
         $room->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => 'Ruangan berhasil dihapus.']);
+        }
 
         return redirect()->route('rooms.index')->with('success', 'Ruangan berhasil dihapus.');
     }
