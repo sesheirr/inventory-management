@@ -104,7 +104,7 @@
                             </ul>
                         @endif
 
-                        <a href="{{ route('products.index', ['search' => $category->name]) }}" class="mt-auto btn btn-sm btn-outline-primary">Lihat semua</a>
+                        <a href="{{ route('products.index', ['search' => $category->name, 'from' => 'categories']) }}" class="mt-auto btn btn-sm btn-outline-primary">Lihat semua</a>
                     </div>
                 </div>
             </div>
