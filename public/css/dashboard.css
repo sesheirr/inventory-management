@@ -1639,3 +1639,21 @@ html.dark .profile-pill-link:hover {
     outline: 2px solid rgba(255, 255, 255, 0.8);
     outline-offset: 2px;
 }
+
+/* Modal scroll fixes: ensure modal-body scrolls internally while header/footer stay visible */
+.modal-dialog-scrollable .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure modal content doesn't exceed viewport and header/footer remain visible */
+.modal-dialog-scrollable .modal-content {
+    max-height: 90vh;
+}
+
+@media (max-width: 576px) {
+    .modal-dialog-scrollable .modal-body {
+        max-height: 75vh;
+    }
+}
