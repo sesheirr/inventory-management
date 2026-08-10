@@ -314,6 +314,22 @@ html.dark .category-card .btn.btn-outline-primary {
     color: #eef2ff !important;
 }
 
+html.dark .room-card {
+    background: #171a24 !important;
+    border-color: rgba(255,255,255,0.06) !important;
+    color: #eef2ff !important;
+}
+
+html.dark .room-products-card {
+    background: #1e293b !important;
+    border-color: rgba(255,255,255,0.06) !important;
+    color: #eef2ff !important;
+}
+
+html.dark .room-product-sub {
+    color: #94a3b8 !important;
+}
+
 html.dark .form-control,
 html.dark .form-select,
 html.dark .form-check-input,
@@ -745,6 +761,16 @@ html.dark .activity-list-mobile .list-group-item {
 }
 
 html.dark .activity-list-mobile .list-group-item.text-muted {
+    color: rgba(226, 232, 240, 0.75) !important;
+}
+
+html.dark .d-md-none .list-group-item {
+    background: var(--card) !important;
+    border-color: var(--border) !important;
+    color: var(--text) !important;
+}
+
+html.dark .d-md-none .list-group-item.text-muted {
     color: rgba(226, 232, 240, 0.75) !important;
 }
 
