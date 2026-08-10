@@ -41,7 +41,7 @@
             </div>
 
             {{-- Mobile: activity cards --}}
-            <div class="d-md-none">
+            <div class="d-md-none activity-list-mobile">
                 <div class="list-group list-group-flush">
                     @forelse($activityLogs as $log)
                         <div class="list-group-item">

@@ -226,20 +226,33 @@
                                 <div class="fw-semibold">{{ $mutation->product->name ?? '-' }}</div>
                                 <div class="text-muted small">{{ optional($mutation->mutation_date)->format('d/m/Y') }} • {{ $mutation->product->kode_barang ?? '' }}</div>
                             </div>
-                            <div class="mt-2">
+                            <div class="mt-2 d-flex flex-wrap gap-2 align-items-center">
                                 <span class="badge bg-secondary-subtle text-secondary rounded-pill">Qty: {{ $mutation->quantity }}</span>
                                 @switch($mutation->type)
                                     @case('masuk')
-                                        <span class="badge bg-success-subtle text-success rounded-pill ms-2">Masuk</span>
+                                        <span class="badge bg-success-subtle text-success rounded-pill">Masuk</span>
                                         @break
                                     @case('keluar')
-                                        <span class="badge bg-danger-subtle text-danger rounded-pill ms-2">Keluar</span>
+                                        <span class="badge bg-danger-subtle text-danger rounded-pill">Keluar</span>
                                         @break
                                     @case('pindah_ruang')
-                                        <span class="badge bg-info-subtle text-info rounded-pill ms-2">Pindah</span>
+                                        <span class="badge bg-info-subtle text-info rounded-pill">Pindah</span>
                                         @break
                                     @default
-                                        <span class="badge bg-secondary-subtle text-secondary rounded-pill ms-2">{{ ucfirst(str_replace('_',' ',$mutation->type)) }}</span>
+                                        <span class="badge bg-secondary-subtle text-secondary rounded-pill">{{ ucfirst(str_replace('_',' ',$mutation->type)) }}</span>
+                                @endswitch
+                                @switch($mutation->status)
+                                    @case('pending')
+                                        <span class="badge bg-warning text-dark rounded-pill">Pending</span>
+                                        @break
+                                    @case('approved')
+                                        <span class="badge bg-success rounded-pill">Approved</span>
+                                        @break
+                                    @case('rejected')
+                                        <span class="badge bg-danger rounded-pill">Rejected</span>
+                                        @break
+                                    @default
+                                        <span class="badge bg-secondary rounded-pill">{{ ucfirst($mutation->status) }}</span>
                                 @endswitch
                             </div>
                             <div class="mt-2 d-flex flex-column gap-1">
@@ -247,6 +260,11 @@
                                 <div class="text-muted small">Ke: <strong>{{ $mutation->toRoom?->name ?? '-' }}</strong></div>
                             </div>
                             <div class="mt-2 text-muted small" style="white-space: normal; word-break: break-word;">{{ $mutation->note ?? '-' }}</div>
+                            @if(!empty($mutation->rejection_note))
+                                <div class="mt-2 text-muted small" style="white-space: normal; word-break: break-word;">
+                                    <strong>Alasan:</strong> {{ $mutation->rejection_note }}
+                                </div>
+                            @endif
                             <div class="mt-3 d-flex flex-wrap gap-2">
                                 @if($mutation->status === 'pending' && (auth()->user()->isAdmin() || auth()->user()->isSuperAdmin()))
                                     <form action="{{ route('mutations.approve', $mutation) }}" method="POST" class="m-0">

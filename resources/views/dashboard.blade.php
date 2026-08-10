@@ -155,7 +155,7 @@
             </div>
 
             {{-- Mobile recent activity cards --}}
-            <div class="d-md-none">
+            <div class="d-md-none activity-list-mobile">
                 <div class="list-group list-group-flush">
                     @forelse($activityLogs as $log)
                         <div class="list-group-item">
@@ -177,9 +177,9 @@
 
                                 <div class="flex-grow-1 activity-item-body">
                                     <div class="activity-item-row">
-                                        <div class="activity-item-meta">
-                                            <div class="fw-semibold">{{ $log->user?->name ?? 'System' }}</div>
-                                            <div class="small text-muted">{{ ucfirst($log->action) }}</div>
+                                        <div class="activity-item-meta d-flex flex-column min-w-0">
+                                            <div class="fw-semibold activity-item-name text-truncate">{{ $log->user?->name ?? 'System' }}</div>
+                                            <div class="small text-muted activity-item-action">{{ ucfirst($log->action) }}</div>
                                         </div>
                                         <div class="small text-muted activity-item-timestamp">{{ $log->created_at?->format('d/m/Y H:i') ?? '-' }}</div>
                                     </div>

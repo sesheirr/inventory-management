@@ -670,7 +670,21 @@ html.dark .profile-pill .text-muted {
 
 .activity-item-meta {
     min-width: 0;
-    flex: 1;
+    flex: 1 1 auto;
+    overflow: hidden;
+}
+
+.activity-item-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.activity-item-action {
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: anywhere;
 }
 
 .activity-item-body {
@@ -688,7 +702,25 @@ html.dark .profile-pill .text-muted {
 .activity-item-timestamp {
     flex-shrink: 0;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    max-width: 120px;
     color: var(--text-secondary);
+}
+
+@media (max-width: 767px) {
+    .activity-item-row {
+        gap: 0.5rem;
+    }
+
+    .activity-item-meta {
+        width: min(100%, calc(100% - 120px));
+    }
+
+    .activity-item-timestamp {
+        max-width: 100px;
+    }
 }
 
 html.dark .activity-item-description,
@@ -696,6 +728,25 @@ html.dark .activity-item-timestamp {
     color: rgba(226, 232, 240, 0.75);
 }
 
+.activity-list-mobile .list-group-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+.activity-list-mobile .list-group-item.text-muted {
+    color: var(--text-secondary) !important;
+}
+
+html.dark .activity-list-mobile .list-group-item {
+    background: var(--card);
+    border-color: var(--border);
+    color: var(--text);
+}
+
+html.dark .activity-list-mobile .list-group-item.text-muted {
+    color: rgba(226, 232, 240, 0.75) !important;
+}
 
 .search-box {
     position: relative;
