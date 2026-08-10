@@ -87,7 +87,24 @@
                 justify-content: center;
             }
         }
+
+        /* ===== Back button (bulat) ===== */
+        .back-btn-circle {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
     </style>
+
+    @if(request('from') === 'categories')
+        <div class="mb-3">
+            <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary rounded-circle d-inline-flex align-items-center justify-content-center back-btn-circle" title="Kembali ke Kategori">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+        </div>
+    @endif
 
     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
         <div class="position-relative search-box" style="max-width:320px; width:100%;">
@@ -376,8 +393,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!isUserTyping) return;
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
-            const q = encodeURIComponent(this.value || '');
-            window.location.href = `?search=${q}`;
+            const params = new URLSearchParams(window.location.search);
+            params.set('search', this.value || '');
+            window.location.href = `?${params.toString()}`;
         }, 350);
     });
 });
