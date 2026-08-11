@@ -1668,22 +1668,30 @@ html.dark .profile-pill-link:hover {
 
 
 /* Modal scroll fixes: ensure modal-body scrolls internally while header/footer stay visible */
+.modal-dialog-scrollable .modal-content {
+    max-height: 85vh;
+    max-height: 85dvh;
+}
+
 .modal-dialog-scrollable .modal-body {
-    max-height: 70vh;
+    max-height: 60vh;
+    max-height: 60dvh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 }
 
-/* Ensure modal content doesn't exceed viewport and header/footer remain visible */
-.modal-dialog-scrollable .modal-content {
-    max-height: 90vh;
-}
-
 @media (max-width: 576px) {
+    .modal-dialog-scrollable .modal-content {
+        max-height: 80vh;
+        max-height: 80dvh;
+    }
+
     .modal-dialog-scrollable .modal-body {
-        max-height: 75vh;
+        max-height: 55vh;
+        max-height: 55dvh;
     }
 }
+
 
 /* Fix profile list value color light mode */
 html.light .profile-list-value {
