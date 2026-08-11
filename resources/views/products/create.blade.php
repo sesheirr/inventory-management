@@ -1,15 +1,33 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="card dashboard-card">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="card dashboard-card mobile-borderless-card">
+    <style>
+        .back-btn-circle { width: 40px; height: 40px; padding: 0; font-size: 1.1rem; flex-shrink: 0; position: relative; z-index: 1050 !important; pointer-events: auto; }
+
+        @media (max-width: 576px) {
+            .mobile-borderless-card {
+                border: none !important;
+                border-radius: 0 !important;
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+                box-shadow: none !important;
+                background-color: transparent !important;
+            }
+        }
+    </style>
+
+    <div class="d-flex align-items-center gap-3 mb-4 px-3 px-md-0">
+        <a href="{{ route('products.index') }}" class="btn btn-outline-secondary rounded-circle d-inline-flex d-md-none align-items-center justify-content-center back-btn-circle" title="Kembali">
+            <i class="bi bi-arrow-left"></i>
+        </a>
         <div>
             <h4 class="fw-semibold mb-1">Buat Barang</h4>
             <p class="text-muted mb-0">Tambah barang baru dengan detail lengkap.</p>
         </div>
     </div>
 
-    <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data" class="row g-4">
+    <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data" class="row g-4 px-2 px-md-0">
         @csrf
 
         <div class="col-md-6">
@@ -65,8 +83,8 @@
             <input type="file" name="image" class="form-control">
         </div>
 
-        <div class="col-12 d-flex justify-content-end gap-2 form-actions">
-            <button type="submit" class="btn btn-primary rounded-pill px-4">Simpan Barang</button>
+        <div class="col-12 d-flex justify-content-end gap-2 form-actions mt-4">
+            <button type="submit" class="btn btn-primary rounded-pill px-4 w-100 w-md-auto">Simpan Barang</button>
         </div>
     </form>
 </div>
