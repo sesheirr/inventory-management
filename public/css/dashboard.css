@@ -91,7 +91,6 @@ html.dark {
 }
 
 /* Dark-mode overrides for specific components to improve contrast */
-html.dark .topbar,
 html.dark .dashboard-card,
 html.dark .topbar-search,
 html.dark .search-box .form-control,
@@ -427,6 +426,7 @@ body {
 
 @media (min-width: 992px) {
     /* Desktop-only layout: allow fixed/sticky sidebar on large screens */
+   
     .sidebar {
         width: 220px;
         padding: 24px 16px;
@@ -537,7 +537,7 @@ html.dark .sidebar .nav-link.active svg {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 24px 30px;
+    padding: 10px 30px;
     background: var(--bg);
     flex-wrap: wrap;
     gap: 16px;
@@ -637,7 +637,7 @@ html.dark .profile-pill .text-muted {
 }
 
 .content-area {
-    padding: 0 30px 30px;
+    padding: 24px 30px 30px;
 }
 
 .app-footer {
@@ -1025,8 +1025,8 @@ html.dark .profile-dropdown-menu {
     border-radius: 24px;
     border: 1px solid var(--border);
     box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+   backdrop-filter: blur(14px);
+   -webkit-backdrop-filter: blur(14px);
     padding: 24px;
     display: flex;
     flex-direction: column;
@@ -1708,9 +1708,9 @@ html.light .profile-section-title {
     position: sticky !important;
     top: 0 !important;
     z-index: 1030 !important;
-    background: var(--card-bg, #1e293b) !important;
-    backdrop-filter: blur(10px);
+     background-color: #1e293b !important;
     border-bottom: 1px solid rgba(255,255,255,0.08);
+    
 }
 html.light .topbar {
     background: #ffffff !important;
@@ -1727,6 +1727,27 @@ html.light .topbar {
         width: auto !important;
         justify-content: flex-start !important;
     }
+}
+
+/* FINAL FIX — paksa warna topbar, taruh paling bawah supaya menang */
+header.topbar,
+.topbar {
+    background-color: #1e293b !important;
+    background-image: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+html:not(.dark) header.topbar,
+html:not(.dark) .topbar {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #e5e7eb !important;
+}
+
+html.dark header.topbar,
+html.dark .topbar {
+    background-color: #1e293b !important;
+    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
 }
 
 
