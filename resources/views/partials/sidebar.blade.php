@@ -49,10 +49,10 @@
             </button>
 
             <div class="d-lg-none border-top pt-3 mt-3 w-100">
-                <button type="button" class="btn btn-outline-light w-100 d-flex align-items-center justify-content-center gap-2" id="darkModeToggleMobile">
-                    <i class="fa fa-moon"></i>
-                    <span>Mode Gelap</span>
-                </button>
+            <button type="button" class="btn btn-outline-light w-100 d-flex align-items-center justify-content-center gap-2" id="darkModeToggleMobile">
+                <i id="darkModeIconMobile" class="fa fa-moon"></i>
+                <span id="darkModeTextMobile">Mode Gelap</span>
+            </button>
             </div>
         </div>
     </div>

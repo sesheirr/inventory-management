@@ -879,9 +879,9 @@ html.dark .d-md-none .list-group-item.text-muted {
     }
 }
 
-/* ===========================
+/* ======
    PROFILE DROPDOWN STYLES
-   =========================== */
+   ====== */
 
 .profile-pill {
     cursor: pointer;
@@ -1575,11 +1575,11 @@ html.dark .profile-page .btn-outline-light:hover {
     color: #ffffff;
 }
 
-/* ===========================
+/* ======
    BACK BUTTON (circle) — dipakai di header semua halaman
    yang showBackButton = true (Products, Categories, Rooms,
    Reports, Profile, Settings)
-   =========================== */
+   ====== */
 .btn-back-circle {
     width: 43px;
     height: 43px;
@@ -1618,7 +1618,7 @@ html.dark .btn-back-circle:hover {
     color: #eef2ff;
 }
 
-/* ============ Profile pill jadi link (navbar) ============ */
+/* ===== Profile pill jadi link (navbar) ===== */
 .profile-pill-link {
     text-decoration: none;
     color: inherit;
@@ -1639,9 +1639,9 @@ html.dark .profile-pill-link:hover {
     transform: translateY(0);
 }
 
-/* ===========================
+/* ======
    DARK MODE TOGGLE MOBILE
-   =========================== */
+   ====== */
 #darkModeToggleMobile {
     background-color: transparent;
     border: 1px solid rgba(255, 255, 255, 0.5);
@@ -1666,6 +1666,7 @@ html.dark .profile-pill-link:hover {
     outline-offset: 2px;
 }
 
+
 /* Modal scroll fixes: ensure modal-body scrolls internally while header/footer stay visible */
 .modal-dialog-scrollable .modal-body {
     max-height: 70vh;
@@ -1683,3 +1684,41 @@ html.dark .profile-pill-link:hover {
         max-height: 75vh;
     }
 }
+
+/* Fix profile list value color light mode */
+html.light .profile-list-value {
+    color: #111827 !important;
+}
+html.light .profile-list-label {
+    color: #6b7280 !important;
+}
+html.light .profile-section-title {
+    color: #9ca3af !important;
+}
+/* MODIFIED: Topbar sticky + fix mobile layout */
+.topbar {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1030 !important;
+    background: var(--card-bg, #1e293b) !important;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+html.light .topbar {
+    background: #ffffff !important;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+@media (max-width: 767px) {
+    .topbar {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 10px 16px !important;
+    }
+    .topbar .d-flex.align-items-center {
+        width: auto !important;
+        justify-content: flex-start !important;
+    }
+}
+
+

@@ -21,11 +21,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function applyTheme(theme) {
         const docEl = document.documentElement;
-        docEl.classList.remove('light', 'dark');
-        docEl.classList.add(theme === 'dark' ? 'dark' : 'light');
-        if (icon) {
-            icon.classList.toggle('bi-sun', theme === 'dark');
-            icon.classList.toggle('bi-moon', theme !== 'dark');
+        const mobileIcon = document.getElementById('darkModeIconMobile');
+        const mobileText = document.getElementById('darkModeTextMobile');
+        if (theme === 'dark') {
+            docEl.classList.add('dark');
+            if (icon) { icon.classList.remove('bi-moon'); icon.classList.add('bi-sun'); }
+            if (mobileIcon) { mobileIcon.classList.remove('fa-moon'); mobileIcon.classList.add('fa-sun'); }
+            if (mobileText) mobileText.textContent = 'Mode Terang';
+        } else {
+            docEl.classList.remove('dark');
+            if (icon) { icon.classList.remove('bi-sun'); icon.classList.add('bi-moon'); }
+            if (mobileIcon) { mobileIcon.classList.remove('fa-sun'); mobileIcon.classList.add('fa-moon'); }
+            if (mobileText) mobileText.textContent = 'Mode Gelap';
         }
         updateSegmentButtons(theme);
     }
