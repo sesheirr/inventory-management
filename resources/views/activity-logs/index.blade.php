@@ -1,5 +1,4 @@
 @extends('layouts.app')
-
 @section('content')
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -8,7 +7,6 @@
             <p class="text-muted mb-0">Lihat semua aktivitas sistem oleh seluruh pengguna.</p>
         </div>
     </div>
-
     <div class="card rounded-4 shadow-sm border-0">
         <div class="card-body">
             <div class="d-none d-md-block">
@@ -25,7 +23,21 @@
                     <tbody>
                         @forelse($activityLogs as $log)
                             <tr>
-                                <td>{{ $log->user?->name ?? 'System' }}</td>
+                                {{-- MODIFIED: Tambah avatar di kolom User --}}
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        @if(!empty($log->user?->avatar))
+                                            <img src="{{ $log->user->avatar }}"
+                                                alt="{{ $log->user->name }}"
+                                                style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+                                        @else
+                                            <img src="https://ui-avatars.com/api/?name={{ urlencode($log->user?->name ?? 'S') }}&size=32&background=4f8ef7&color=fff&rounded=true&bold=true"
+                                                alt="{{ $log->user?->name ?? 'System' }}"
+                                                style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+                                        @endif
+                                        <span>{{ $log->user?->name ?? 'System' }}</span>
+                                    </div>
+                                </td>
                                 <td>{{ ucfirst($log->action) }}</td>
                                 <td>{{ $log->description }}</td>
                                 <td>{{ $log->created_at?->format('d/m/Y H:i') ?? '-' }}</td>
@@ -44,11 +56,23 @@
             <div class="d-md-none activity-list-mobile">
                 <div class="list-group list-group-flush">
                     @forelse($activityLogs as $log)
-                        <div class="list-group-item">
+                        <div class="list-group-item px-0 py-3">
                             <div>
-                                <div class="fw-semibold">{{ $log->user?->name ?? 'System' }}</div>
+                                {{-- MODIFIED: Tambah avatar di mobile card --}}
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    @if(!empty($log->user?->avatar))
+                                        <img src="{{ $log->user->avatar }}"
+                                            alt="{{ $log->user->name }}"
+                                            style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+                                    @else
+                                        <img src="https://ui-avatars.com/api/?name={{ urlencode($log->user?->name ?? 'S') }}&size=28&background=4f8ef7&color=fff&rounded=true&bold=true"
+                                            alt="{{ $log->user?->name ?? 'System' }}"
+                                            style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+                                    @endif
+                                    <div class="fw-semibold">{{ $log->user?->name ?? 'System' }}</div>
+                                </div>
                                 <div class="text-muted small">{{ ucfirst($log->action) }}</div>
-                                <div class="text-muted small mt-2" style="white-space: normal; overflow-wrap: break-word;">{{ $log->description }}</div>
+                                <div class="text-muted small mt-2" style="white-space:normal;overflow-wrap:break-word;">{{ $log->description }}</div>
                                 <div class="text-muted small mt-2">{{ $log->created_at?->format('d/m/Y H:i') ?? '-' }}</div>
                             </div>
                         </div>
