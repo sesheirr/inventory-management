@@ -1750,4 +1750,17 @@ html.dark .topbar {
     border-bottom: 1px solid rgba(255,255,255,0.08) !important;
 }
 
+/* Fix notifikasi/alert ketutupan topbar */
+.alert.alert-dismissible,
+.alert-success,
+.alert-danger,
+.alert-warning,
+.alert-info {
+    position: relative;
+    z-index: 1040;
+}
 
+/* Fix: kasih jarak content-area ke topbar biar alert notifikasi nggak ketutupan */
+.content-area {
+    padding-top: 24px;
+}

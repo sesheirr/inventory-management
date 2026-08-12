@@ -18,7 +18,7 @@
     <style>
         /* Container posisi melayang di tengah atas layar */
         .toast-pill-container {
-            top: 24px !important;
+            top: 70px !important; /* MODIFIED: turun di bawah navbar */
             left: 50% !important;
             transform: translateX(-50%) !important;
             z-index: 1080;
