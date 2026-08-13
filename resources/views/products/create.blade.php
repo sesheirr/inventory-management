@@ -83,9 +83,138 @@
             <input type="file" name="image" class="form-control">
         </div>
 
+        {{-- BARCODE FEATURE: Section Barcode + Tombol Scan Kamera --}}
+        <div class="col-12">
+            <hr class="my-2">
+            <h6 class="fw-semibold mb-3 text-muted"><i class="bi bi-upc-scan me-2"></i>Informasi Barcode Aset</h6>
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label">Kode Barcode</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-upc"></i></span>
+                        <input type="text"
+                            name="barcode"
+                            id="barcode-input"
+                            class="form-control @error('barcode') is-invalid @enderror"
+                            value="{{ old('barcode') }}"
+                            placeholder="Scan stiker barcode atau kosongkan untuk generate otomatis"
+                            autocomplete="off"
+                            style="text-transform:uppercase;"
+                            oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9\-]/g,'')">
+                        
+                        {{-- Tombol Scan Kamera --}}
+                        <button type="button" class="btn btn-outline-primary" id="btn-scan-camera" title="Scan dengan Kamera">
+                            <i class="bi bi-camera me-1"></i>Scan
+                        </button>
+
+                        {{-- Tombol Preview --}}
+                        <button type="button" class="btn btn-outline-secondary" id="preview-barcode-btn">
+                            <i class="bi bi-eye me-1"></i>Preview
+                        </button>
+                    </div>
+                    <div class="form-text text-muted mt-1">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Kosongkan jika barang belum punya stiker — sistem akan generate kode otomatis saat disimpan.
+                        Jika barang sudah ada stiker, scan atau ketik kode yang tertera.
+                    </div>
+                    @error('barcode')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+
+                <div class="col-12" id="barcode-preview-container" style="display:none;">
+                    <div class="p-3 border rounded-3 text-center bg-white">
+                        <svg id="barcode-preview"></svg>
+                        <div class="text-muted small mt-1" id="barcode-preview-text"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="col-12 d-flex justify-content-end gap-2 form-actions mt-4">
             <button type="submit" class="btn btn-primary rounded-pill px-4 w-100 w-md-auto">Simpan Barang</button>
         </div>
     </form>
 </div>
+
+{{-- Modal Pop-up untuk Kamera Scanner --}}
+<div class="modal fade" id="scannerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4">
+            <div class="modal-header border-0">
+                <h5 class="modal-title"><i class="bi bi-camera me-2"></i>Scan Barcode dengan Kamera</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" id="btn-close-scanner"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="reader" style="width: 100%;"></div>
+                <div class="text-muted small mt-2">Arahkan kamera ke stiker barcode aset.</div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal" id="btn-stop-scanner">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Library JsBarcode & Html5-Qrcode --}}
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+<script>
+// BARCODE FEATURE: Preview barcode live
+function renderBarcodePreview(value) {
+    const container = document.getElementById('barcode-preview-container');
+    const svg = document.getElementById('barcode-preview');
+    const text = document.getElementById('barcode-preview-text');
+    if (value && value.length >= 4) {
+        try {
+            JsBarcode(svg, value, { format: 'CODE128', width: 2, height: 60, displayValue: false });
+            text.textContent = value;
+            container.style.display = 'block';
+        } catch(e) { container.style.display = 'none'; }
+    } else {
+        container.style.display = 'none';
+    }
+}
+
+document.getElementById('barcode-input')?.addEventListener('input', function() {
+    renderBarcodePreview(this.value);
+});
+
+document.getElementById('preview-barcode-btn')?.addEventListener('click', function() {
+    const val = document.getElementById('barcode-input').value;
+    renderBarcodePreview(val);
+});
+
+// BARCODE FEATURE: Kamera Scanner Handler
+let html5QrCode;
+
+document.getElementById('btn-scan-camera')?.addEventListener('click', function() {
+    const modal = new bootstrap.Modal(document.getElementById('scannerModal'));
+    modal.show();
+
+    setTimeout(() => {
+        html5QrCode = new Html5Qrcode("reader");
+        html5QrCode.start(
+            { facingMode: "environment" }, 
+            { fps: 10, qrbox: { width: 250, height: 100 } },
+            (decodedText, decodedResult) => {
+                document.getElementById('barcode-input').value = decodedText.toUpperCase();
+                renderBarcodePreview(decodedText.toUpperCase());
+                
+                html5QrCode.stop().then(() => {
+                    modal.hide();
+                }).catch(err => console.log(err));
+            },
+            (errorMessage) => {}
+        ).catch(err => {
+            alert("Gagal mengakses kamera: " + err);
+        });
+    }, 500);
+});
+
+document.getElementById('scannerModal')?.addEventListener('hidden.bs.modal', function () {
+    if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().catch(err => console.log(err));
+    }
+});
+</script>
 @endsection

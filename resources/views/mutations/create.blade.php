@@ -17,7 +17,14 @@
             <select name="product_id" class="form-select" required>
                 <option value="">Pilih barang</option>
                 @foreach($items as $item)
-                    <option value="{{ $item->id }}" @selected(old('product_id') == $item->id)>{{ $item->name }} @if($item->kode_barang) ({{ $item->kode_barang }})@endif</option>
+                    <option value="{{ $item->id }}" @selected(old('product_id') == $item->id)>
+                        {{ $item->name }}
+                        @if(!empty($item->barcode))
+                            ({{ $item->barcode }})
+                        @elseif(!empty($item->kode_barang))
+                            ({{ $item->kode_barang }})
+                        @endif
+                    </option>
                 @endforeach
             </select>
         </div>

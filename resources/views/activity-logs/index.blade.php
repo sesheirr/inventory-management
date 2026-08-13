@@ -56,7 +56,7 @@
             <div class="d-md-none activity-list-mobile">
                 <div class="list-group list-group-flush">
                     @forelse($activityLogs as $log)
-                        <div class="list-group-item px-0 py-3">
+                        <div class="list-group-item px-4 py-3">
                             <div>
                                 {{-- MODIFIED: Tambah avatar di mobile card --}}
                                 <div class="d-flex align-items-center gap-2 mb-1">

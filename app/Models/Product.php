@@ -27,6 +27,7 @@ class Product extends Model
         'image',
         'image_public_id',
         'kode_barang',
+        'barcode', // BARCODE FEATURE
     ];
 
     public function category(): BelongsTo

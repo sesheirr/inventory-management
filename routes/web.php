@@ -88,6 +88,7 @@ Route::middleware('auth')->group(function () {
     // Rute Manajemen Produk (CRUD tanpa delete untuk semua user)
     Route::get('products/export-excel', [ProductController::class, 'exportExcel'])->name('products.export');
     Route::resource('products', ProductController::class)->except(['destroy']);
+    Route::get('/products/{product}/barcode/print', [ProductController::class, 'printBarcode'])->name('products.barcode.print');
 
     // Rute Manajemen Kategori dan Ruangan untuk semua user (read-only)
     Route::resource('categories', CategoryController::class)->only(['index', 'show']);

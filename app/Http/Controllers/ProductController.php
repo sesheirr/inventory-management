@@ -60,6 +60,7 @@ class ProductController extends Controller
             'stock' => ['required', 'integer', 'min:0'],
             'status' => ['required', 'in:active,inactive,out_of_stock'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'barcode' => ['nullable', 'string', 'max:50', 'regex:/^[A-Z0-9\-]+$/', Rule::unique('products', 'barcode')],
         ]);
 
         $data = $this->resolveCategoryData($data, $request);
@@ -70,7 +71,12 @@ class ProductController extends Controller
 
         $data['kode_barang'] = 'BRG-' . strtoupper(Str::random(6));
 
-        Product::create($data);
+        $product = Product::create($data);
+        // BARCODE FEATURE: generate otomatis jika tidak diisi
+        if (empty($product->barcode)) {
+            $product->barcode = $this->generateUniqueBarcode($product->id);
+            $product->save();
+        }
 
         return redirect()->route('products.index')->with('success', 'Barang berhasil disimpan.');
     }
@@ -101,6 +107,7 @@ class ProductController extends Controller
             'stock' => ['required', 'integer', 'min:0'],
             'status' => ['required', 'in:active,inactive,out_of_stock'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'barcode' => ['nullable', 'string', 'max:50', 'regex:/^[A-Z0-9\-]+$/', Rule::unique('products', 'barcode')->ignore($product->id)],
         ]);
 
         $data = $this->resolveCategoryData($data, $request);
@@ -353,5 +360,21 @@ class ProductController extends Controller
                 'api_secret' => $apiSecret,
             ],
         ]);
+    }
+
+    // BARCODE FEATURE: generate kode unik format INV-YYYY-XXXXX-XXXX
+    private function generateUniqueBarcode(int $productId): string
+    {
+        do {
+            $code = 'INV-' . date('Y') . '-' . str_pad($productId, 5, '0', STR_PAD_LEFT) . '-' . strtoupper(Str::random(4));
+        } while (Product::where('barcode', $code)->exists());
+
+        return $code;
+    }
+
+    // BARCODE FEATURE: halaman cetak stiker barcode
+    public function printBarcode(Product $product)
+    {
+        return view('products.barcode-print', compact('product'));
     }
 }

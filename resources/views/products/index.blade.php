@@ -160,6 +160,7 @@
                     <th>Ruangan</th>
                     <th>Jumlah</th>
                     <th>Status</th>
+                    <th>Barcode</th>
                     <th style="width:50px;"></th>
                 </tr>
             </thead>
@@ -191,6 +192,18 @@
                             @endif
                         </td>
                         <td>
+                            @if($product->barcode)
+                                <div class="d-flex align-items-center gap-1">
+                                    <span class="badge bg-dark text-white rounded-pill px-2 py-1" style="font-size:0.7rem;font-family:monospace;">{{ $product->barcode }}</span>
+                                    <a href="{{ route('products.barcode.print', $product) }}" target="_blank" class="btn btn-sm btn-outline-secondary p-1" title="Cetak Stiker" style="line-height:1;">
+                                        <i class="bi bi-printer" style="font-size:0.8rem;"></i>
+                                    </a>
+                                </div>
+                            @else
+                                <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1" style="font-size:0.7rem;">Belum ada stiker</span>
+                            @endif
+                        </td>
+                        <td>
                             <div class="dropdown">
                                 <button class="btn btn-link text-secondary p-0" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></button>
                                 <ul class="dropdown-menu dropdown-menu-end rounded-3 shadow-sm border-0">
@@ -205,7 +218,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="7" class="text-center py-5 text-muted">Tidak ada barang ditemukan.</td></tr>
+                    <tr><td colspan="8" class="text-center py-5 text-muted">Tidak ada barang ditemukan.</td></tr>
                 @endforelse
             </tbody>
             </table>
@@ -246,6 +259,14 @@
                                 <span class="badge bg-danger-subtle text-danger px-2 py-1 rounded-pill" style="font-size: 0.72rem;">Stok Habis</span>
                             @endif
                         </div>
+                        @if($product->barcode)
+                            <div class="d-flex align-items-center gap-1 mt-1">
+                                <span class="badge bg-dark text-white rounded-pill px-2 py-1" style="font-size:0.68rem;font-family:monospace;">{{ $product->barcode }}</span>
+                                <a href="{{ route('products.barcode.print', $product) }}" target="_blank" class="btn btn-sm btn-outline-secondary p-1" style="line-height:1;font-size:0.7rem;">
+                                    <i class="bi bi-printer"></i>
+                                </a>
+                            </div>
+                        @endif
                         
                         <div class="d-flex gap-1">
                             <a href="{{ route('products.show', $product) }}" class="btn btn-sm btn-outline-secondary flex-fill py-1" style="font-size: 0.78rem;">Lihat</a>
