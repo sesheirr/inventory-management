@@ -15,69 +15,95 @@
         </div>
     </div>
 
-    {{-- Filter Form (Adaptif Light/Dark Mode) --}}
+    {{-- Filter Form --}}
     <div class="p-3 mb-4 rounded-4 filter-panel">
-        <form method="GET" action="{{ route('mutations.index') }}" class="row g-2">
-            <div class="col-6 col-md-4 col-lg-2">
-                <label class="form-label text-muted small fw-medium mb-1">Dari Tanggal</label>
-                <input type="date" name="date_from" value="{{ $dateFrom }}" class="form-control form-control-sm" title="Dari Tanggal">
-            </div>
-            <div class="col-6 col-md-4 col-lg-2">
-                <label class="form-label text-muted small fw-medium mb-1">Sampai Tanggal</label>
-                <input type="date" name="date_to" value="{{ $dateTo }}" class="form-control form-control-sm" title="Sampai Tanggal">
-            </div>
-            <div class="col-6 col-md-4 col-lg-2">
-                <label class="form-label text-muted small fw-medium mb-1">Kategori</label>
-                <select name="category_id" class="form-select form-select-sm">
-                    <option value="">Semua Kategori</option>
-                    @foreach($categories as $category)
-                        <option value="{{ $category->id }}" @selected($categoryId == $category->id)>{{ $category->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-6 col-md-4 col-lg-2">
-                <label class="form-label text-muted small fw-medium mb-1">Ruangan</label>
-                <select name="room_id" class="form-select form-select-sm">
-                    <option value="">Semua Ruangan</option>
-                    @foreach($rooms as $room)
-                        <option value="{{ $room->id }}" @selected($roomId == $room->id)>{{ $room->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-6 col-md-4 col-lg-2">
-                <label class="form-label text-muted small fw-medium mb-1">Tipe Mutasi</label>
-                <select name="type" class="form-select form-select-sm">
-                    <option value="">Semua Tipe</option>
-                    <option value="masuk" @selected($type === 'masuk')>Masuk</option>
-                    <option value="keluar" @selected($type === 'keluar')>Keluar</option>
-                    <option value="pindah_ruang" @selected($type === 'pindah_ruang')>Pindah Ruang</option>
-                </select>
-            </div>
-            <div class="col-6 col-md-4 col-lg-2">
-                <label class="form-label text-muted small fw-medium mb-1">Status</label>
-                <select name="status" class="form-select form-select-sm">
-                    <option value="">Semua Status</option>
-                    <option value="pending" @selected(($status ?? '') === 'pending')>Pending</option>
-                    <option value="approved" @selected(($status ?? '') === 'approved')>Approved</option>
-                    <option value="rejected" @selected(($status ?? '') === 'rejected')>Rejected</option>
-                </select>
-            </div>
+        <form method="GET" action="{{ route('mutations.index') }}" id="filterForm">
 
-            {{-- Search Input & Action Buttons --}}
-            <div class="col-12 col-md-8 col-lg-9 mt-2">
-                <div class="input-group input-group-sm">
-                    <span class="input-group-text text-muted border-end-0"><i class="bi bi-search"></i></span>
-                    <input type="search" name="search" value="{{ $search }}" class="form-control form-control-sm border-start-0" placeholder="Cari nama barang, kode, atau catatan...">
+            {{-- Baris Utama: Pencarian di Kiri & Tombol Filter di Kanan --}}
+            <div class="d-flex gap-3 align-items-center flex-wrap flex-md-nowrap">
+
+                {{-- SEARCH BAR --}}
+                <div class="position-relative search-box flex-grow-1" style="width:100%;">
+                    <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                    <input type="text" id="realtimeSearch" name="search" value="{{ $search ?? '' }}"
+                           class="form-control rounded-pill ps-5 bg-transparent"
+                           placeholder="Cari barang, kode, atau catatan..." autocomplete="off">
+                </div>
+
+                {{-- Tombol Toggle Filter Dropdown & Reset (di kanan) --}}
+                <div class="d-flex align-items-center gap-2">
+                    @php
+                        $isFiltered = ($dateFrom ?? '') || ($dateTo ?? '') || ($categoryId ?? '') || ($roomId ?? '') || ($type ?? '') || ($status ?? '');
+                    @endphp
+
+                    <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 d-flex align-items-center gap-1 text-nowrap py-2"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#advancedFilter"
+                            aria-expanded="{{ $isFiltered ? 'true' : 'false' }}"
+                            aria-controls="advancedFilter"
+                            id="filterToggleBtn">
+                        <i class="bi bi-funnel"></i>
+                        <span id="filterToggleText">{{ $isFiltered ? 'Sembunyikan Filter' : 'Filter' }}</span>
+                        <i class="bi {{ $isFiltered ? 'bi-chevron-up' : 'bi-chevron-down' }} ms-1" id="filterChevron"></i>
+                    </button>
+
+                    <a href="{{ route('mutations.index') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-2 d-flex align-items-center justify-content-center" title="Reset Data">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
                 </div>
             </div>
-            <div class="col-12 col-md-4 col-lg-3 mt-2 d-flex gap-2">
-                <button type="submit" class="btn btn-primary btn-sm rounded-pill w-100">
-                    <i class="bi bi-funnel me-1"></i> Filter
-                </button>
-                <a href="{{ route('mutations.index') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 d-flex align-items-center justify-content-center" title="Reset">
-                    <i class="bi bi-arrow-counterclockwise"></i>
-                </a>
+
+            {{-- Bagian Pilihan Filter (Muncul di Bawah saat Tombol Filter Diklik) --}}
+            <div class="collapse {{ $isFiltered ? 'show' : '' }} mt-3" id="advancedFilter">
+                <div class="row g-2 pt-3 border-top border-secondary-subtle">
+                    <div class="col-6 col-md-4 col-lg-2">
+                        <label class="form-label text-muted small fw-medium mb-1">Dari Tanggal</label>
+                        <input type="date" name="date_from" value="{{ $dateFrom ?? '' }}" class="form-control form-control-sm trigger-auto-submit" title="Dari Tanggal">
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-2">
+                        <label class="form-label text-muted small fw-medium mb-1">Sampai Tanggal</label>
+                        <input type="date" name="date_to" value="{{ $dateTo ?? '' }}" class="form-control form-control-sm trigger-auto-submit" title="Sampai Tanggal">
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-2">
+                        <label class="form-label text-muted small fw-medium mb-1">Kategori</label>
+                        <select name="category_id" class="form-select form-select-sm trigger-auto-submit">
+                            <option value="">Semua Kategori</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" @selected(($categoryId ?? '') == $category->id)>{{ $category->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-2">
+                        <label class="form-label text-muted small fw-medium mb-1">Ruangan</label>
+                        <select name="room_id" class="form-select form-select-sm trigger-auto-submit">
+                            <option value="">Semua Ruangan</option>
+                            @foreach($rooms as $room)
+                                <option value="{{ $room->id }}" @selected(($roomId ?? '') == $room->id)>{{ $room->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-2">
+                        <label class="form-label text-muted small fw-medium mb-1">Tipe Mutasi</label>
+                        <select name="type" class="form-select form-select-sm trigger-auto-submit">
+                            <option value="">Semua Tipe</option>
+                            <option value="masuk" @selected(($type ?? '') === 'masuk')>Masuk</option>
+                            <option value="keluar" @selected(($type ?? '') === 'keluar')>Keluar</option>
+                            <option value="pindah_ruang" @selected(($type ?? '') === 'pindah_ruang')>Pindah Ruang</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-2">
+                        <label class="form-label text-muted small fw-medium mb-1">Status</label>
+                        <select name="status" class="form-select form-select-sm trigger-auto-submit">
+                            <option value="">Semua Status</option>
+                            <option value="pending" @selected(($status ?? '') === 'pending')>Pending</option>
+                            <option value="approved" @selected(($status ?? '') === 'approved')>Approved</option>
+                            <option value="rejected" @selected(($status ?? '') === 'rejected')>Rejected</option>
+                        </select>
+                    </div>
+                </div>
             </div>
+
         </form>
     </div>
 
@@ -143,7 +169,7 @@
                                     <span class="badge bg-secondary rounded-pill px-2">{{ ucfirst($mutation->status) }}</span>
                             @endswitch
 
-                            {{-- Tombol Alasan Penolakan (Modal Trigger) --}}
+                            {{-- Tombol Alasan Penolakan --}}
                             @if($mutation->status === 'rejected')
                                 <div class="mt-1">
                                     <button type="button" 
@@ -220,62 +246,95 @@
         <div class="row g-3">
             @forelse($mutations as $mutation)
                 <div class="col-12">
-                    <div class="card">
-                        <div class="card-body">
+                    <div class="card border rounded-3 p-3 shadow-sm">
+                        <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <div class="fw-semibold">{{ $mutation->product->name ?? '-' }}</div>
                                 <div class="text-muted small">{{ optional($mutation->mutation_date)->format('d/m/Y') }} • {{ $mutation->product->kode_barang ?? '' }}</div>
                             </div>
-                            <div class="mt-2 d-flex flex-wrap gap-2 align-items-center">
-                                <span class="badge bg-secondary-subtle text-secondary rounded-pill">Qty: {{ $mutation->quantity }}</span>
-                                @switch($mutation->type)
-                                    @case('masuk')
-                                        <span class="badge bg-success-subtle text-success rounded-pill">Masuk</span>
-                                        @break
-                                    @case('keluar')
-                                        <span class="badge bg-danger-subtle text-danger rounded-pill">Keluar</span>
-                                        @break
-                                    @case('pindah_ruang')
-                                        <span class="badge bg-info-subtle text-info rounded-pill">Pindah</span>
-                                        @break
-                                    @default
-                                        <span class="badge bg-secondary-subtle text-secondary rounded-pill">{{ ucfirst(str_replace('_',' ',$mutation->type)) }}</span>
-                                @endswitch
-                                @switch($mutation->status)
-                                    @case('pending')
-                                        <span class="badge bg-warning text-dark rounded-pill">Pending</span>
-                                        @break
-                                    @case('approved')
-                                        <span class="badge bg-success rounded-pill">Approved</span>
-                                        @break
-                                    @case('rejected')
-                                        <span class="badge bg-danger rounded-pill">Rejected</span>
-                                        @break
-                                    @default
-                                        <span class="badge bg-secondary rounded-pill">{{ ucfirst($mutation->status) }}</span>
-                                @endswitch
+                            
+                            {{-- Dropdown Aksi untuk Mobile --}}
+                            <div class="dropdown">
+                                <button class="btn btn-sm border-0 rounded-circle p-1" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="line-height: 1;">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end rounded-3 shadow border border-secondary-subtle small">
+                                    <li>
+                                        <a class="dropdown-item py-1" href="{{ route('mutations.show', $mutation) }}">
+                                            <i class="bi bi-eye me-2 text-muted"></i> Lihat Detail
+                                        </a>
+                                    </li>
+                                    @if(auth()->user()->isAdmin() || auth()->user()->isSuperAdmin())
+                                        <li><hr class="dropdown-divider opacity-50 my-1"></li>
+                                        <li>
+                                            <form action="{{ route('mutations.destroy', $mutation) }}" method="POST" class="m-0"
+                                                  onsubmit="return confirm('Apakah Anda yakin ingin menghapus data mutasi ini?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="dropdown-item py-1 text-danger">
+                                                    <i class="bi bi-trash me-2"></i> Hapus
+                                                </button>
+                                            </form>
+                                        </li>
+                                    @endif
+                                </ul>
                             </div>
-                            <div class="mt-2 d-flex flex-column gap-1">
-                                <div class="text-muted small">Dari: <strong>{{ $mutation->fromRoom?->name ?? '-' }}</strong></div>
-                                <div class="text-muted small">Ke: <strong>{{ $mutation->toRoom?->name ?? '-' }}</strong></div>
+                        </div>
+
+                        <div class="mt-2 d-flex flex-wrap gap-2 align-items-center">
+                            <span class="badge bg-secondary-subtle text-secondary rounded-pill">Qty: {{ $mutation->quantity }}</span>
+                            @switch($mutation->type)
+                                @case('masuk')
+                                    <span class="badge bg-success-subtle text-success rounded-pill">Masuk</span>
+                                    @break
+                                @case('keluar')
+                                    <span class="badge bg-danger-subtle text-danger rounded-pill">Keluar</span>
+                                    @break
+                                @case('pindah_ruang')
+                                    <span class="badge bg-info-subtle text-info rounded-pill">Pindah</span>
+                                    @break
+                                @default
+                                    <span class="badge bg-secondary-subtle text-secondary rounded-pill">{{ ucfirst(str_replace('_',' ',$mutation->type)) }}</span>
+                            @endswitch
+                            @switch($mutation->status)
+                                @case('pending')
+                                    <span class="badge bg-warning text-dark rounded-pill">Pending</span>
+                                    @break
+                                @case('approved')
+                                    <span class="badge bg-success rounded-pill">Approved</span>
+                                    @break
+                                @case('rejected')
+                                    <span class="badge bg-danger rounded-pill">Rejected</span>
+                                    @break
+                                @default
+                                    <span class="badge bg-secondary rounded-pill">{{ ucfirst($mutation->status) }}</span>
+                            @endswitch
+                        </div>
+
+                        <div class="mt-2 d-flex flex-column gap-1 small text-muted">
+                            <div>Dari: <strong>{{ $mutation->fromRoom?->name ?? '-' }}</strong></div>
+                            <div>Ke: <strong>{{ $mutation->toRoom?->name ?? '-' }}</strong></div>
+                        </div>
+
+                        @if(!empty($mutation->note))
+                            <div class="mt-2 text-muted small">Catatan: {{ $mutation->note }}</div>
+                        @endif
+
+                        @if(!empty($mutation->rejection_note))
+                            <div class="mt-2 text-danger small">
+                                <strong>Alasan Penolakan:</strong> {{ $mutation->rejection_note }}
                             </div>
-                            <div class="mt-2 text-muted small" style="white-space: normal; word-break: break-word;">{{ $mutation->note ?? '-' }}</div>
-                            @if(!empty($mutation->rejection_note))
-                                <div class="mt-2 text-muted small" style="white-space: normal; word-break: break-word;">
-                                    <strong>Alasan:</strong> {{ $mutation->rejection_note }}
-                                </div>
+                        @endif
+
+                        <div class="mt-3 d-flex flex-wrap gap-2">
+                            @if($mutation->status === 'pending' && (auth()->user()->isAdmin() || auth()->user()->isSuperAdmin()))
+                                <form action="{{ route('mutations.approve', $mutation) }}" method="POST" class="m-0">
+                                    @csrf
+                                    @method('PATCH')
+                                    <button type="submit" class="btn btn-sm btn-success rounded-pill px-3">Setujui</button>
+                                </form>
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#rejectModal{{ $mutation->id }}">Tolak</button>
                             @endif
-                            <div class="mt-3 d-flex flex-wrap gap-2">
-                                @if($mutation->status === 'pending' && (auth()->user()->isAdmin() || auth()->user()->isSuperAdmin()))
-                                    <form action="{{ route('mutations.approve', $mutation) }}" method="POST" class="m-0">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="btn btn-sm btn-success rounded-pill">Setujui</button>
-                                    </form>
-                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ $mutation->id }}">Tolak</button>
-                                @endif
-                                <a href="{{ route('mutations.show', $mutation) }}" class="btn btn-sm btn-outline-secondary">Lihat</a>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -298,7 +357,6 @@
 
 {{-- Modals Container --}}
 @foreach($mutations as $mutation)
-    {{-- Modal Tolak Pengajuan (Khusus Admin/SuperAdmin) --}}
     @if($mutation->status === 'pending' && (auth()->user()->isAdmin() || auth()->user()->isSuperAdmin()))
         <div class="modal fade" id="rejectModal{{ $mutation->id }}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-sm modal-dialog-scrollable">
@@ -314,8 +372,7 @@
                             <p class="small text-muted mb-2">Barang: <strong>{{ $mutation->product->name ?? '-' }}</strong></p>
                             <div class="mb-2">
                                 <label class="form-label small fw-medium mb-1">Alasan Penolakan <span class="text-danger">*</span></label>
-                                <textarea name="rejection_note" class="form-control form-control-sm" rows="3" required
-                                          placeholder="Tulis alasan singkat..."></textarea>
+                                <textarea name="rejection_note" class="form-control form-control-sm" rows="3" required placeholder="Tulis alasan singkat..."></textarea>
                             </div>
                         </div>
                         <div class="modal-footer border-0 pt-0 form-actions">
@@ -328,7 +385,6 @@
         </div>
     @endif
 
-    {{-- Modal Lihat Alasan Penolakan (Bisa Dilihat Semua User) --}}
     @if($mutation->status === 'rejected')
         <div class="modal fade" id="reasonModal{{ $mutation->id }}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -357,28 +413,83 @@
 @push('styles')
 <style>
 .filter-panel {
-    background-color: var(--bs-body-bg);
-    border: 1px solid var(--bs-border-color);
+    background-color: transparent;
 }
-
 .filter-panel .form-control,
 .filter-panel .form-select {
     background-color: var(--bs-body-bg);
     color: var(--bs-body-color);
     border-color: var(--bs-border-color);
 }
-
-.filter-panel .input-group-text {
-    background-color: var(--bs-body-bg);
-    color: var(--bs-secondary-color);
-    border-color: var(--bs-border-color);
-}
-
 .filter-panel .form-control:focus,
 .filter-panel .form-select:focus {
     background-color: var(--bs-body-bg);
     color: var(--bs-body-color);
 }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const filterCollapse = document.getElementById('advancedFilter');
+    const filterToggleText = document.getElementById('filterToggleText');
+    const filterChevron = document.getElementById('filterChevron');
+
+    if (filterCollapse) {
+        filterCollapse.addEventListener('show.bs.collapse', function () {
+            filterToggleText.textContent = 'Sembunyikan Filter';
+            filterChevron.classList.remove('bi-chevron-down');
+            filterChevron.classList.add('bi-chevron-up');
+        });
+        filterCollapse.addEventListener('hide.bs.collapse', function () {
+            filterToggleText.textContent = 'Filter';
+            filterChevron.classList.remove('bi-chevron-up');
+            filterChevron.classList.add('bi-chevron-down');
+        });
+    }
+
+    const filterForm = document.getElementById('filterForm');
+    const realtimeSearch = document.getElementById('realtimeSearch');
+    const baseUrl = "{{ route('mutations.index') }}";
+
+    function updateResults() {
+        if (!filterForm) return;
+
+        const formData = new FormData(filterForm);
+        const params = new URLSearchParams();
+
+        for (const [key, value] of formData.entries()) {
+            if (value !== null && value !== '') {
+                params.append(key, value);
+            }
+        }
+
+        const queryString = params.toString();
+        window.location.href = queryString ? `${baseUrl}?${queryString}` : baseUrl;
+    }
+
+    let debounceTimer = null;
+    let isUserTyping = false;
+
+    realtimeSearch?.addEventListener('focus', function () {
+        isUserTyping = true;
+        const val = realtimeSearch.value;
+        realtimeSearch.value = '';
+        realtimeSearch.value = val;
+    });
+
+    realtimeSearch?.addEventListener('input', function () {
+        if (!isUserTyping) return;
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(updateResults, 350);
+    });
+
+    const autoSubmitElements = document.querySelectorAll('.trigger-auto-submit');
+    autoSubmitElements.forEach(function (element) {
+        element.addEventListener('change', updateResults);
+    });
+});
+</script>
 @endpush
 @endsection

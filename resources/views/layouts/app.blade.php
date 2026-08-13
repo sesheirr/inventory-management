@@ -122,6 +122,8 @@
             }
         }
     </style>
+
+    @stack('styles')
 </head>
 
 <body>
@@ -193,6 +195,8 @@
             });
         });
     </script>
+
+    @stack('scripts')
 </body>
 
 </html>
