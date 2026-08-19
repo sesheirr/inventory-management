@@ -74,7 +74,7 @@ class ProductController extends Controller
         $product = Product::create($data);
         // BARCODE FEATURE: generate otomatis jika tidak diisi
         if (empty($product->barcode)) {
-            $product->barcode = $this->generateUniqueBarcode($product->id);
+            $product->barcode = $this->generateUniqueBarcode();
             $product->save();
         }
 
@@ -362,15 +362,28 @@ class ProductController extends Controller
         ]);
     }
 
-    // BARCODE FEATURE: generate kode unik format INV-YYYY-XXXXX-XXXX
-    private function generateUniqueBarcode(int $productId): string
-    {
+    // BARCODE FEATURE: generate kode urut otomatis format BRG-000001
+private function generateUniqueBarcode(): string
+{
+    return \Illuminate\Support\Facades\DB::transaction(function () {
+        $last = Product::where('barcode', 'like', 'BRG-%')
+            ->lockForUpdate()
+            ->orderByRaw('CAST(SUBSTR(barcode, 5) AS UNSIGNED) DESC')
+            ->value('barcode');
+
+        $nextNumber = 1;
+        if ($last && preg_match('/^BRG-(\d+)$/', $last, $m)) {
+            $nextNumber = ((int) $m[1]) + 1;
+        }
+
         do {
-            $code = 'INV-' . date('Y') . '-' . str_pad($productId, 5, '0', STR_PAD_LEFT) . '-' . strtoupper(Str::random(4));
+            $code = 'BRG-' . str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
+            $nextNumber++;
         } while (Product::where('barcode', $code)->exists());
 
         return $code;
-    }
+    });
+}
 
     // BARCODE FEATURE: halaman cetak stiker barcode
     public function printBarcode(Product $product)
