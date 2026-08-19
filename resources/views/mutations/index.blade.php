@@ -1,4 +1,4 @@
-@extends('layouts.app')
+ @extends('layouts.app')
 
 @section('content')
 <div class="card border-0 shadow-sm p-3 p-md-4 rounded-4">
