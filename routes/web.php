@@ -86,6 +86,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     // Rute Manajemen Produk (CRUD tanpa delete untuk semua user)
+    Route::get('/scan-barcode', [ProductController::class, 'scanBarcode'])->name('products.scan');
+    Route::post('/scan-barcode/cari', [ProductController::class, 'scanBarcodeSearch'])->name('products.scan.search');
+
     Route::get('products/export-excel', [ProductController::class, 'exportExcel'])->name('products.export');
     Route::resource('products', ProductController::class)->except(['destroy']);
     Route::get('/products/{product}/barcode/print', [ProductController::class, 'printBarcode'])->name('products.barcode.print');

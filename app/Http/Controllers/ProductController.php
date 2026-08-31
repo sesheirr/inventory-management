@@ -389,5 +389,36 @@ private function generateUniqueBarcode(): string
     public function printBarcode(Product $product)
     {
         return view('products.barcode-print', compact('product'));
-    }
+    }// BARCODE FEATURE: halaman scan barcode
+public function scanBarcode()
+{
+    return view('products.scan-barcode');
 }
+
+// BARCODE FEATURE: cari produk berdasarkan hasil scan barcode
+public function scanBarcodeSearch(Request $request)
+{
+    $validated = $request->validate([
+        'barcode' => ['required', 'string', 'max:50', 'regex:/^[A-Za-z0-9\-]+$/'],
+    ]);
+
+    $barcode = strtoupper(trim($validated['barcode']));
+
+    $product = Product::where('barcode', $barcode)->first();
+
+    if (!$product) {
+        return response()->json([
+            'found' => false,
+            'message' => 'Barang dengan barcode tersebut tidak ditemukan.',
+        ], 404);
+    }
+
+    return response()->json([
+        'found' => true,
+        'redirect_url' => route('products.show', $product->id),
+    ]);
+}
+
+
+}
+

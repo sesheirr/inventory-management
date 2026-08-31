@@ -78,6 +78,12 @@
                         <div class="fw-semibold text-capitalize">{{ str_replace('_', ' ', $product->status) }}</div>
                     </div>
                 </div>
+                <div class="col-md-6">
+                         <div class="stat-box">
+                            <span class="text-muted">Kode Barcode</span>
+                             <div class="fw-semibold">{{ $product->barcode ?: 'Belum ada kode' }}</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
