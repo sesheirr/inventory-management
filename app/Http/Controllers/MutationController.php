@@ -137,7 +137,7 @@ class MutationController extends Controller
 
     public function approve(Mutation $mutation)
     {
-        if (!in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+        if (! auth()->user() || ! auth()->user()->isAdmin()) {
             abort(403, 'Anda tidak memiliki izin untuk memproses persetujuan mutasi.');
         }
 
@@ -181,7 +181,7 @@ class MutationController extends Controller
 
     public function reject(Request $request, Mutation $mutation)
     {
-        if (!in_array(auth()->user()->role, ['admin', 'superadmin'])) {
+        if (! auth()->user() || ! auth()->user()->isAdmin()) {
             abort(403, 'Anda tidak memiliki izin untuk memproses persetujuan mutasi.');
         }
 

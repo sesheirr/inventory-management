@@ -93,47 +93,41 @@ Route::middleware('auth')->group(function () {
     Route::resource('products', ProductController::class)->except(['destroy']);
     Route::get('/products/{product}/barcode/print', [ProductController::class, 'printBarcode'])->name('products.barcode.print');
 
-    // Rute Manajemen Kategori dan Ruangan untuk semua user (read-only)
-    Route::resource('categories', CategoryController::class)->only(['index', 'show']);
-    Route::resource('rooms', RoomController::class)->only(['index', 'show']);
-
     // Rute Manajemen Mutasi untuk semua user kecuali hapus
     Route::resource('mutations', MutationController::class)->except(['destroy']);
 });
 
-Route::middleware(['auth', 'superadmin'])->group(function () {
-    Route::delete('/dashboard/clear-history', [DashboardController::class, 'clearHistory'])->name('dashboard.clear-history');
-});
-
 Route::middleware(['auth', 'admin'])->group(function () {
+    // Manajemen Produk (Aksi Admin: Hapus)
     Route::post('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected');
     Route::delete('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected.delete');
     Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
 
-    Route::resource('categories', CategoryController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
-    Route::resource('rooms', RoomController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
+    // Manajemen Kategori & Ruangan (Aksi Admin: Tambah, Ubah, Hapus — didefinisikan sebelum show agar tidak tertimpa wildcard)
+    Route::resource('categories', CategoryController::class)->except(['index', 'show']);
+    Route::resource('rooms', RoomController::class)->except(['index', 'show']);
 
+    // Manajemen Mutasi (Aksi Admin: Hapus & Approval)
     Route::delete('mutations/{mutation}', [MutationController::class, 'destroy'])->name('mutations.destroy');
+    Route::patch('mutations/{mutation}/approve', [MutationController::class, 'approve'])->name('mutations.approve');
+    Route::patch('mutations/{mutation}/reject', [MutationController::class, 'reject'])->name('mutations.reject');
 
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
 });
 
+Route::middleware('auth')->group(function () {
+    // Rute Manajemen Kategori dan Ruangan untuk semua user (read-only: index & show)
+    Route::resource('categories', CategoryController::class)->only(['index', 'show']);
+    Route::resource('rooms', RoomController::class)->only(['index', 'show']);
+});
+
 Route::middleware(['auth', 'superadmin'])->group(function () {
+    Route::delete('/dashboard/clear-history', [DashboardController::class, 'clearHistory'])->name('dashboard.clear-history');
+
+    // Manajemen User — Hanya untuk Super Admin
     Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
     Route::put('/users/{user}/role', [UserManagementController::class, 'updateRole'])->name('users.update-role');
     Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
-});
-
-Route::middleware(['auth'])->group(function () {
-
-    Route::resource('mutations', MutationController::class);
-
-    // Approval routes — dibatasi role admin & superadmin (lihat middleware di controller)
-    Route::patch('mutations/{mutation}/approve', [MutationController::class, 'approve'])
-        ->name('mutations.approve');
-
-    Route::patch('mutations/{mutation}/reject', [MutationController::class, 'reject'])
-        ->name('mutations.reject');
 });
 
 Route::middleware(['auth'])->group(function () {
