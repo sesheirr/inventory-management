@@ -171,7 +171,7 @@
                         <td>
                             <div class="d-flex align-items-center gap-3">
                                 <div class="product-thumb">
-                                    <img src="{{ $product->image ?? asset('images/no-image.png') }}" alt="{{ $product->name }}" onerror="this.onerror=null; this.src='https://placehold.co/100x100?text=No+Image';">
+                                    <img src="{{ $product->hasMedia('images') ? $product->getFirstMediaUrl('images') : asset('images/no-image.png') }}" alt="{{ $product->name }}" onerror="this.onerror=null; this.src='https://placehold.co/100x100?text=No+Image';">
                                 </div>
                                 <div>
                                     <div class="fw-semibold">{{ $product->name }}</div>
@@ -236,7 +236,7 @@
                     </div>
 
                     <div class="product-thumb flex-shrink-0">
-                        <img src="{{ $product->image ?? asset('images/no-image.png') }}" alt="{{ $product->name }}" onerror="this.onerror=null; this.src='https://placehold.co/100x100?text=No+Image';">
+                        <img src="{{ $product->hasMedia('images') ? $product->getFirstMediaUrl('images') : asset('images/no-image.png') }}" alt="{{ $product->name }}" onerror="this.onerror=null; this.src='https://placehold.co/100x100?text=No+Image';">
                     </div>
                     
                     <div class="flex-grow-1" style="min-width: 0;">

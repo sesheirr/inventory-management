@@ -33,8 +33,8 @@
     <div class="row g-4 px-2 px-md-0">
         <div class="col-lg-4 text-center">
             <div class="detail-image d-flex align-items-center justify-content-center overflow-hidden p-2">
-                @if($product->image)
-                    <img src="{{ $product->image }}"
+                @if($product->hasMedia('images'))
+                    <img src="{{ $product->getFirstMediaUrl('images') }}"
                          alt="{{ $product->name }}"
                          class="rounded-3"
                          onerror="this.onerror=null; this.src='https://placehold.co/400x300?text=Gambar+Error';">

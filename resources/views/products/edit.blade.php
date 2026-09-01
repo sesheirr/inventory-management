@@ -88,9 +88,9 @@
         <div class="col-12">
             <label class="form-label">Gambar</label>
             <input type="file" name="image" class="form-control">
-            @if($product->image)
+            @if($product->hasMedia('images'))
                 <div class="mt-2">
-                    <img src="{{ $product->image }}" alt="Gambar saat ini" class="img-thumbnail" style="max-height:120px;" onerror="this.onerror=null; this.src='https://placehold.co/120x120?text=No+Image';">
+                    <img src="{{ $product->getFirstMediaUrl('images') }}" alt="Gambar saat ini" class="img-thumbnail" style="max-height:120px;" onerror="this.onerror=null; this.src='https://placehold.co/120x120?text=No+Image';">
                     <label class="form-check-label ms-2">Hapus gambar</label>
                     <input type="checkbox" name="remove_image" value="1" class="form-check-input ms-2">
                 </div>
