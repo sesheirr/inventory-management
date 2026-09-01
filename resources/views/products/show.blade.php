@@ -19,8 +19,7 @@
                 background-color: transparent !important;
             }
         }
-    </style>
-
+    </style>  
     <div class="d-flex align-items-center gap-3 mb-4 px-3 px-md-0">
         <a href="{{ route('products.index') }}" class="btn btn-outline-secondary rounded-circle d-inline-flex d-md-none align-items-center justify-content-center back-btn-circle" title="Kembali">
             <i class="bi bi-arrow-left"></i>
