@@ -93,8 +93,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('products', ProductController::class)->except(['destroy']);
     Route::get('/products/{product}/barcode/print', [ProductController::class, 'printBarcode'])->name('products.barcode.print');
 
-    // Rute Manajemen Kategori dan Ruangan untuk semua user (read-only)
-    Route::resource('categories', CategoryController::class)->only(['index', 'show']);
+    // Rute Manajemen Kategori untuk user terautentikasi: lihat, lihat detail, dan tambah
+    Route::resource('categories', CategoryController::class)->only(['index', 'show', 'store']);
     Route::resource('rooms', RoomController::class)->only(['index', 'show']);
 
     // Rute Manajemen Mutasi untuk semua user kecuali hapus
@@ -110,7 +110,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected.delete');
     Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
 
-    Route::resource('categories', CategoryController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
+    Route::resource('categories', CategoryController::class)->only(['edit', 'update', 'destroy']);
     Route::resource('rooms', RoomController::class)->only(['create', 'store', 'edit', 'update', 'destroy']);
 
     Route::delete('mutations/{mutation}', [MutationController::class, 'destroy'])->name('mutations.destroy');

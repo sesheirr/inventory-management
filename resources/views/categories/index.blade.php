@@ -15,11 +15,9 @@
             </div>
         </form>
 
-        @if(auth()->user()->isAdmin())
-            <button type="button" class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
-                + Tambah Kategori
-            </button>
-        @endif
+        <button type="button" class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+            + Tambah Kategori
+        </button>
     </div>
 </div>
 

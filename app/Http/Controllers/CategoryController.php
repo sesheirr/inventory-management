@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CategoryController extends Controller
 {
@@ -38,8 +39,11 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:100'],
+            'name' => ['required', 'string', 'max:100', 'unique:categories,name'],
+            'description' => ['nullable', 'string'],
         ]);
+
+        $data['name'] = trim((string) $data['name']);
 
         Category::create($data);
 
@@ -59,19 +63,32 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category)
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:100'],
+            'name' => ['required', 'string', 'max:100', Rule::unique('categories', 'name')->ignore($category->id)],
             'description' => ['nullable', 'string'],
         ]);
 
+        $data['name'] = trim((string) $data['name']);
         $category->update($data);
 
-        return redirect()->route('categories.index')->with('success', 'Category updated successfully.');
+        return redirect()->route('categories.index')->with('success', 'Kategori berhasil diperbarui.');
     }
 
-    public function destroy(Category $category)
+    public function destroy(Request $request, Category $category)
     {
+        $productCount = $category->products()->count();
+
+        if ($productCount > 0) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'Kategori tidak bisa dihapus karena masih digunakan oleh ' . $productCount . ' barang.'
+                ], 422);
+            }
+
+            return redirect()->route('categories.index')->with('error', 'Kategori tidak bisa dihapus karena masih digunakan oleh ' . $productCount . ' barang.');
+        }
+
         $category->delete();
 
-        return redirect()->route('categories.index')->with('success', 'Category deleted successfully.');
+        return redirect()->route('categories.index')->with('success', 'Kategori berhasil dihapus.');
     }
 }
