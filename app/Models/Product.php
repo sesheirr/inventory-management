@@ -7,11 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Traits\LogsActivity;
-
-class Product extends Model
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+class Product extends Model implements HasMedia
 {
     use HasFactory;
     use LogsActivity;
+    use InteractsWithMedia;
 
     protected $fillable = [
         'name',
@@ -24,8 +26,6 @@ class Product extends Model
         'stock',
         'price',
         'status',
-        'image',
-        'image_public_id',
         'kode_barang',
         'barcode', // BARCODE FEATURE
     ];
