@@ -88,7 +88,7 @@ class Mutation extends Model
     {
         return match ($this->status) {
             'pending'  => 'Menunggu',
-            'approved' => 'Disetujui',
+            'approved' => 'ACC',
             'rejected' => 'Ditolak',
             default    => ucfirst($this->status),
         };

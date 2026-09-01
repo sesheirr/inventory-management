@@ -57,6 +57,19 @@
                 <div class="fw-semibold">{{ $mutation->note ?? '-' }}</div>
             </div>
         </div>
+
+        @if($mutation->status !== 'pending' && $mutation->approver)
+            <div class="col-12">
+                <div class="card p-3 rounded-4 bg-light border-0">
+                    <small class="text-muted">Status Proses</small>
+                    <div class="fw-semibold">
+                        {{ $mutation->status === 'approved' ? 'Di-ACC oleh' : 'Ditolak oleh' }}
+                        {{ $mutation->approver->name ?? 'Admin' }}
+                        pada {{ optional($mutation->approved_at)->format('d/m/Y H:i') }}
+                    </div>
+                </div>
+            </div>
+        @endif
     </div>
 </div>
 @endsection

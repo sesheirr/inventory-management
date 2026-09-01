@@ -1,4 +1,4 @@
- @extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
 <div class="card border-0 shadow-sm p-3 p-md-4 rounded-4">
@@ -109,7 +109,8 @@
 
     {{-- Data Table (desktop) --}}
     <div class="d-none d-md-block">
-        <div class="table-responsive">
+        {{-- overflow-visible agar dropdown tidak terpotong atau tersembunyi --}}
+        <div class="table-responsive overflow-visible pb-4">
             <table class="table table-sm align-middle table-hover small mb-0">
             <thead>
                 <tr class="border-bottom border-secondary-subtle">
@@ -134,16 +135,24 @@
                         <td>
                             @switch($mutation->type)
                                 @case('masuk')
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill"><i class="bi bi-box-arrow-in-down me-1"></i>Masuk</span>
+                                    <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 rounded-pill px-3 py-1 fw-semibold">
+                                        <i class="bi bi-box-arrow-in-down me-1"></i>Masuk
+                                    </span>
                                     @break
                                 @case('keluar')
-                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill"><i class="bi bi-box-arrow-up me-1"></i>Keluar</span>
+                                    <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50 rounded-pill px-3 py-1 fw-semibold">
+                                        <i class="bi bi-box-arrow-up me-1"></i>Keluar
+                                    </span>
                                     @break
                                 @case('pindah_ruang')
-                                    <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill"><i class="bi bi-arrow-left-right me-1"></i>Pindah</span>
+                                    <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50 rounded-pill px-3 py-1 fw-semibold">
+                                        <i class="bi bi-arrow-left-right me-1"></i>Pindah
+                                    </span>
                                     @break
                                 @default
-                                    <span class="badge bg-secondary-subtle text-secondary rounded-pill">{{ ucfirst(str_replace('_', ' ', $mutation->type)) }}</span>
+                                    <span class="badge bg-secondary bg-opacity-25 text-body border border-secondary rounded-pill px-3 py-1 fw-semibold">
+                                        {{ ucfirst(str_replace('_', ' ', $mutation->type)) }}
+                                    </span>
                             @endswitch
                         </td>
                         <td class="fw-semibold text-center">{{ $mutation->quantity }}</td>
@@ -282,19 +291,19 @@
                         </div>
 
                         <div class="mt-2 d-flex flex-wrap gap-2 align-items-center">
-                            <span class="badge bg-secondary-subtle text-secondary rounded-pill">Qty: {{ $mutation->quantity }}</span>
+                            <span class="badge bg-secondary bg-opacity-25 text-body border border-secondary rounded-pill">Qty: {{ $mutation->quantity }}</span>
                             @switch($mutation->type)
                                 @case('masuk')
-                                    <span class="badge bg-success-subtle text-success rounded-pill">Masuk</span>
+                                    <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 rounded-pill">Masuk</span>
                                     @break
                                 @case('keluar')
-                                    <span class="badge bg-danger-subtle text-danger rounded-pill">Keluar</span>
+                                    <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50 rounded-pill">Keluar</span>
                                     @break
                                 @case('pindah_ruang')
-                                    <span class="badge bg-info-subtle text-info rounded-pill">Pindah</span>
+                                    <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50 rounded-pill">Pindah</span>
                                     @break
                                 @default
-                                    <span class="badge bg-secondary-subtle text-secondary rounded-pill">{{ ucfirst(str_replace('_',' ',$mutation->type)) }}</span>
+                                    <span class="badge bg-secondary bg-opacity-25 text-body border border-secondary rounded-pill">{{ ucfirst(str_replace('_',' ',$mutation->type)) }}</span>
                             @endswitch
                             @switch($mutation->status)
                                 @case('pending')

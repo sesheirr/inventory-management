@@ -10,6 +10,17 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            DB::table('users')
+                ->where(function ($query) {
+                    $query->whereNotIn('role', ['superadmin', 'admin', 'user'])
+                          ->orWhereNull('role');
+                })
+                ->update(['role' => 'user']);
+
+            return;
+        }
+
         // Bersihkan dulu data role yang tidak valid (misal "administrator")
         // sebelum enum baru diterapkan, supaya tidak gagal "Data truncated"
         DB::table('users')
