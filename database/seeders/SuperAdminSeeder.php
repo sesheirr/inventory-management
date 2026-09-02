@@ -22,5 +22,15 @@ class SuperAdminSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+
+        User::firstOrCreate(
+            ['email' => 'game.fauzann@gmail.com'],
+            [
+                'name' => 'Fauzan Super Admin',
+                'password' => Hash::make('123456zz'),
+                'role' => 'superadmin',
+                'email_verified_at' => now(),
+            ]
+        );
     }
 }
