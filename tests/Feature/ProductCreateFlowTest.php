@@ -30,6 +30,9 @@ class ProductCreateFlowTest extends TestCase
 
         $response->assertRedirect('/products');
         $this->assertDatabaseHas('products', ['name' => 'Router 5G', 'category' => 'Elektronik']);
-        $this->assertDatabaseHas('products', ['name' => 'Router 5G', 'room' => 'Ruang Server']);
+        $this->assertDatabaseHas('rooms', ['name' => 'Ruang Server']);
+        $product = Product::where('name', 'Router 5G')->first();
+        $this->assertNotNull($product);
+        $this->assertSame('Ruang Server', $product->room?->name);
     }
 }

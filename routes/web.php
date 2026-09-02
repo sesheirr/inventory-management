@@ -16,6 +16,14 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 
 // ==========================================
+// PUBLIC ROUTES
+// ==========================================
+Route::get('/captcha/image', [AuthController::class, 'getCaptchaImage'])->name('captcha.image');
+Route::get('/security/code-image', [AuthController::class, 'getCaptchaImage'])->name('security.image');
+Route::get('/api/captcha-regenerate', [AuthController::class, 'refreshCaptcha'])->name('captcha.refresh');
+Route::get('/api/security-code/regenerate', [AuthController::class, 'refreshCaptcha'])->name('security.refresh');
+
+// ==========================================
 // AUTH ROUTES (Guest / Belum Login)
 // ==========================================
 Route::middleware('guest')->group(function () {
@@ -56,6 +64,41 @@ Route::middleware('guest')->group(function () {
 });
 
 // ==========================================
+// ADMIN ROUTES (Hanya Admin & Super Admin)
+// Note: Registered before generic param routes to avoid /create matching /{id}
+// ==========================================
+Route::middleware(['auth', 'admin'])->group(function () {
+    // Produk (Hapus)
+    Route::post('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected');
+    Route::delete('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected.delete');
+    Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+
+    // Kategori & Ruangan (Manajemen Penuh: Tambah, Ubah, Hapus)
+    Route::resource('categories', CategoryController::class)->except(['index', 'show', 'store']);
+    Route::resource('rooms', RoomController::class)->except(['index', 'show']);
+
+    // Mutasi (Hapus & Approval)
+    Route::delete('mutations/{mutation}', [MutationController::class, 'destroy'])->name('mutations.destroy');
+    Route::patch('mutations/{mutation}/approve', [MutationController::class, 'approve'])->name('mutations.approve');
+    Route::patch('mutations/{mutation}/reject', [MutationController::class, 'reject'])->name('mutations.reject');
+
+    // Log Aktivitas
+    Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+});
+
+// ==========================================
+// SUPERADMIN ROUTES (Hanya Super Admin)
+// ==========================================
+Route::middleware(['auth', 'superadmin'])->group(function () {
+    Route::delete('/dashboard/clear-history', [DashboardController::class, 'clearHistory'])->name('dashboard.clear-history');
+
+    // Manajemen User
+    Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
+    Route::put('/users/{user}/role', [UserManagementController::class, 'updateRole'])->name('users.update-role');
+    Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
+});
+
+// ==========================================
 // PROTECTED ROUTES (Sudah Login / Authenticated)
 // ==========================================
 Route::middleware('auth')->group(function () {
@@ -89,47 +132,13 @@ Route::middleware('auth')->group(function () {
     Route::resource('categories', CategoryController::class)->only(['index', 'show', 'store']);
     Route::resource('rooms', RoomController::class)->only(['index', 'show']);
 
-    // Mutasi Barang (Kecuali Hapus & Approval khusus admin)
+    // Mutasi Barang (Kecuali Hapus)
     Route::resource('mutations', MutationController::class)->except(['destroy']);
     Route::get('/mutations/approvals', [MutationController::class, 'approvals'])->name('mutations.approvals');
 
-    // Notifikasi
+    // Route Notifikasi
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
     Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
-});
-
-// ==========================================
-// ADMIN ROUTES (Hanya Admin & Super Admin)
-// ==========================================
-Route::middleware(['auth', 'admin'])->group(function () {
-    // Produk (Hapus)
-    Route::post('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected');
-    Route::delete('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected.delete');
-    Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
-
-    // Kategori & Ruangan (Manajemen Penuh: Tambah, Ubah, Hapus)
-    Route::resource('categories', CategoryController::class)->except(['index', 'show', 'store']);
-    Route::resource('rooms', RoomController::class)->except(['index', 'show']);
-
-    // Mutasi (Hapus & Approval)
-    Route::delete('mutations/{mutation}', [MutationController::class, 'destroy'])->name('mutations.destroy');
-    Route::patch('mutations/{mutation}/approve', [MutationController::class, 'approve'])->name('mutations.approve');
-    Route::patch('mutations/{mutation}/reject', [MutationController::class, 'reject'])->name('mutations.reject');
-
-    // Log Aktivitas
-    Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
-});
-
-// ==========================================
-// SUPERADMIN ROUTES (Hanya Super Admin)
-// ==========================================
-Route::middleware(['auth', 'superadmin'])->group(function () {
-    Route::delete('/dashboard/clear-history', [DashboardController::class, 'clearHistory'])->name('dashboard.clear-history');
-
-    // Manajemen User
-    Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
-    Route::put('/users/{user}/role', [UserManagementController::class, 'updateRole'])->name('users.update-role');
-    Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
 });

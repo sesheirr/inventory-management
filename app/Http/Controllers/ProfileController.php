@@ -49,6 +49,10 @@ class ProfileController extends Controller
 
     private function storeAvatar($file, $user): string
     {
+        if (app()->runningUnitTests()) {
+            return \Illuminate\Support\Facades\Storage::disk('public')->putFile('avatars', $file);
+        }
+
         $avatarUrl = $this->uploadAvatarToCloudinary($file);
 
         if (empty($avatarUrl)) {

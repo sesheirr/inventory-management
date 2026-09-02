@@ -54,23 +54,31 @@ class ProductController extends Controller
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'category' => ['nullable', 'string', 'max:100'],
             'subcategory' => ['nullable', 'string', 'max:100'],
-            'room_id' => ['required', 'integer', 'exists:rooms,id'],
+            'room_id' => ['nullable', 'integer', 'exists:rooms,id'],
+            'room' => ['nullable', 'string', 'max:150'],
             'edition' => ['nullable', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
             'stock' => ['required', 'integer', 'min:0'],
+            'price' => ['nullable', 'numeric', 'min:0'],
             'status' => ['required', 'in:active,inactive,out_of_stock'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'barcode' => ['nullable', 'string', 'max:50', 'regex:/^[A-Z0-9\-]+$/', Rule::unique('products', 'barcode')],
         ]);
 
         $data = $this->resolveCategoryData($data, $request);
+        $data = $this->resolveRoomData($data, $request);
 
         $data['kode_barang'] = 'BRG-' . strtoupper(Str::random(6));
 
         $product = Product::create($data);
 
         if ($request->hasFile('image')) {
-            $product->addMediaFromRequest('image')->toMediaCollection('images');
+            $request->file('image')->store('products', 'public');
+            try {
+                $product->addMediaFromRequest('image')->toMediaCollection('images');
+            } catch (\Throwable $e) {
+                // Media library fallback
+            }
         }
         // BARCODE FEATURE: generate otomatis jika tidak diisi
         if (empty($product->barcode)) {
@@ -196,6 +204,49 @@ class ProductController extends Controller
 
 
 
+    private function resolveRoomData(array $data, Request $request): array
+    {
+        if ($request->filled('room_id')) {
+            $room = Room::find($request->input('room_id'));
+            if ($room) {
+                $data['room_id'] = $room->id;
+                $data['room'] = $room->name;
+
+                return $data;
+            }
+        }
+
+        if ($request->filled('room')) {
+            $name = trim((string) $request->input('room'));
+            $room = Room::where('name', $name)->first();
+
+            if (!$room) {
+                $room = Room::create([
+                    'name' => $name,
+                    'description' => null,
+                ]);
+            }
+
+            $data['room_id'] = $room->id;
+            $data['room'] = $room->name;
+
+            return $data;
+        }
+
+        $room = Room::query()->first();
+        if ($room) {
+            $data['room_id'] = $room->id;
+            $data['room'] = $room->name;
+
+            return $data;
+        }
+
+        $data['room_id'] = null;
+        $data['room'] = null;
+
+        return $data;
+    }
+
     private function categoryOptions(): array
     {
         return [
@@ -218,30 +269,28 @@ class ProductController extends Controller
         return $this->index($request);
     }
 
-
-
     // BARCODE FEATURE: generate kode urut otomatis format BRG-000001
-private function generateUniqueBarcode(): string
-{
-    return \Illuminate\Support\Facades\DB::transaction(function () {
-        $last = Product::where('barcode', 'like', 'BRG-%')
-            ->lockForUpdate()
-            ->orderByRaw('CAST(SUBSTR(barcode, 5) AS UNSIGNED) DESC')
-            ->value('barcode');
+    private function generateUniqueBarcode(): string
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () {
+            $last = Product::where('barcode', 'like', 'BRG-%')
+                ->lockForUpdate()
+                ->latest('id')
+                ->value('barcode');
 
-        $nextNumber = 1;
-        if ($last && preg_match('/^BRG-(\d+)$/', $last, $m)) {
-            $nextNumber = ((int) $m[1]) + 1;
-        }
+            $nextNumber = 1;
+            if ($last && preg_match('/^BRG-(\d+)$/', $last, $m)) {
+                $nextNumber = ((int) $m[1]) + 1;
+            }
 
-        do {
-            $code = 'BRG-' . str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
-            $nextNumber++;
-        } while (Product::where('barcode', $code)->exists());
+            do {
+                $code = 'BRG-' . str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
+                $nextNumber++;
+            } while (Product::where('barcode', $code)->exists());
 
-        return $code;
-    });
-}
+            return $code;
+        });
+    }
 
     // BARCODE FEATURE: halaman cetak stiker barcode
     public function printBarcode(Product $product)

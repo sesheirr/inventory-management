@@ -123,6 +123,12 @@ class ReportController extends Controller
         $mutationLabels = $mutationByMonth->pluck('month')->toArray();
         $mutationValues = $mutationByMonth->pluck('total')->toArray();
 
+        $activityLogsQuery = \App\Models\ActivityLog::with('user')->latest();
+        if (auth()->check() && !auth()->user()->isAdmin()) {
+            $activityLogsQuery->where('user_id', auth()->id());
+        }
+        $activityLogs = $activityLogsQuery->limit(10)->get();
+
         return view('dashboard', compact(
             'categories',
             'rooms',
@@ -140,7 +146,8 @@ class ReportController extends Controller
             'categoryValues',
             'mutationLabels',
             'mutationValues',
-            'totalRuangan'
+            'totalRuangan',
+            'activityLogs'
         ));
     }
 
