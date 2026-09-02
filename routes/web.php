@@ -74,7 +74,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
 
     // Kategori & Ruangan (Manajemen Penuh: Tambah, Ubah, Hapus)
-    Route::resource('categories', CategoryController::class)->except(['index', 'show', 'store']);
+    Route::resource('categories', CategoryController::class)->only(['edit', 'update', 'destroy']);
     Route::resource('rooms', RoomController::class)->except(['index', 'show']);
 
     // Mutasi (Hapus & Approval)

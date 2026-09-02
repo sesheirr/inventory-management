@@ -169,8 +169,11 @@ class RoleAccessControlTest extends TestCase
 
     public function test_regular_user_cannot_access_admin_or_superadmin_actions(): void
     {
+        $category = \App\Models\Category::create(['name' => 'Restricted Category']);
+
         $this->actingAs($this->regularUser)->get(route('users.index'))->assertForbidden();
         $this->actingAs($this->regularUser)->get(route('rooms.create'))->assertForbidden();
-        $this->actingAs($this->regularUser)->post(route('categories.store'), ['name' => 'Test'])->assertForbidden();
+        $this->actingAs($this->regularUser)->get(route('categories.edit', $category))->assertForbidden();
+        $this->actingAs($this->regularUser)->delete(route('categories.destroy', $category))->assertForbidden();
     }
 }
