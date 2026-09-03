@@ -11,7 +11,7 @@
                 <img src="{{ asset('images/logo-diskominfo.png') }}" alt="Logo Diskominfo Garut" class="w-full h-full object-contain">
             </div>
             <div class="min-w-0">
-                <h1 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white leading-tight">Inventaris Aset</h1>
+                <h1 class="text-sm font-bold tracking-tight text-slate-900 dark:text-white leading-tight">Inventaris Diskominfo</h1>
                 <p class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 truncate">Diskominfo Garut</p>
             </div>
         </a>
