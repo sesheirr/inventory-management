@@ -20,7 +20,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-extrabold tracking-tight text-white">
-                        Sistem Inventaris Aset
+                        Sistem Inventaris Diskominfo
                     </h1>
                     <p class="text-xs font-medium text-blue-300/80 mt-0.5">
                         Diskominfo Kabupaten Garut
