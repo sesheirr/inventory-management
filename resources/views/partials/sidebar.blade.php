@@ -3,7 +3,7 @@
 
 {{-- Sidebar Container --}}
 <aside id="sidebarOffcanvas" class="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-[#0f1b38] border-r border-slate-200/80 dark:border-slate-800 flex flex-col transition-transform duration-300 ease-in-out -translate-x-full lg:translate-x-0 lg:static lg:h-screen lg:sticky lg:top-0 shadow-sm">
-    
+
     {{-- Brand Header --}}
     <div class="h-16 px-5 flex items-center justify-between border-b border-slate-200/70 dark:border-slate-800/80 shrink-0">
         <a href="{{ route('dashboard') }}" class="flex items-center gap-3 group">
@@ -28,98 +28,112 @@
             <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Menu Utama</p>
             <nav class="space-y-1">
                 {{-- Dashboard --}}
-                <a href="{{ route('dashboard') }}" 
+                <a href="{{ route('dashboard') }}"
                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
-                   {{ request()->routeIs('dashboard') 
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold' 
+                   {{ request()->routeIs('dashboard')
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold'
                       : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-blue-600 dark:hover:text-blue-400' }}">
                     <i class="bi bi-grid text-base {{ request()->routeIs('dashboard') ? 'text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' }}"></i>
                     <span>Dashboard</span>
                 </a>
 
+                @if(!auth()->user()->isSuperAdmin())
                 {{-- Barang --}}
-                <a href="{{ route('products.index') }}" 
+                <a href="{{ route('products.index') }}"
                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
                    {{ request()->routeIs('products.index') || (request()->routeIs('products.*') && !request()->routeIs('products.scan'))
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold' 
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold'
                       : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-blue-600 dark:hover:text-blue-400' }}">
                     <i class="bi bi-box-seam text-base {{ request()->routeIs('products.index') || (request()->routeIs('products.*') && !request()->routeIs('products.scan')) ? 'text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' }}"></i>
-                    <span>Data Barang</span>
+                    <span>Barang</span>
                 </a>
 
                 {{-- Scan Barcode --}}
-                <a href="{{ route('products.scan') }}" 
+                <a href="{{ route('products.scan') }}"
                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
-                   {{ request()->routeIs('products.scan') 
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold' 
+                   {{ request()->routeIs('products.scan')
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold'
                       : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-blue-600 dark:hover:text-blue-400' }}">
                     <i class="bi bi-qr-code-scan text-base {{ request()->routeIs('products.scan') ? 'text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' }}"></i>
                     <span>Scan Barcode</span>
                 </a>
 
                 {{-- Kategori --}}
-                <a href="{{ route('categories.index') }}" 
+                <a href="{{ route('categories.index') }}"
                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
-                   {{ request()->routeIs('categories.*') 
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold' 
+                   {{ request()->routeIs('categories.*')
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold'
                       : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-blue-600 dark:hover:text-blue-400' }}">
                     <i class="bi bi-tags text-base {{ request()->routeIs('categories.*') ? 'text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' }}"></i>
                     <span>Kategori</span>
                 </a>
 
                 {{-- Ruangan --}}
-                <a href="{{ route('rooms.index') }}" 
+                <a href="{{ route('rooms.index') }}"
                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
-                   {{ request()->routeIs('rooms.*') 
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold' 
+                   {{ request()->routeIs('rooms.*')
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold'
                       : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-blue-600 dark:hover:text-blue-400' }}">
                     <i class="bi bi-building text-base {{ request()->routeIs('rooms.*') ? 'text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' }}"></i>
                     <span>Ruangan</span>
                 </a>
 
                 {{-- Mutasi Barang --}}
-                <a href="{{ route('mutations.index') }}" 
+                <a href="{{ route('mutations.index') }}"
                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
-                   {{ request()->routeIs('mutations.*') 
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold' 
+                   {{ request()->routeIs('mutations.*')
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold'
                       : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-blue-600 dark:hover:text-blue-400' }}">
                     <i class="bi bi-arrow-left-right text-base {{ request()->routeIs('mutations.*') ? 'text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' }}"></i>
                     <span>Mutasi Barang</span>
                 </a>
 
-                {{-- Laporan --}}
-                <a href="{{ route('reports.index') }}" 
-                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
-                   {{ request()->routeIs('reports.*') 
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold' 
-                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-blue-600 dark:hover:text-blue-400' }}">
-                    <i class="bi bi-file-earmark-bar-graph text-base {{ request()->routeIs('reports.*') ? 'text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' }}"></i>
-                    <span>Laporan</span>
-                </a>
+                                @if(auth()->user()->isAdmin())
+                                        {{-- Laporan --}}
+                                        <a href="{{ route('reports.index') }}"
+                                             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
+                                             {{ request()->routeIs('reports.*')
+                                                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold'
+                                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-blue-600 dark:hover:text-blue-400' }}">
+                                                <i class="bi bi-file-earmark-bar-graph text-base {{ request()->routeIs('reports.*') ? 'text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' }}"></i>
+                                                <span>Laporan</span>
+                                        </a>
+                                @endif
+                @endif
             </nav>
         </div>
 
         {{-- Administrator Section --}}
-        @if(auth()->user()->isAdmin())
+        @if(auth()->user()->isAdmin() && !auth()->user()->isSuperAdmin())
             <div>
                 <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Administrasi</p>
                 <nav class="space-y-1">
                     {{-- Log Aktivitas --}}
-                    <a href="{{ route('activity-logs.index') }}" 
+                    <a href="{{ route('activity-logs.index') }}"
                        class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
-                       {{ request()->routeIs('activity-logs.*') 
-                          ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold' 
+                       {{ request()->routeIs('activity-logs.*')
+                          ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold'
                           : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-blue-600 dark:hover:text-blue-400' }}">
                         <i class="bi bi-clock-history text-base {{ request()->routeIs('activity-logs.*') ? 'text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' }}"></i>
                         <span>Log Aktivitas</span>
                     </a>
 
+                    {{-- Approval Mutasi --}}
+                    <a href="{{ route('mutations.approvals') }}"
+                       class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
+                       {{ request()->routeIs('mutations.approvals')
+                          ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold'
+                          : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-blue-600 dark:hover:text-blue-400' }}">
+                        <i class="bi bi-check2-square text-base {{ request()->routeIs('mutations.approvals') ? 'text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' }}"></i>
+                        <span>Approval Mutasi</span>
+                    </a>
+
                     {{-- Manajemen User (SuperAdmin Only) --}}
                     @if(auth()->user()->isSuperAdmin())
-                        <a href="{{ route('users.index') }}" 
+                        <a href="{{ route('users.index') }}"
                            class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
-                           {{ request()->routeIs('users.*') 
-                              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold' 
+                           {{ request()->routeIs('users.*')
+                              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold'
                               : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-blue-600 dark:hover:text-blue-400' }}">
                             <i class="bi bi-people text-base {{ request()->routeIs('users.*') ? 'text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' }}"></i>
                             <span>Manajemen User</span>
@@ -128,18 +142,36 @@
                 </nav>
             </div>
         @endif
+
+        @if(auth()->user()->isSuperAdmin())
+            <div>
+                <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Administrasi</p>
+                <nav class="space-y-1">
+                    <a href="{{ route('users.index') }}"
+                       class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
+                       {{ request()->routeIs('users.*')
+                          ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold'
+                          : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-blue-600 dark:hover:text-blue-400' }}">
+                        <i class="bi bi-people text-base {{ request()->routeIs('users.*') ? 'text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' }}"></i>
+                        <span>Manajemen User</span>
+                    </a>
+                </nav>
+            </div>
+        @endif
     </div>
 
     {{-- Bottom Navigation & User Actions --}}
     <div class="p-3 border-t border-slate-200/70 dark:border-slate-800/80 space-y-1 bg-slate-50/50 dark:bg-[#0c152d]">
-        <a href="{{ route('settings') }}" 
-           class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
-           {{ request()->routeIs('settings') 
-              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold' 
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-blue-600 dark:hover:text-blue-400' }}">
-            <i class="bi bi-gear text-base {{ request()->routeIs('settings') ? 'text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' }}"></i>
-            <span>Pengaturan</span>
-        </a>
+                @if(auth()->user()->isSuperAdmin())
+                        <a href="{{ route('settings') }}"
+                             class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
+                             {{ request()->routeIs('settings')
+                                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold'
+                                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-blue-600 dark:hover:text-blue-400' }}">
+                                <i class="bi bi-gear text-base {{ request()->routeIs('settings') ? 'text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' }}"></i>
+                                <span>Pengaturan</span>
+                        </a>
+                @endif
 
         <button type="button" data-modal-target="logoutModal" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all duration-150 group">
             <i class="bi bi-box-arrow-right text-base text-rose-500 group-hover:translate-x-0.5 transition-transform"></i>

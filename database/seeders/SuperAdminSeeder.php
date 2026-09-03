@@ -13,7 +13,7 @@ class SuperAdminSeeder extends Seeder
      */
     public function run(): void
     {
-        User::firstOrCreate(
+        User::updateOrCreate(
             ['email' => 'admin@web.inventaris'],
             [
                 'name' => 'Super Admin',
