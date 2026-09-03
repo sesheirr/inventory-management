@@ -43,22 +43,31 @@ class Product extends Model implements HasMedia
     public function getCategoryNameAttribute(): string
     {
         if ($this->category_id !== null) {
-            $cat = $this->category;
-            if ($cat) {
+            $cat = $this->relationLoaded('category') ? $this->getRelation('category') : $this->category()->first();
+            if ($cat instanceof Category) {
                 return $cat->name;
             }
         }
 
-        return (string) ($this->getAttribute('category') ?: 'Umum');
+        $rawCategory = $this->attributes['category'] ?? null;
+        if (is_string($rawCategory) && trim($rawCategory) !== '') {
+            return trim($rawCategory);
+        }
+
+        return 'Umum';
     }
 
     public function getRoomNameAttribute(): ?string
     {
         if ($this->room_id !== null) {
-            return $this->room()->first()?->name;
+            $room = $this->relationLoaded('room') ? $this->getRelation('room') : $this->room()->first();
+            if ($room instanceof Room) {
+                return $room->name;
+            }
         }
 
-        return $this->getAttribute('room');
+        $rawRoom = $this->attributes['room'] ?? null;
+        return (is_string($rawRoom) && trim($rawRoom) !== '') ? trim($rawRoom) : null;
     }
 
     public function mutations(): HasMany

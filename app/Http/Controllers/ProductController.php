@@ -34,7 +34,7 @@ class ProductController extends Controller
             });
         }
 
-        $products = $products->latest()->paginate(10);
+        $products = $products->with(['category', 'room', 'media'])->latest()->paginate(10);
 
         return view('products.index', compact('products', 'query'));
     }
