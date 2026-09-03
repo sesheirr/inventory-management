@@ -1,281 +1,182 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="card dashboard-card">
-    <style>
-        /* Room page: adaptive cards for light/dark themes */
-        .room-card {
-            display: flex;
-            flex-direction: column;
-            border-radius: 12px;
-            padding: 16px;
-            transition: background .2s ease, border-color .2s ease, color .2s ease;
-            border: 1px solid transparent;
-        }
+<div class="space-y-6">
+    {{-- Header & Controls --}}
+    <div class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 p-4 sm:p-5 shadow-sm">
+        <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Daftar Ruangan</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Kelola penempatan ruangan dan penanggung jawab aset inventaris</p>
+            </div>
 
-        .room-products-card {
-            border-radius: 12px;
-            padding: 12px;
-            margin-top: 10px;
-            transition: background .15s ease, border-color .15s ease, color .15s ease;
-        }
-
-        .room-product-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 8px;
-            border-radius: 8px;
-        }
-
-        .room-product-sub {
-            font-size: 0.875rem;
-            color: var(--muted);
-        }
-
-        /* Light theme */
-        [data-bs-theme="light"] .room-card {
-            background: var(--card);
-            color: var(--text);
-            border-color: #e2e8f0;
-        }
-
-        [data-bs-theme="light"] .room-products-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            color: #111827;
-        }
-
-        [data-bs-theme="light"] .room-product-sub {
-            color: #6b7280;
-        }
-
-        /* Dark theme */
-        [data-bs-theme="dark"] .room-card {
-            background: transparent;
-            color: #eef2ff;
-            border-color: rgba(255,255,255,0.04);
-        }
-
-        [data-bs-theme="dark"] .room-products-card {
-            background: #1e293b; /* slightly lighter than page bg */
-            border: 1px solid rgba(255,255,255,0.06);
-            color: #ffffff;
-        }
-
-        [data-bs-theme="dark"] .room-product-sub {
-            color: #94a3b8;
-        }
-
-        /* small screens adjustments */
-        @media (max-width: 576px) {
-            .room-product-item { flex-direction: column; align-items: flex-start; }
-            .room-product-item .text-end { text-align: left; }
-        }
-    </style>
-
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-        <div>
-            <h4 class="fw-semibold mb-1">Ruangan</h4>
-            <p class="text-muted mb-0">Lihat dan filter barang berdasarkan ruangan.</p>
-        </div>
-
-        <div class="d-flex flex-column flex-sm-row align-items-stretch gap-2 w-100 w-sm-auto">
-            <form action="{{ route('rooms.index') }}" method="GET" class="flex-fill">
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-search"></i></span>
-                    <input type="text" name="search" value="{{ $query ?? '' }}" class="form-control" placeholder="Cari ruangan...">
-                </div>
-            </form>
-            @if(auth()->user()->isAdmin())
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahRuangan">
-                    <i class="fa fa-plus me-2"></i> Tambah Ruangan
-                </button>
-            @endif
-        </div>
-    </div>
-
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    <div class="modal fade" id="modalTambahRuangan" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content rounded-4">
-                <form method="POST" action="{{ route('rooms.store') }}">
-                    @csrf
-                    <div class="modal-header border-0">
-                        <h5 class="modal-title fw-bold">Tambah Ruangan</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nama Ruangan <span class="text-danger">*</span></label>
-                            <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}" required>
-                            @error('name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                       
-                        <div class="mb-3">
-                            <label class="form-label">Penanggung Jawab</label>
-                            <input type="text" name="person_in_charge" class="form-control @error('person_in_charge') is-invalid @enderror" value="{{ old('person_in_charge') }}">
-                            @error('person_in_charge')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                       
-                    </div>
-                    <div class="modal-footer border-0 form-actions">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary">Simpan</button>
-                    </div>
+            <div class="flex items-center gap-3">
+                <form action="{{ route('rooms.index') }}" method="GET" class="relative w-full sm:w-72">
+                    <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="search" name="search" value="{{ $query ?? '' }}" placeholder="Cari nama ruangan atau penanggung jawab..." 
+                           class="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors" autocomplete="off">
                 </form>
+
+                @if(auth()->user()->isAdmin())
+                    <button type="button" data-modal-target="modalTambahRuangan" 
+                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-500/25 active:scale-[0.98] transition-all shrink-0 cursor-pointer">
+                        <i class="bi bi-plus-lg"></i>
+                        <span>Tambah Ruangan</span>
+                    </button>
+                @endif
             </div>
         </div>
     </div>
 
-    <div class="row g-3">
-        @if($rooms->isEmpty())
-            <div id="roomsEmptyMessage" class="col-12 text-center py-5 text-muted">Tidak ada ruangan ditemukan.</div>
-        @else
+    {{-- Room Cards Grid --}}
+    @if($rooms->isEmpty())
+        <div id="roomsEmptyMessage" class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 p-12 text-center text-slate-400 dark:text-slate-500 shadow-sm">
+            <i class="bi bi-building text-4xl mb-3 block text-slate-300 dark:text-slate-600"></i>
+            <h3 class="text-base font-bold text-slate-700 dark:text-slate-300">Ruangan Tidak Ditemukan</h3>
+            <p class="text-xs mt-1">Coba gunakan kata kunci lain atau tambahkan data ruangan baru.</p>
+        </div>
+    @else
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="roomsGrid">
             @foreach($rooms as $room)
-                <div class="col-12 col-md-6 col-lg-4">
-                    <div class="room-card border-0 rounded-4 shadow-sm h-100">
-                        <div class="room-card-content">
-                            <h5 class="mb-1 fw-semibold">{{ $room->name }}</h5>
-                            <small class="text-muted d-block">
-                                Penanggung Jawab:
-                                {{ $room->person_in_charge ?? '-' }}
-                            </small>
-                            <small class="text-muted d-block">
-                                {{ $room->products_count }} Barang
-                            </small>
-                        </div>
-                        <div class="mt-3 d-flex flex-wrap gap-2 align-items-center room-card-actions mt-auto">
-                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#roomProducts{{ md5($room->name) }}" aria-expanded="false" aria-controls="roomProducts{{ md5($room->name) }}">
-                                <i class="bi bi-eye"></i> Lihat
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-danger delete-room-button" data-room-id="{{ $room->id }}" data-room-name="{{ $room->name }}" data-delete-url="{{ route('rooms.destroy', $room) }}">
-                                <i class="bi bi-trash"></i> Hapus
-                            </button>
-                        </div>
-                        <div class="collapse mt-3" id="roomProducts{{ md5($room->name) }}">
-                            <div class="room-products-card">
-                                @if($room->products->isEmpty())
-                                    <div class="text-muted">Belum ada barang di ruangan ini.</div>
-                                @else
-                                    @foreach($room->products as $p)
-                                        <div class="room-product-item">
-                                            <div>
-                                                <div class="fw-semibold">{{ $p->name }}</div>
-                                                <div class="room-product-sub">Kapasitas: {{ $p->subcategory ?? '-' }}</div>
-                                            </div>
-                                            <div class="text-end">
-                                                <div class="fw-semibold">{{ $p->stock }}</div>
-                                                <div class="room-product-sub">stok</div>
-                                            </div>
-                                        </div>
-                                        @if(! $loop->last)
-                                            <hr class="my-2" style="opacity:.06">
-                                        @endif
-                                    @endforeach
-                                @endif
-
-                                @if($room->count > 6)
-                                    <div class="mt-3 text-center">
-                                        <a href="{{ route('products.index', ['search' => $room->name]) }}" class="btn btn-sm btn-outline-primary rounded-pill">Lihat semua di ruangan ini</a>
-                                    </div>
-                                @endif
+                <div class="room-card-col group rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-sm hover:shadow-md hover:border-blue-500/40 transition-all duration-200 p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-start justify-between gap-2 mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg font-bold shrink-0">
+                                    <i class="bi bi-building"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-base font-bold text-slate-900 dark:text-white leading-tight">{{ $room->name }}</h3>
+                                    <span class="text-xs font-semibold text-amber-600 dark:text-amber-400">{{ $room->products_count }} total barang</span>
+                                </div>
                             </div>
+
+                            @if(auth()->user()->isAdmin())
+                                <div class="relative">
+                                    <button type="button" data-dropdown-toggle="room-dropdown-{{ $room->id }}" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                        <i class="bi bi-three-dots-vertical text-sm"></i>
+                                    </button>
+                                    <div id="room-dropdown-{{ $room->id }}" data-dropdown-menu class="hidden absolute right-0 mt-1 w-36 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl py-1 z-20 text-left">
+                                        <a href="{{ route('rooms.edit', $room) }}" class="flex items-center gap-2 px-3.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">
+                                            <i class="bi bi-pencil text-slate-400"></i> Edit Ruangan
+                                        </a>
+                                        <button type="button" class="delete-room-btn w-full flex items-center gap-2 px-3.5 py-1.5 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                                                data-room-name="{{ $room->name }}" 
+                                                data-delete-url="{{ route('rooms.destroy', $room) }}">
+                                            <i class="bi bi-trash"></i> Hapus
+                                        </button>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
+
+                        {{-- Penanggung Jawab Info --}}
+                        <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-3 bg-slate-50 dark:bg-slate-900/40 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                            <i class="bi bi-person-badge text-blue-500"></i>
+                            <span>PJ: <strong class="text-slate-700 dark:text-slate-200">{{ $room->person_in_charge ?? 'Belum ditentukan' }}</strong></span>
+                        </div>
+
+                        {{-- Product List inside Room --}}
+                        @if($room->products->isEmpty())
+                            <p class="text-xs text-slate-400 dark:text-slate-500 italic py-2">Belum ada barang di ruangan ini.</p>
+                        @else
+                            <div class="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                                @foreach($room->products->take(3) as $p)
+                                    <div class="flex items-center justify-between text-xs py-1">
+                                        <span class="text-slate-700 dark:text-slate-300 truncate max-w-[180px]">{{ $p->name }}</span>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                                            {{ $p->stock }} unit
+                                        </span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-100 dark:border-slate-800/80 mt-3">
+                        <a href="{{ route('products.index', ['search' => $room->name]) }}" class="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-amber-700 dark:text-amber-400 bg-amber-50/80 dark:bg-amber-950/30 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors">
+                            <span>Lihat Semua Barang di Ruangan Ini</span>
+                            <i class="bi bi-arrow-right text-[10px]"></i>
+                        </a>
                     </div>
                 </div>
             @endforeach
-        @endif
+        </div>
+    @endif
+</div>
+
+{{-- Add Room Modal --}}
+<div id="modalTambahRuangan" class="modal-container fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 animate-fade-in">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Tambah Ruangan Baru</h3>
+            <button type="button" data-modal-close class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <i class="bi bi-x-lg text-sm"></i>
+            </button>
+        </div>
+
+        <form action="{{ route('rooms.store') }}" method="POST" class="space-y-4">
+            @csrf
+            <div class="space-y-1.5">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Nama Ruangan <span class="text-rose-500">*</span></label>
+                <input type="text" name="name" value="{{ old('name') }}" required 
+                       class="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors placeholder-slate-400"
+                       placeholder="Contoh: Ruang Server & NOC Lt. 2">
+                @error('name')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Penanggung Jawab Ruangan</label>
+                <input type="text" name="person_in_charge" value="{{ old('person_in_charge') }}" 
+                       class="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors placeholder-slate-400"
+                       placeholder="Contoh: Budi Santoso, S.Kom">
+                @error('person_in_charge')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
+                <button type="button" data-modal-close class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors">
+                    Batal
+                </button>
+                <button type="submit" class="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-all cursor-pointer">
+                    Simpan Ruangan
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        @if($errors->any())
-            var modal = new bootstrap.Modal(document.getElementById('modalTambahRuangan'));
-            modal.show();
-        @endif
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.delete-room-btn').forEach(function (button) {
+        button.addEventListener('click', function () {
+            const roomName = this.dataset.roomName || 'ruangan ini';
+            if (!confirm('Apakah Anda yakin ingin menghapus ' + roomName + '? Tindakan ini tidak dapat dibatalkan.')) {
+                return;
+            }
 
-        document.querySelectorAll('.delete-room-button').forEach(function (button) {
-            button.addEventListener('click', function () {
-                var roomName = this.dataset.roomName || 'ruangan ini';
-                if (!confirm('Hapus ' + roomName + '? Aksi ini tidak dapat dibatalkan.')) {
-                    return;
+            const deleteUrl = this.dataset.deleteUrl;
+            const cardCol = this.closest('.room-card-col');
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            fetch(deleteUrl, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json'
+                },
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (cardCol) cardCol.remove();
+                const remaining = document.querySelectorAll('.room-card-col');
+                if (remaining.length === 0) {
+                    window.location.reload();
                 }
-
-                var deleteUrl = this.dataset.deleteUrl;
-                var cardColumn = this.closest('.col-12.col-md-6.col-lg-4');
-                var token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-                fetch(deleteUrl, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': token,
-                        'Accept': 'application/json'
-                    },
-                })
-                .then(function (response) {
-                    if (!response.ok) {
-                        return response.json().then(function (data) {
-                            throw new Error(data.message || 'Gagal menghapus ruangan.');
-                        });
-                    }
-                    return response.json();
-                })
-                .then(function (data) {
-                    if (cardColumn) {
-                        cardColumn.remove();
-                    }
-
-                    var roomCards = document.querySelectorAll('.col-12.col-md-6.col-lg-4');
-                    if (roomCards.length === 0) {
-                        var emptyMessage = document.getElementById('roomsEmptyMessage');
-                        if (!emptyMessage) {
-                            var row = document.querySelector('.row.g-3');
-                            if (row) {
-                                var message = document.createElement('div');
-                                message.id = 'roomsEmptyMessage';
-                                message.className = 'col-12 text-center py-5 text-muted';
-                                message.textContent = 'Tidak ada ruangan ditemukan.';
-                                row.appendChild(message);
-                            }
-                        }
-                    }
-
-                    if (data.success) {
-                        var alertWrapper = document.createElement('div');
-                        alertWrapper.className = 'alert alert-success alert-dismissible fade show rounded-3';
-                        alertWrapper.setAttribute('role', 'alert');
-                        alertWrapper.innerHTML = data.success + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
-                        var container = document.querySelector('.card.dashboard-card');
-                        if (container) {
-                            container.insertBefore(alertWrapper, container.firstChild);
-                        }
-                    }
-                })
-                .catch(function (error) {
-                    alert(error.message);
-                });
-            });
+            })
+            .catch(err => alert('Gagal menghapus ruangan: ' + err));
         });
     });
+});
 </script>
 @endsection

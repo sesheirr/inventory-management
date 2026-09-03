@@ -40,6 +40,18 @@ class Product extends Model implements HasMedia
         return $this->belongsTo(Room::class);
     }
 
+    public function getCategoryNameAttribute(): string
+    {
+        if ($this->category_id !== null) {
+            $cat = $this->category;
+            if ($cat) {
+                return $cat->name;
+            }
+        }
+
+        return (string) ($this->getAttribute('category') ?: 'Umum');
+    }
+
     public function getRoomNameAttribute(): ?string
     {
         if ($this->room_id !== null) {

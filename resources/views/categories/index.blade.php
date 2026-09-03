@@ -1,155 +1,141 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
-<div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
-    <div>
-        <h4 class="fw-semibold mb-1">Kategori</h4>
-        <p class="text-muted mb-0">Filter dan lihat barang berdasarkan kategori utama.</p>
-    </div>
-
-    <div class="d-flex flex-column flex-sm-row gap-2 w-100 w-lg-auto">
-        <form action="{{ route('categories.index') }}" method="GET" class="flex-fill">
-            <div class="input-group shadow-sm">
-                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-                <input type="search" name="search" value="{{ $query ?? '' }}" class="form-control border-start-0" placeholder="Cari kategori atau barang...">
+<div class="space-y-6">
+    {{-- Header & Search Bar --}}
+    <div class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 p-4 sm:p-5 shadow-sm">
+        <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Kategori Barang</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Kelompokkan dan kelola klasifikasi aset inventaris</p>
             </div>
-        </form>
 
-        <button type="button" class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
-            + Tambah Kategori
-        </button>
-    </div>
-</div>
+            <div class="flex items-center gap-3">
+                <form action="{{ route('categories.index') }}" method="GET" class="relative w-full sm:w-72">
+                    <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="search" name="search" value="{{ $query ?? '' }}" placeholder="Cari kategori..." 
+                           class="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors" autocomplete="off">
+                </form>
 
-<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addCategoryModalLabel">Tambah Kategori Baru</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                <button type="button" data-modal-target="addCategoryModal" 
+                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-500/25 active:scale-[0.98] transition-all shrink-0 cursor-pointer">
+                    <i class="bi bi-plus-lg"></i>
+                    <span>Tambah Kategori</span>
+                </button>
             </div>
-            <form action="{{ route('categories.store') }}" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="category-name" class="form-label">Nama Kategori</label>
-                        <input id="category-name" type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}" required>
-                        @error('name')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-                <div class="modal-footer form-actions">
-                    <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary rounded-pill">Simpan Kategori</button>
-                </div>
-            </form>
         </div>
     </div>
-</div>
 
-@if($categories->isEmpty())
-    <div class="card shadow-sm p-4">
-        <div class="d-flex flex-column align-items-center text-center">
-            <i class="bi bi-tags fs-1 mb-3 text-muted"></i>
-            <h5 class="mb-2">Kategori tidak ditemukan</h5>
-            <p class="text-muted mb-0">Coba kata kunci lain atau periksa kembali data kategori.</p>
+    {{-- Categories Grid --}}
+    @if($categories->isEmpty())
+        <div class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 p-12 text-center text-slate-400 dark:text-slate-500 shadow-sm">
+            <i class="bi bi-tags text-4xl mb-3 block text-slate-300 dark:text-slate-600"></i>
+            <h3 class="text-base font-bold text-slate-700 dark:text-slate-300">Kategori Tidak Ditemukan</h3>
+            <p class="text-xs mt-1">Coba gunakan kata kunci lain atau tambahkan kategori baru.</p>
         </div>
-    </div>
-@else
-    <div class="row g-4">
-        @foreach($categories as $category)
-            <div class="col-12 col-md-6 col-xl-4">
-                <div class="card h-100 shadow-sm border-0 category-card">
-                    <div class="card-body d-flex flex-column">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div>
-                                <h5 class="fw-bold mb-1">{{ $category->name }}</h5>
-                                <p class="text-muted mb-0">{{ $category->products_count }} barang</p>
+    @else
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            @foreach($categories as $category)
+                <div class="group rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-sm hover:shadow-md hover:border-blue-500/40 transition-all duration-200 p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-start justify-between gap-2 mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg font-bold shrink-0">
+                                    <i class="bi bi-tag"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-base font-bold text-slate-900 dark:text-white leading-tight">{{ $category->name }}</h3>
+                                    <span class="text-xs font-semibold text-blue-600 dark:text-blue-400">{{ $category->products_count }} total barang</span>
+                                </div>
                             </div>
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-link text-muted p-0" type="button" id="categoryMenu{{ $category->id }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-three-dots-vertical"></i>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="categoryMenu{{ $category->id }}">
+
                             @if(auth()->user()->isAdmin())
-                                <li><a class="dropdown-item" href="{{ route('categories.edit', $category) }}">Edit</a></li>
-                                <li>
-                                    <form action="{{ route('categories.destroy', $category) }}" method="POST" onsubmit="return confirm('Hapus kategori ini?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="dropdown-item text-danger">Hapus</button>
-                                    </form>
-                                </li>
-                            @else
-                                <li><span class="dropdown-item text-muted">Akses terbatas</span></li>
+                                <div class="relative">
+                                    <button type="button" data-dropdown-toggle="cat-dropdown-{{ $category->id }}" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                        <i class="bi bi-three-dots-vertical text-sm"></i>
+                                    </button>
+                                    <div id="cat-dropdown-{{ $category->id }}" data-dropdown-menu class="hidden absolute right-0 mt-1 w-36 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl py-1 z-20 text-left">
+                                        <a href="{{ route('categories.edit', $category) }}" class="flex items-center gap-2 px-3.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800">
+                                            <i class="bi bi-pencil text-slate-400"></i> Edit Kategori
+                                        </a>
+                                        <form action="{{ route('categories.destroy', $category) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus kategori ini?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="w-full flex items-center gap-2 px-3.5 py-1.5 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30">
+                                                <i class="bi bi-trash"></i> Hapus
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
                             @endif
-                        </ul>
-                            </div>
                         </div>
 
+                        {{-- Product Preview Items --}}
                         @if($category->products->isEmpty())
-                            <div class="text-muted">Belum ada barang dalam kategori ini.</div>
+                            <p class="text-xs text-slate-400 dark:text-slate-500 italic py-2">Belum ada barang di kategori ini.</p>
                         @else
-                            <div class="small text-muted mb-2">Barang dalam kategori</div>
-                            <ul class="list-unstyled mb-3">
+                            <div class="space-y-1.5 my-3 pt-2 border-t border-slate-100 dark:border-slate-800/80">
                                 @foreach($category->products->take(3) as $product)
-                                    <li class="category-product-item d-flex justify-content-between align-items-center py-2">
-                                        <span>{{ $product->name }}</span>
-                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">{{ $product->stock }}</span>
-                                    </li>
+                                    <div class="flex items-center justify-between text-xs py-1">
+                                        <span class="text-slate-700 dark:text-slate-300 truncate max-w-[180px]">{{ $product->name }}</span>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                                            {{ $product->stock }} unit
+                                        </span>
+                                    </div>
                                 @endforeach
-                            </ul>
+                            </div>
                         @endif
+                    </div>
 
-                        <a href="{{ route('products.index', ['search' => $category->name, 'from' => 'categories']) }}" class="mt-auto btn btn-sm btn-outline-primary">Lihat semua</a>
+                    <div class="pt-3 border-t border-slate-100 dark:border-slate-800/80 mt-2">
+                        <a href="{{ route('products.index', ['search' => $category->name, 'from' => 'categories']) }}" class="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
+                            <span>Lihat Semua Barang</span>
+                            <i class="bi bi-arrow-right text-[10px]"></i>
+                        </a>
                     </div>
                 </div>
+            @endforeach
+        </div>
+    @endif
+</div>
+
+{{-- Add Category Modal --}}
+<div id="addCategoryModal" class="modal-container fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 animate-fade-in">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Tambah Kategori Baru</h3>
+            <button type="button" data-modal-close class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <i class="bi bi-x-lg text-sm"></i>
+            </button>
+        </div>
+
+        <form action="{{ route('categories.store') }}" method="POST" class="space-y-4">
+            @csrf
+            <div class="space-y-1.5">
+                <label for="category-name" class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Nama Kategori <span class="text-rose-500">*</span></label>
+                <input id="category-name" type="text" name="name" value="{{ old('name') }}" required 
+                       class="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors placeholder-slate-400"
+                       placeholder="Contoh: Elektronik & Jaringan">
+                @error('name')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
             </div>
-        @endforeach
+
+            <div class="space-y-1.5">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Deskripsi (Opsional)</label>
+                <textarea name="description" rows="3" 
+                          class="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors placeholder-slate-400"
+                          placeholder="Penjelasan ringkas kategori barang ini...">{{ old('description') }}</textarea>
+                @error('description')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
+                <button type="button" data-modal-close class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors">
+                    Batal
+                </button>
+                <button type="submit" class="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-all cursor-pointer">
+                    Simpan Kategori
+                </button>
+            </div>
+        </form>
     </div>
-@endif
-@endsection
-
-@section('styles')
-<style>
-    .category-card {
-        transition: transform .2s ease, box-shadow .2s ease;
-    }
-
-    .category-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 1rem 2rem rgba(0, 0, 0, .08);
-    }
-
-    .category-product-item {
-        border-bottom: 1px solid rgba(0, 0, 0, .06);
-        padding-bottom: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .category-product-item:last-child {
-        border-bottom: none;
-        margin-bottom: 0;
-        padding-bottom: 0;
-    }
-
-    html.dark .category-card {
-        background: #1F2937;
-        border-color: #374151;
-    }
-
-    html.dark .category-product-item {
-        border-bottom: 2px solid rgba(255, 255, 255, 0.15);
-    }
-
-    html.dark .category-card .category-product-item > span {
-        color: #e2e8f0;
-    }
-
-    html.dark .category-card .category-product-item .badge {
-        color: #cbd5e1 !important;
-        background-color: rgba(148, 163, 184, 0.12) !important;
-    }
-</style>
+</div>
 @endsection

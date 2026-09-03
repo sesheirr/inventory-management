@@ -1,165 +1,210 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="card dashboard-card mobile-borderless-card">
-    <style>
-        .back-btn-circle { width: 40px; height: 40px; padding: 0; font-size: 1.1rem; flex-shrink: 0; position: relative; z-index: 1050 !important; pointer-events: auto; }
-
-        @media (max-width: 576px) {
-            .mobile-borderless-card {
-                border: none !important;
-                border-radius: 0 !important;
-                padding-left: 0 !important;
-                padding-right: 0 !important;
-                box-shadow: none !important;
-                background-color: transparent !important;
-            }
-        }
-    </style>
-
-    <div class="d-flex align-items-center gap-3 mb-4 px-3 px-md-0">
-        <a href="{{ route('products.index') }}" class="btn btn-outline-secondary rounded-circle d-inline-flex d-md-none align-items-center justify-content-center back-btn-circle" title="Kembali">
-            <i class="bi bi-arrow-left"></i>
-        </a>
-        <div>
-            <h4 class="fw-semibold mb-1">Buat Barang</h4>
-            <p class="text-muted mb-0">Tambah barang baru dengan detail lengkap.</p>
-        </div>
-    </div>
-
-    <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data" class="row g-4 px-2 px-md-0">
-        @csrf
-
-        <div class="col-md-6">
-            <label class="form-label">Nama Barang</label>
-            <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
-        </div>
-
-        <div class="col-md-6">
-            <label class="form-label">Kategori</label>
-            <select name="category_id" class="form-select" required>
-                <option value="">Pilih kategori</option>
-                @foreach($categories as $category)
-                    <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>{{ $category->name }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="col-md-6">
-            <label class="form-label">Kapasitas</label>
-            <input type="text" name="subcategory" class="form-control" value="{{ old('subcategory') }}">
-        </div>
-
-        <div class="col-md-6">
-            <label class="form-label">Ruangan</label>
-            <select name="room_id" class="form-select" required>
-                <option value="" selected disabled>Pilih ruangan</option>
-                @foreach($rooms as $room)
-                    <option value="{{ $room->id }}" @selected(old('room_id') == $room->id)>{{ $room->name }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="col-md-6">
-            <label class="form-label">Jumlah</label>
-            <input type="number" min="0" name="stock" class="form-control" value="{{ old('stock', 0) }}" required>
-        </div>
-
-        <div class="col-md-6">
-            <label class="form-label">Status</label>
-            <select name="status" class="form-select" required>
-                <option value="active" @selected(old('status') === 'active')>Aktif</option>
-                <option value="inactive" @selected(old('status') === 'inactive')>Tidak Aktif</option>
-            </select>
-        </div>
-
-        <div class="col-12">
-            <label class="form-label">Deskripsi</label>
-            <textarea name="description" rows="4" class="form-control">{{ old('description') }}</textarea>
-        </div>
-
-        <div class="col-12">
-            <label class="form-label">Gambar</label>
-            <input type="file" name="image" class="form-control">
-        </div>
-
-        {{-- BARCODE FEATURE: Section Barcode + Tombol Scan Kamera --}}
-        <div class="col-12">
-            <hr class="my-2">
-            <h6 class="fw-semibold mb-3 text-muted"><i class="bi bi-upc-scan me-2"></i>Informasi Barcode Aset</h6>
-            <div class="row g-3">
-                <div class="col-12">
-                    <label class="form-label">Kode Barcode</label>
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="bi bi-upc"></i></span>
-                        <input type="text"
-                            name="barcode"
-                            id="barcode-input"
-                            class="form-control @error('barcode') is-invalid @enderror"
-                            value="{{ old('barcode') }}"
-                            placeholder="Scan stiker barcode atau kosongkan untuk generate otomatis"
-                            autocomplete="off"
-                            style="text-transform:uppercase;"
-                            oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9\-]/g,'')">
-                        
-                        {{-- Tombol Scan Kamera --}}
-                        <button type="button" class="btn btn-outline-primary" id="btn-scan-camera" title="Scan dengan Kamera">
-                            <i class="bi bi-camera me-1"></i>Scan
-                        </button>
-
-                        {{-- Tombol Preview --}}
-                        <button type="button" class="btn btn-outline-secondary" id="preview-barcode-btn">
-                            <i class="bi bi-eye me-1"></i>Preview
-                        </button>
-                    </div>
-                    <div class="form-text text-muted mt-1">
-                        <i class="bi bi-info-circle me-1"></i>
-                        Kosongkan jika barang belum punya stiker — sistem akan generate kode otomatis saat disimpan.
-                        Jika barang sudah ada stiker, scan atau ketik kode yang tertera.
-                    </div>
-                    @error('barcode')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
-
-                <div class="col-12" id="barcode-preview-container" style="display:none;">
-                    <div class="p-3 border rounded-3 text-center bg-white">
-                        <svg id="barcode-preview"></svg>
-                        <div class="text-muted small mt-1" id="barcode-preview-text"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 d-flex justify-content-end gap-2 form-actions mt-4">
-            <button type="submit" class="btn btn-primary rounded-pill px-4 w-100 w-md-auto">Simpan Barang</button>
-        </div>
-    </form>
-</div>
-
-{{-- Modal Pop-up untuk Kamera Scanner --}}
-<div class="modal fade" id="scannerModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4">
-            <div class="modal-header border-0">
-                <h5 class="modal-title"><i class="bi bi-camera me-2"></i>Scan Barcode dengan Kamera</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" id="btn-close-scanner"></button>
-            </div>
-            <div class="modal-body text-center">
-                <div id="reader" style="width: 100%;"></div>
-                <div class="text-muted small mt-2">Arahkan kamera ke stiker barcode aset.</div>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal" id="btn-stop-scanner">Tutup</button>
+<div class="max-w-4xl mx-auto space-y-6">
+    {{-- Header --}}
+    <div class="flex items-center justify-between pb-4 border-b border-slate-200/80 dark:border-slate-800/80">
+        <div class="flex items-center gap-3">
+            <a href="{{ route('products.index') }}" class="w-9 h-9 rounded-xl flex items-center justify-center text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="Kembali">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Tambah Barang Baru</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Masukkan rincian data aset dan inventaris baru</p>
             </div>
         </div>
     </div>
+
+    {{-- Form Card --}}
+    <div class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-sm p-6 sm:p-8">
+        <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+            @csrf
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {{-- Nama Barang --}}
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        Nama Barang <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="text" name="name" value="{{ old('name') }}" required 
+                           class="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors placeholder-slate-400"
+                           placeholder="Contoh: Laptop Dell Latitude 5420">
+                    @error('name')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
+                </div>
+
+                {{-- Kategori --}}
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        Kategori <span class="text-rose-500">*</span>
+                    </label>
+                    <select name="category_id" required 
+                            class="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors">
+                        <option value="" disabled selected>Pilih Kategori Barang</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>{{ $category->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('category_id')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
+                </div>
+
+                {{-- Kapasitas / Subkategori --}}
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        Kapasitas / Spesifikasi Singkat
+                    </label>
+                    <input type="text" name="subcategory" value="{{ old('subcategory') }}" 
+                           class="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors placeholder-slate-400"
+                           placeholder="Contoh: Core i7 / 16GB RAM / 512GB SSD">
+                    @error('subcategory')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
+                </div>
+
+                {{-- Ruangan --}}
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        Lokasi Ruangan <span class="text-rose-500">*</span>
+                    </label>
+                    <select name="room_id" required 
+                            class="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors">
+                        <option value="" disabled selected>Pilih Ruangan Penyimpanan</option>
+                        @foreach($rooms as $room)
+                            <option value="{{ $room->id }}" @selected(old('room_id') == $room->id)>{{ $room->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('room_id')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
+                </div>
+
+                {{-- Jumlah Stok --}}
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        Jumlah Stok Unit <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="number" min="0" name="stock" value="{{ old('stock', 0) }}" required 
+                           class="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors">
+                    @error('stock')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
+                </div>
+
+                {{-- Status --}}
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        Status Barang <span class="text-rose-500">*</span>
+                    </label>
+                    <select name="status" required 
+                            class="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors">
+                        <option value="active" @selected(old('status') === 'active')>Aktif (Tersedia / Digunakan)</option>
+                        <option value="inactive" @selected(old('status') === 'inactive')>Tidak Aktif (Rusak / Afkir)</option>
+                    </select>
+                    @error('status')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
+                </div>
+            </div>
+
+            {{-- Deskripsi --}}
+            <div class="space-y-1.5">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    Deskripsi / Catatan Barang
+                </label>
+                <textarea name="description" rows="3" 
+                          class="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors placeholder-slate-400"
+                          placeholder="Tambahkan catatan nomor seri, kelengkapan, atau kondisi barang...">{{ old('description') }}</textarea>
+                @error('description')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
+            </div>
+
+            {{-- Foto Barang --}}
+            <div class="space-y-1.5">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    Foto Barang
+                </label>
+                <input type="file" name="image" accept="image/*" 
+                       class="w-full px-4 py-2 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-950/40 dark:file:text-blue-300 hover:file:bg-blue-100">
+                @error('image')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
+            </div>
+
+            {{-- Barcode Section --}}
+            <div class="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                <div class="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200">
+                    <i class="bi bi-upc-scan text-blue-600 dark:text-blue-400"></i>
+                    <span>Informasi Kode Barcode Aset</span>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex items-center gap-2">
+                        <div class="relative flex-1">
+                            <i class="bi bi-upc absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text"
+                                   name="barcode"
+                                   id="barcode-input"
+                                   value="{{ old('barcode') }}"
+                                   placeholder="Scan stiker barcode atau kosongkan untuk otomatis"
+                                   class="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm font-mono uppercase bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors"
+                                   autocomplete="off"
+                                   oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9\-]/g,'')">
+                        </div>
+
+                        <button type="button" id="btn-scan-camera" class="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800/40 transition-colors flex items-center gap-1.5 cursor-pointer">
+                            <i class="bi bi-camera"></i>
+                            <span>Scan Kamera</span>
+                        </button>
+
+                        <button type="button" id="preview-barcode-btn" class="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                            <i class="bi bi-eye"></i>
+                            <span>Preview</span>
+                        </button>
+                    </div>
+
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                        <i class="bi bi-info-circle me-1 text-blue-500"></i>
+                        Kosongkan jika barang belum memiliki stiker barcode (sistem akan men-generate kode otomatis saat data disimpan).
+                    </p>
+                    @error('barcode')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
+
+                    {{-- Live Barcode Preview Container --}}
+                    <div id="barcode-preview-container" class="hidden p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center">
+                        <div class="inline-block bg-white p-3 rounded-lg shadow-sm">
+                            <svg id="barcode-preview"></svg>
+                        </div>
+                        <div class="text-xs font-mono font-bold text-slate-700 dark:text-slate-300 mt-2" id="barcode-preview-text"></div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Actions --}}
+            <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+                <a href="{{ route('products.index') }}" class="px-5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors">
+                    Batal
+                </a>
+                <button type="submit" class="px-6 py-2.5 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-500/25 active:scale-[0.98] transition-all cursor-pointer">
+                    Simpan Data Barang
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
-{{-- Library JsBarcode & Html5-Qrcode --}}
+{{-- Camera Scanner Modal --}}
+<div id="scannerModal" class="modal-container fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 text-center animate-fade-in">
+        <button type="button" id="btn-close-scanner" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <i class="bi bi-x-lg text-sm"></i>
+        </button>
+
+        <h3 class="text-base font-bold text-slate-900 dark:text-white mb-3 flex items-center justify-center gap-2">
+            <i class="bi bi-camera text-blue-600"></i> Scan Barcode Kamera
+        </h3>
+
+        <div id="reader" class="w-full rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800"></div>
+        <p class="text-xs text-slate-400 mt-3">Arahkan kamera perangkat ke stiker barcode aset barang.</p>
+
+        <div class="mt-4">
+            <button type="button" id="btn-stop-scanner" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800">
+                Tutup Scanner
+            </button>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <script>
-// BARCODE FEATURE: Preview barcode live
 function renderBarcodePreview(value) {
     const container = document.getElementById('barcode-preview-container');
     const svg = document.getElementById('barcode-preview');
@@ -168,10 +213,10 @@ function renderBarcodePreview(value) {
         try {
             JsBarcode(svg, value, { format: 'CODE128', width: 2, height: 60, displayValue: false });
             text.textContent = value;
-            container.style.display = 'block';
-        } catch(e) { container.style.display = 'none'; }
+            container.classList.remove('hidden');
+        } catch(e) { container.classList.add('hidden'); }
     } else {
-        container.style.display = 'none';
+        container.classList.add('hidden');
     }
 }
 
@@ -184,37 +229,44 @@ document.getElementById('preview-barcode-btn')?.addEventListener('click', functi
     renderBarcodePreview(val);
 });
 
-// BARCODE FEATURE: Kamera Scanner Handler
-let html5QrCode;
+let html5QrCode = null;
+const scannerModal = document.getElementById('scannerModal');
+
+function closeScannerModal() {
+    if (scannerModal) {
+        scannerModal.classList.add('hidden');
+        scannerModal.classList.remove('flex');
+    }
+    if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().catch(err => console.log(err));
+    }
+}
 
 document.getElementById('btn-scan-camera')?.addEventListener('click', function() {
-    const modal = new bootstrap.Modal(document.getElementById('scannerModal'));
-    modal.show();
+    if (scannerModal) {
+        scannerModal.classList.remove('hidden');
+        scannerModal.classList.add('flex');
+    }
 
     setTimeout(() => {
         html5QrCode = new Html5Qrcode("reader");
         html5QrCode.start(
             { facingMode: "environment" }, 
             { fps: 10, qrbox: { width: 250, height: 100 } },
-            (decodedText, decodedResult) => {
+            (decodedText) => {
                 document.getElementById('barcode-input').value = decodedText.toUpperCase();
                 renderBarcodePreview(decodedText.toUpperCase());
-                
-                html5QrCode.stop().then(() => {
-                    modal.hide();
-                }).catch(err => console.log(err));
+                closeScannerModal();
             },
-            (errorMessage) => {}
+            () => {}
         ).catch(err => {
             alert("Gagal mengakses kamera: " + err);
+            closeScannerModal();
         });
-    }, 500);
+    }, 400);
 });
 
-document.getElementById('scannerModal')?.addEventListener('hidden.bs.modal', function () {
-    if (html5QrCode && html5QrCode.isScanning) {
-        html5QrCode.stop().catch(err => console.log(err));
-    }
-});
+document.getElementById('btn-close-scanner')?.addEventListener('click', closeScannerModal);
+document.getElementById('btn-stop-scanner')?.addEventListener('click', closeScannerModal);
 </script>
 @endsection

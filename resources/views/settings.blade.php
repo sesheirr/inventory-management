@@ -1,185 +1,160 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="settings-page">
-    <div class="settings-hero">
-        <div class="settings-hero-inner">
-            <div>
-                <p class="settings-breadcrumb">Settings</p>
-                <h1 class="settings-hero-title">Pengaturan</h1>
-                <p class="settings-hero-subtitle">Kelola preferensi aplikasi dan akun Anda.</p>
-            </div>
+<div class="max-w-4xl mx-auto space-y-6">
+    <div class="flex items-center justify-between pb-4 border-b border-slate-200/80 dark:border-slate-800/80">
+        <div>
+            <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Pengaturan Sistem</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Kelola preferensi antarmuka, profil akun, dan informasi aplikasi</p>
         </div>
     </div>
 
-    <div class="settings-stack">
-        <!-- Edit Profile card (moved actions from Profile page) -->
-        <section class="settings-card">
-            <div class="settings-card-inner">
-                <div class="settings-card-meta">
-                    <div class="settings-card-icon settings-card-icon-violet">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 20h9"></path>
-                            <path d="M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
-                        </svg>
+    @if(session('success'))
+        <div class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    <div class="space-y-4">
+        {{-- Appearance / Theme Settings --}}
+        <div class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-sm p-6 space-y-4">
+            <div class="flex items-start justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg shrink-0">
+                        <i class="bi bi-palette"></i>
                     </div>
                     <div>
-                        <h2 class="settings-card-title">Edit Profile</h2>
-                        <p class="settings-card-text">Perbarui informasi profil akun Anda.</p>
-                    </div>
-                </div>
-
-                <div class="settings-card-action">
-                    <button type="button" class="btn-ghost" data-bs-toggle="modal" data-bs-target="#editProfileModal">
-                        Edit Profile
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon">
-                            <path d="M5 12h14"></path>
-                            <path d="m13 6 6 6-6 6"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Ubah Password card (keamanan) -->
-        <!-- REMOVED: Ubah Password card (feature unused) -->
-
-        <!-- Tentang Aplikasi (unchanged) -->
-        <section class="settings-card">
-            <div class="settings-card-inner">
-                <div class="settings-card-meta">
-                    <div class="settings-card-icon settings-card-icon-yellow">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="9"></circle>
-                            <path d="M12 8h.01"></path>
-                            <path d="M11 12h1v4h1"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <h2 class="settings-card-title">Tentang Aplikasi</h2>
-                        <p class="settings-card-text">Informasi versi dan detail aplikasi inventaris.</p>
-                    </div>
-                </div>
-
-                <div class="settings-card-action settings-card-info">
-                    <div class="info-row">
-                        <span class="info-label">Nama Aplikasi</span>
-                        <span class="info-value">Sistem Informasi Inventarisasi Barang dan Aset</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Developer</span>
-                        <span class="info-value">RPL SMKN 1 Garut</span>
+                        <h2 class="text-base font-bold text-slate-900 dark:text-white">Tema & Tampilan</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Pilih mode tampilan terang (Light Mode) atau gelap (Dark Mode)</p>
                     </div>
                 </div>
             </div>
-        </section>
-    </div>
 
-    <!-- Moved Edit Profile modal from Profile page so edit action is accessible from Settings -->
-    <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content rounded-4 border-0 shadow">
-                <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    <div class="modal-header border-0">
-                        <h5 class="modal-title fw-semibold" id="editProfileModalLabel">Edit Profil</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3 text-center">
-                            <label class="form-label">Foto Profil</label>
-                            <div class="d-flex flex-column align-items-center gap-2">
-                                <div class="avatar-circle shadow overflow-hidden" style="width: 90px; height: 90px; font-size: 2rem;">
-                                    @if(!empty($user->avatar))
-                                        <img id="profilePreviewImage" src="{{ $user->avatar }}" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover; display: block;">
-                                        <span id="profilePreviewFallback" class="fw-bold d-none">{{ strtoupper(substr($user->name ?? 'U', 0, 2)) }}</span>
-                                    @else
-                                        <img id="profilePreviewImage" src="" alt="Foto profil" style="width: 100%; height: 100%; object-fit: cover; display: none;">
-                                        <span id="profilePreviewFallback" class="fw-bold">{{ strtoupper(substr($user->name ?? 'U', 0, 2)) }}</span>
-                                    @endif
-                                </div>
-                                <input type="file" id="avatarInput" name="avatar" class="form-control" accept="image/*">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Nama Lengkap</label>
-                            <input type="text" name="name" class="form-control" value="{{ old('name', $user->name) }}" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control" value="{{ old('email', $user->email) }}" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Nomor HP</label>
-                            <input type="text" name="phone" class="form-control" value="{{ old('phone', $user->phone ?? '') }}">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Jenis Kelamin</label>
-                            <select name="gender" class="form-select">
-                                <option value="" @selected(empty($user->gender))>-- Pilih --</option>
-                                <option value="Laki-laki" @selected($user->gender === 'Laki-laki')>Laki-laki</option>
-                                <option value="Perempuan" @selected($user->gender === 'Perempuan')>Perempuan</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Tanggal Lahir</label>
-                            @php
-                                $birthDateValue = old('birth_date');
-                                if (empty($birthDateValue) && !empty($user->birth_date)) {
-                                    try {
-                                        $parsedBirthDate = \Carbon\Carbon::parse($user->birth_date);
-                                        $birthDateValue = $parsedBirthDate->format('Y-m-d');
-                                    } catch (\Throwable $e) {
-                                        $birthDateValue = (string) $user->birth_date;
-                                    }
-                                }
-                                if (!empty($birthDateValue)) {
-                                    $birthDateValue = substr((string) $birthDateValue, 0, 10);
-                                }
-                            @endphp
-                            <input type="date" name="birth_date" class="form-control" value="{{ $birthDateValue ?? '' }}">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Alamat</label>
-                            <textarea name="address" class="form-control" rows="3">{{ old('address', $user->address ?? '') }}</textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer border-0 form-actions">
-                        <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary rounded-pill">Simpan</button>
-                    </div>
-                </form>
+            <div class="grid grid-cols-2 gap-3 pt-2">
+                <button type="button" data-theme="light" class="segment-button p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 text-xs font-semibold hover:border-blue-500 transition-all cursor-pointer">
+                    <i class="bi bi-sun text-base text-amber-500"></i>
+                    <span>Mode Terang</span>
+                </button>
+                <button type="button" data-theme="dark" class="segment-button p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 text-xs font-semibold hover:border-blue-500 transition-all cursor-pointer">
+                    <i class="bi bi-moon-stars text-base text-blue-400"></i>
+                    <span>Mode Gelap</span>
+                </button>
+            </div>
+        </div>
+
+        {{-- Profile Edit Card --}}
+        <div class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-sm p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg shrink-0">
+                    <i class="bi bi-person-gear"></i>
+                </div>
+                <div>
+                    <h2 class="text-base font-bold text-slate-900 dark:text-white">Informasi Profil Akun</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Ubah nama, email, nomor HP, atau foto profil Anda</p>
+                </div>
+            </div>
+
+            <button type="button" data-modal-target="editProfileModal" class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-500/25 active:scale-[0.98] transition-all cursor-pointer">
+                <span>Ubah Profil</span>
+                <i class="bi bi-arrow-right"></i>
+            </button>
+        </div>
+
+        {{-- About Application Card --}}
+        <div class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-sm p-6 space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg shrink-0">
+                    <i class="bi bi-info-circle"></i>
+                </div>
+                <div>
+                    <h2 class="text-base font-bold text-slate-900 dark:text-white">Tentang Aplikasi</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Informasi lisensi dan instansi pengelola sistem inventaris</p>
+                </div>
+            </div>
+
+            <div class="divide-y divide-slate-100 dark:divide-slate-800 text-xs pt-1">
+                <div class="py-2.5 flex items-center justify-between">
+                    <span class="text-slate-500 dark:text-slate-400 font-medium">Nama Aplikasi</span>
+                    <span class="font-semibold text-slate-900 dark:text-white">Sistem Informasi Inventarisasi Barang dan Aset</span>
+                </div>
+                <div class="py-2.5 flex items-center justify-between">
+                    <span class="text-slate-500 dark:text-slate-400 font-medium">Instansi</span>
+                    <span class="font-semibold text-slate-900 dark:text-white">Diskominfo Kab. Garut</span>
+                </div>
+                <div class="py-2.5 flex items-center justify-between">
+                    <span class="text-slate-500 dark:text-slate-400 font-medium">Versi Frontend</span>
+                    <span class="inline-flex items-center gap-1.5 font-mono font-bold text-blue-600 dark:text-blue-400">
+                        Tailwind CSS v4 Modern Blue
+                    </span>
+                </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const avatarInput = document.getElementById('avatarInput');
-        const previewImage = document.getElementById('profilePreviewImage');
-        const previewFallback = document.getElementById('profilePreviewFallback');
+{{-- Edit Profile Modal --}}
+<div id="editProfileModal" class="modal-container fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="relative w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 animate-fade-in max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Edit Data Profil</h3>
+            <button type="button" data-modal-close class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg">
+                <i class="bi bi-x-lg text-sm"></i>
+            </button>
+        </div>
 
-        if (!avatarInput || !previewImage || !previewFallback) {
-            return;
-        }
+        <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+            @csrf
 
-        avatarInput.addEventListener('change', function (event) {
-            const [file] = event.target.files || [];
+            <div class="space-y-1.5">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Foto Profil</label>
+                <input type="file" id="avatarInput" name="avatar" accept="image/*" 
+                       class="w-full px-3 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 file:mr-3 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700">
+            </div>
 
-            if (!file) {
-                return;
-            }
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Nama Lengkap <span class="text-rose-500">*</span></label>
+                    <input type="text" name="name" value="{{ old('name', $user->name) }}" required 
+                           class="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white">
+                </div>
 
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                previewImage.src = e.target.result;
-                previewImage.style.display = 'block';
-                previewFallback.classList.add('d-none');
-            };
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Email <span class="text-rose-500">*</span></label>
+                    <input type="email" name="email" value="{{ old('email', $user->email) }}" required 
+                           class="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white">
+                </div>
 
-            reader.readAsDataURL(file);
-        });
-    });
-    </script>
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Nomor Telepon</label>
+                    <input type="text" name="phone" value="{{ old('phone', $user->phone ?? '') }}" 
+                           class="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white">
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Jenis Kelamin</label>
+                    <select name="gender" class="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white">
+                        <option value="">-- Pilih --</option>
+                        <option value="Laki-laki" @selected($user->gender === 'Laki-laki')>Laki-laki</option>
+                        <option value="Perempuan" @selected($user->gender === 'Perempuan')>Perempuan</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Alamat</label>
+                <textarea name="address" rows="2" 
+                          class="w-full px-3.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white">{{ old('address', $user->address ?? '') }}</textarea>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2">
+                <button type="button" data-modal-close class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800">
+                    Batal
+                </button>
+                <button type="submit" class="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-sm">
+                    Simpan
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 @endsection

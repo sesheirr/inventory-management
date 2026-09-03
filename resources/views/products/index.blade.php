@@ -1,333 +1,352 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="card dashboard-card mobile-borderless-card">
-    <style>
-        .product-thumb { width:48px; height:48px; border-radius:12px; overflow:hidden; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--bs-border-color); background:var(--bs-body-bg); }
-        .product-thumb img { width:100%; height:100%; object-fit:cover; }
-        .category-badge, .room-badge { min-width:130px; display:inline-flex; align-items:center; justify-content:center; }
-        .table-responsive { overflow-x:auto; }
+<div class="space-y-6">
+    {{-- Top Toolbar Card --}}
+    <div class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 p-4 sm:p-5 shadow-sm space-y-4">
         
-        /* Layout Delete Mode Default */
-        .delete-mode-cell { min-width:32px; display: flex; align-items: center; }
-        td.delete-mode-cell { display: table-cell; }
+        {{-- Back Button if came from categories --}}
+        @if(request('from') === 'categories')
+            <div class="pb-2 border-b border-slate-100 dark:border-slate-800">
+                <a href="{{ route('categories.index') }}" class="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400">
+                    <i class="bi bi-arrow-left"></i> Kembali ke Daftar Kategori
+                </a>
+            </div>
+        @endif
 
-        /* ===== Checkbox (Mode Hapus) ===== */
-        .product-checkbox,
-        .select-all-checkbox {
-            width: 23px !important;
-            height: 23px !important;
-            border: 2px solid #4B5563 !important;
-            background-color: transparent !important;
-            border-radius: 6px !important;
-            cursor: pointer;
-            appearance: none;
-            -webkit-appearance: none;
-            position: relative;
-            margin: 0;
-            flex-shrink: 0;
-            transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-        }
-        .product-checkbox:hover,
-        .select-all-checkbox:hover {
-            border-color: #EF4444 !important;
-            cursor: pointer;
-        }
-        .product-checkbox:checked,
-        .select-all-checkbox:checked {
-            background-color: #EF4444 !important;
-            border-color: #EF4444 !important;
-            box-shadow: 0 0 0 3px rgba(239,68,68,0.25), 0 0 8px rgba(239,68,68,0.6);
-        }
-        .product-checkbox:checked::after,
-        .select-all-checkbox:checked::after {
-            content: "";
-            position: absolute;
-            left: 50%;
-            top: 45%;
-            width: 6px;
-            height: 11px;
-            border: solid #fff;
-            border-width: 0 2px 2px 0;
-            transform: translate(-50%, -50%) rotate(45deg);
-        }
-        .product-checkbox:focus-visible,
-        .select-all-checkbox:focus-visible {
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(239,68,68,0.3);
-        }
-        [data-bs-theme="dark"] .product-checkbox,
-        [data-bs-theme="dark"] .select-all-checkbox {
-            border-color: #4B5563 !important;
-        }
-
-        /* ===== Row highlight when selected for delete ===== */
-        tr.row-selected-for-delete,
-        .mobile-item.row-selected-for-delete {
-            background-color: rgba(239,68,68,0.10) !important;
-            box-shadow: inset 4px 0 0 0 #EF4444;
-            transition: background-color 0.25s ease, box-shadow 0.25s ease;
-        }
-        tr.row-selected-for-delete td,
-        tr.row-selected-for-delete .fw-semibold,
-        tr.row-selected-for-delete .text-muted,
-        .mobile-item.row-selected-for-delete * {
-            color: inherit;
-        }
-
-        @media (max-width: 576px) {
-            .mobile-borderless-card {
-                border: none !important;
-                border-radius: 0 !important;
-                padding-left: 0 !important;
-                padding-right: 0 !important;
-                box-shadow: none !important;
-                background-color: transparent !important;
-            }
-            .mobile-header-pad {
-                padding: 0 15px;
-            }
-            
-            .action-toolbar { 
-                width: 100%; 
-                display: flex;
-                flex-wrap: nowrap !important;
-                gap: 6px !important;
-                overflow-x: auto;
-                padding-bottom: 4px;
-            }
-            .action-toolbar .btn { 
-                font-size: 0.78rem !important; 
-                padding: 0.35rem 0.6rem !important; 
-                flex: 1 1 0;
-                justify-content: center;
-                white-space: nowrap;
-            }
-            
-            .category-badge, .room-badge { min-width: auto; padding-left: 0.6rem !important; padding-right: 0.6rem !important; font-size: 0.75rem; }
-        }
-
-        .back-btn-circle { width: 40px; height: 40px; padding: 0; font-size: 1.1rem; flex-shrink: 0; }
-    </style>
-
-    @if(request('from') === 'categories')
-        <div class="mb-3 mobile-header-pad">
-            <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary rounded-circle d-inline-flex align-items-center justify-content-center back-btn-circle" title="Kembali ke Kategori">
-                <i class="bi bi-arrow-left"></i>
-            </a>
-        </div>
-    @endif
-
-    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-3 mobile-header-pad">
-        <div class="position-relative search-box" style="max-width:320px; width:100%;">
-            <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-            <input id="realtimeSearch" name="search" value="{{ $query ?? '' }}" class="form-control rounded-pill" placeholder="Cari barang..." style="padding-left:2.7rem;" autocomplete="off">
-        </div>
-
-        {{-- Ditambahkan justify-content-md-end agar mepet ke kanan di desktop --}}
-        <div class="d-flex align-items-center justify-content-md-end gap-2 action-toolbar w-100 w-lg-auto">
-            <button type="button" id="delete-mode-toggle" class="btn btn-outline-danger rounded-pill d-flex align-items-center">
-                <i class="bi bi-trash me-1"></i>Hapus
-            </button>
-
-            <div id="delete-toolbar" class="delete-toolbar d-none d-flex align-items-center gap-1 flex-grow-1 flex-lg-grow-0">
-                <button type="button" id="select-all-btn" class="btn btn-outline-secondary rounded-pill btn-sm text-nowrap">Semua</button>
-                <button type="button" id="btn-bulk-delete" class="btn btn-danger rounded-pill btn-sm text-nowrap" data-bs-toggle="modal" data-bs-target="#bulkDeleteModal" disabled>
-                    <i class="bi bi-trash me-1"></i>Hapus
-                </button>
-                <span id="selected-summary" class="text-muted small ms-1 text-nowrap">0 dipilih</span>
+        <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+            {{-- Search Bar --}}
+            <div class="relative w-full lg:max-w-md">
+                <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                <input type="text" 
+                       id="realtimeSearch" 
+                       name="search" 
+                       value="{{ $query ?? '' }}" 
+                       placeholder="Cari nama barang, kategori, ruangan, atau barcode..." 
+                       class="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors" 
+                       autocomplete="off">
             </div>
 
-            <a id="export-btn" href="{{ route('products.export') }}" class="btn btn-success rounded-pill d-flex align-items-center">
-                <i class="bi bi-file-earmark-excel-fill me-1"></i>Export
-            </a>
-            
-            <x-primary-button id="add-product-btn" href="{{ route('products.create') }}" class="rounded-pill d-flex align-items-center">
-                <i class="bi bi-plus-lg me-1"></i>Tambah
-            </x-primary-button>
+            {{-- Action Buttons Toolbar --}}
+            <div class="flex items-center flex-wrap gap-2 justify-end">
+                {{-- Delete Mode Toggle --}}
+                <button type="button" 
+                        id="delete-mode-toggle" 
+                        class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-900/40 transition-colors cursor-pointer">
+                    <i class="bi bi-trash"></i>
+                    <span>Mode Hapus</span>
+                </button>
+
+                {{-- Bulk Delete Controls (Hidden until delete mode is enabled) --}}
+                <div id="delete-toolbar" class="hidden items-center gap-2">
+                    <button type="button" 
+                            id="select-all-btn" 
+                            class="px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                        Pilih Semua
+                    </button>
+                    
+                    <button type="button" 
+                            id="btn-bulk-delete" 
+                            data-modal-target="bulkDeleteModal"
+                            disabled 
+                            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-50 disabled:pointer-events-none transition-colors cursor-pointer">
+                        <i class="bi bi-trash-fill"></i>
+                        <span>Hapus Pilihan</span>
+                    </button>
+
+                    <span id="selected-summary" class="text-xs font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                        0 dipilih
+                    </span>
+                </div>
+
+                {{-- Export Excel Button --}}
+                <a id="export-btn" 
+                   href="{{ route('products.export') }}" 
+                   class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/40 transition-colors">
+                    <i class="bi bi-file-earmark-excel"></i>
+                    <span>Export Excel</span>
+                </a>
+
+                {{-- Tambah Barang CTA --}}
+                <a id="add-product-btn" 
+                   href="{{ route('products.create') }}" 
+                   class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-500/25 active:scale-[0.98] transition-all">
+                    <i class="bi bi-plus-lg"></i>
+                    <span>Tambah Barang</span>
+                </a>
+            </div>
         </div>
     </div>
 
-    {{-- Desktop: Table list --}}
-    <div class="d-none d-md-block">
-        <div class="table-responsive">
-            <table class="table align-middle">
-            <thead>
-                <tr>
-                    <th style="width:42px;" class="delete-mode-cell d-none"><input type="checkbox" id="select-all-checkbox" class="form-check-input select-all-checkbox" @if($products->isEmpty()) disabled @endif></th>
-                    <th>Nama Barang</th>
-                    <th>Kategori</th>
-                    <th>Ruangan</th>
-                    <th>Jumlah</th>
-                    <th>Status</th>
-                    <th>Barcode</th>
-                    <th style="width:50px;"></th>
-                </tr>
-            </thead>
-            <tbody id="productTableBody">
-                @forelse($products as $product)
-                    <tr>
-                        <td class="delete-mode-cell d-none"><input type="checkbox" class="form-check-input product-checkbox" value="{{ $product->id }}"></td>
-                        <td>
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="product-thumb">
-                                    <img src="{{ $product->hasMedia('images') ? $product->getFirstMediaUrl('images') : asset('images/no-image.png') }}" alt="{{ $product->name }}" onerror="this.onerror=null; this.src='https://placehold.co/100x100?text=No+Image';">
-                                </div>
-                                <div>
-                                    <div class="fw-semibold">{{ $product->name }}</div>
-                                    @if($product->subcategory)<div class="text-muted small">{{ $product->subcategory }}</div>@endif
-                                </div>
-                            </div>
-                        </td>
-                        <td><span class="badge category-badge bg-primary-subtle text-primary-emphasis px-3 py-2 rounded-pill text-wrap">{{ $product->category }}</span></td>
-                        <td><span class="badge room-badge bg-secondary-subtle text-secondary-emphasis px-3 py-2 rounded-pill text-wrap">{{ $product->room_name ?: 'Belum diisi' }}</span></td>
-                        <td><span class="fw-semibold">{{ $product->stock ?? 0 }}</span></td>
-                        <td>
-                            @if(($product->stock ?? 0) > 0 && $product->status !== 'inactive')
-                                <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill">Aktif</span>
-                            @elseif($product->status === 'inactive')
-                                <span class="badge bg-warning-subtle text-warning px-3 py-2 rounded-pill">Tidak Aktif</span>
-                            @else
-                                <span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill">Stok Habis</span>
-                            @endif
-                        </td>
-                        <td>
-                            @if($product->barcode)
-                                <div class="d-flex align-items-center gap-1">
-                                    <span class="badge bg-dark text-white rounded-pill px-2 py-1" style="font-size:0.7rem;font-family:monospace;">{{ $product->barcode }}</span>
-                                    <a href="{{ route('products.barcode.print', $product) }}" target="_blank" class="btn btn-sm btn-outline-secondary p-1" title="Cetak Stiker" style="line-height:1;">
-                                        <i class="bi bi-printer" style="font-size:0.8rem;"></i>
-                                    </a>
-                                </div>
-                            @else
-                                <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1" style="font-size:0.7rem;">Belum ada stiker</span>
-                            @endif
-                        </td>
-                        <td>
-                            <div class="dropdown">
-                                <button class="btn btn-link text-secondary p-0" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></button>
-                                <ul class="dropdown-menu dropdown-menu-end rounded-3 shadow-sm border-0">
-                                <li><a class="dropdown-item py-2" href="{{ route('products.show', $product) }}"><i class="bi bi-eye me-2 text-muted"></i> Lihat Detail</a></li>
-                                <li><a class="dropdown-item py-2" href="{{ route('products.edit', $product) }}"><i class="bi bi-pencil me-2 text-muted"></i> Edit Barang</a></li>
-                                @if(auth()->user()->isAdmin())
-                                    <li><hr class="dropdown-divider opacity-50"></li>
-                                    <li><button type="button" class="dropdown-item py-2 text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $product->id }}"><i class="bi bi-trash me-2"></i> Hapus</button></li>
-                                @endif
-                            </ul>
-                            </div>
-                        </td>
+    {{-- Main Data List Card --}}
+    <div class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-sm overflow-hidden">
+        
+        {{-- Desktop Table --}}
+        <div class="hidden md:block overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/80 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        <th style="width: 48px;" class="px-4 py-3.5 delete-mode-cell hidden text-center">
+                            <input type="checkbox" id="select-all-checkbox" class="w-4 h-4 rounded text-blue-600 border-slate-300 dark:border-slate-600 focus:ring-blue-500" @if($products->isEmpty()) disabled @endif>
+                        </th>
+                        <th class="px-5 py-3.5">Barang</th>
+                        <th class="px-4 py-3.5">Kategori</th>
+                        <th class="px-4 py-3.5">Ruangan</th>
+                        <th class="px-4 py-3.5 text-center">Jumlah</th>
+                        <th class="px-4 py-3.5">Status</th>
+                        <th class="px-4 py-3.5">Barcode</th>
+                        <th class="px-4 py-3.5 text-right">Aksi</th>
                     </tr>
-                @empty
-                    <tr><td colspan="8" class="text-center py-5 text-muted">Tidak ada barang ditemukan.</td></tr>
-                @endforelse
-            </tbody>
+                </thead>
+                <tbody id="productTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                    @forelse($products as $product)
+                        <tr class="product-row hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                            <td class="px-4 py-3.5 delete-mode-cell hidden text-center">
+                                <input type="checkbox" class="product-checkbox w-4 h-4 rounded text-rose-600 border-slate-300 dark:border-slate-600 focus:ring-rose-500" value="{{ $product->id }}">
+                            </td>
+                            <td class="px-5 py-3.5">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden flex items-center justify-center shrink-0">
+                                        <img src="{{ $product->hasMedia('images') ? $product->getFirstMediaUrl('images') : asset('images/no-image.png') }}" 
+                                             alt="{{ $product->name }}" 
+                                             class="w-full h-full object-cover" 
+                                             onerror="this.onerror=null; this.src='https://placehold.co/100x100?text=No+Image';">
+                                    </div>
+                                    <div class="min-w-0">
+                                        <a href="{{ route('products.show', $product) }}" class="font-semibold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate block max-w-xs">
+                                            {{ $product->name }}
+                                        </a>
+                                        @if($product->subcategory)
+                                            <span class="text-xs text-slate-400 dark:text-slate-500 truncate block">{{ $product->subcategory }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3.5">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/40">
+                                    {{ $product->category_name }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3.5">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                    <i class="bi bi-building me-1.5 text-slate-400"></i>
+                                    {{ $product->room_name ?: 'Belum diisi' }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3.5 text-center font-bold text-slate-900 dark:text-white">
+                                {{ $product->stock ?? 0 }}
+                            </td>
+                            <td class="px-4 py-3.5">
+                                @if(($product->stock ?? 0) > 0 && $product->status !== 'inactive')
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Aktif
+                                    </span>
+                                @elseif($product->status === 'inactive')
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Tidak Aktif
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Habis
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3.5">
+                                @if($product->barcode)
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="px-2 py-0.5 rounded-md bg-slate-900 text-white font-mono text-[11px] font-bold">
+                                            {{ $product->barcode }}
+                                        </span>
+                                        <a href="{{ route('products.barcode.print', $product) }}" target="_blank" class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Cetak Stiker Barcode">
+                                            <i class="bi bi-printer text-xs"></i>
+                                        </a>
+                                    </div>
+                                @else
+                                    <span class="text-xs text-slate-400 dark:text-slate-500 italic">Belum ada</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3.5 text-right">
+                                <div class="relative inline-block text-left">
+                                    <button type="button" data-dropdown-toggle="dropdown-{{ $product->id }}" class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+
+                                    <div id="dropdown-{{ $product->id }}" data-dropdown-menu class="hidden absolute right-0 mt-1 w-44 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl py-1 z-30 animate-fade-in text-left">
+                                        <a href="{{ route('products.show', $product) }}" class="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600">
+                                            <i class="bi bi-eye text-slate-400"></i> Detail Barang
+                                        </a>
+                                        <a href="{{ route('products.edit', $product) }}" class="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600">
+                                            <i class="bi bi-pencil text-slate-400"></i> Edit Data
+                                        </a>
+                                        @if(auth()->user()->isAdmin())
+                                            <div class="my-1 border-t border-slate-100 dark:border-slate-800"></div>
+                                            <button type="button" data-modal-target="deleteModal{{ $product->id }}" class="w-full flex items-center gap-2 px-4 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30">
+                                                <i class="bi bi-trash"></i> Hapus Barang
+                                            </button>
+                                        @endif
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="px-6 py-12 text-center text-slate-400 dark:text-slate-500">
+                                <i class="bi bi-box-seam text-3xl mb-2 block text-slate-300 dark:text-slate-600"></i>
+                                Tidak ada data barang yang ditemukan.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
             </table>
         </div>
-    </div>
 
-    {{-- Mobile: List Item --}}
-    <div class="d-md-none border-top mt-2 bg-white">
-        @forelse($products as $product)
-            <div class="mobile-item py-3 px-3 border-bottom">
-                <div class="d-flex gap-2 align-items-start">
-                    
-                    <div class="delete-mode-cell d-none pt-1">
-                        <input type="checkbox" class="form-check-input product-checkbox" value="{{ $product->id }}">
-                    </div>
+        {{-- Mobile Cards Feed --}}
+        <div class="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+            @forelse($products as $product)
+                <div class="p-4 space-y-3 product-mobile-card">
+                    <div class="flex items-start gap-3">
+                        <div class="delete-mode-cell hidden pt-1">
+                            <input type="checkbox" class="product-checkbox w-4 h-4 rounded text-rose-600 border-slate-300 dark:border-slate-600" value="{{ $product->id }}">
+                        </div>
 
-                    <div class="product-thumb flex-shrink-0">
-                        <img src="{{ $product->hasMedia('images') ? $product->getFirstMediaUrl('images') : asset('images/no-image.png') }}" alt="{{ $product->name }}" onerror="this.onerror=null; this.src='https://placehold.co/100x100?text=No+Image';">
-                    </div>
-                    
-                    <div class="flex-grow-1" style="min-width: 0;">
-                        <div class="d-flex justify-content-between align-items-start mb-1">
-                            <div class="text-truncate pe-2">
-                                <div class="fw-semibold text-truncate" style="font-size: 0.95rem;">{{ $product->name }}</div>
-                                @if($product->subcategory)<div class="text-muted small text-truncate" style="font-size: 0.8rem;">{{ $product->subcategory }}</div>@endif
-                            </div>
-                            <div class="text-muted small fw-medium flex-shrink-0 mt-1" style="font-size: 0.8rem;">Stok: {{ $product->stock ?? 0 }}</div>
+                        <div class="w-14 h-14 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden flex items-center justify-center shrink-0">
+                            <img src="{{ $product->hasMedia('images') ? $product->getFirstMediaUrl('images') : asset('images/no-image.png') }}" 
+                                 alt="{{ $product->name }}" 
+                                 class="w-full h-full object-cover" 
+                                 onerror="this.onerror=null; this.src='https://placehold.co/100x100?text=No+Image';">
                         </div>
-                        
-                        <div class="d-flex flex-wrap gap-1 mb-2">
-                            <span class="badge category-badge bg-primary-subtle text-primary-emphasis px-2 py-1 rounded-pill" style="font-size: 0.72rem;">{{ $product->category }}</span>
-                            <span class="badge room-badge bg-secondary-subtle text-secondary-emphasis px-2 py-1 rounded-pill" style="font-size: 0.72rem;">{{ $product->room_name ?: 'Belum diisi' }}</span>
-                            @if(($product->stock ?? 0) > 0 && $product->status !== 'inactive')
-                                <span class="badge bg-success-subtle text-success px-2 py-1 rounded-pill" style="font-size: 0.72rem;">Aktif</span>
-                            @elseif($product->status === 'inactive')
-                                <span class="badge bg-warning-subtle text-warning px-2 py-1 rounded-pill" style="font-size: 0.72rem;">Tidak Aktif</span>
-                            @else
-                                <span class="badge bg-danger-subtle text-danger px-2 py-1 rounded-pill" style="font-size: 0.72rem;">Stok Habis</span>
-                            @endif
-                        </div>
-                        @if($product->barcode)
-                            <div class="d-flex align-items-center gap-1 mt-1">
-                                <span class="badge bg-dark text-white rounded-pill px-2 py-1" style="font-size:0.68rem;font-family:monospace;">{{ $product->barcode }}</span>
-                                <a href="{{ route('products.barcode.print', $product) }}" target="_blank" class="btn btn-sm btn-outline-secondary p-1" style="line-height:1;font-size:0.7rem;">
-                                    <i class="bi bi-printer"></i>
+
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-start justify-between gap-1">
+                                <a href="{{ route('products.show', $product) }}" class="font-bold text-sm text-slate-900 dark:text-white truncate block">
+                                    {{ $product->name }}
                                 </a>
+                                <span class="text-xs font-bold text-blue-600 dark:text-blue-400 shrink-0">
+                                    Stok: {{ $product->stock ?? 0 }}
+                                </span>
                             </div>
-                        @endif
-                        
-                        <div class="d-flex gap-1">
-                            <a href="{{ route('products.show', $product) }}" class="btn btn-sm btn-outline-secondary flex-fill py-1" style="font-size: 0.78rem;">Lihat</a>
-                            @if(auth()->user()->isAdmin())
-                                <a href="{{ route('products.edit', $product) }}" class="btn btn-sm btn-outline-primary flex-fill py-1" style="font-size: 0.78rem;">Edit</a>
-                                <button type="button" class="btn btn-sm btn-outline-danger flex-fill py-1" style="font-size: 0.78rem;" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $product->id }}">Hapus</button>
+
+                            @if($product->subcategory)
+                                <p class="text-[11px] text-slate-400 truncate">{{ $product->subcategory }}</p>
                             @endif
+
+                            <div class="mt-2 flex items-center flex-wrap gap-1.5">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400">
+                                    {{ $product->category_name }}
+                                </span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                                    {{ $product->room_name ?: 'Ruangan -' }}
+                                </span>
+                                @if(($product->stock ?? 0) > 0 && $product->status !== 'inactive')
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+                                        Aktif
+                                    </span>
+                                @else
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400">
+                                        Habis
+                                    </span>
+                                @endif
+                            </div>
                         </div>
                     </div>
+
+                    {{-- Actions bottom bar on mobile --}}
+                    <div class="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                        <a href="{{ route('products.show', $product) }}" class="flex-1 py-1.5 rounded-lg text-center text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200">
+                            Detail
+                        </a>
+                        <a href="{{ route('products.edit', $product) }}" class="flex-1 py-1.5 rounded-lg text-center text-xs font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100">
+                            Edit
+                        </a>
+                        @if(auth()->user()->isAdmin())
+                            <button type="button" data-modal-target="deleteModal{{ $product->id }}" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        @endif
+                    </div>
                 </div>
+            @empty
+                <div class="p-8 text-center text-xs text-slate-400 dark:text-slate-500">
+                    Tidak ada barang ditemukan.
+                </div>
+            @endforelse
+        </div>
+
+        {{-- Pagination Footer --}}
+        <div class="p-4 sm:p-5 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
+            <div>
+                Menampilkan {{ $products->firstItem() ?? 0 }} - {{ $products->lastItem() ?? 0 }} dari {{ $products->total() }} barang
             </div>
-        @empty
-            <div class="text-center py-5 text-muted">Tidak ada barang ditemukan.</div>
-        @endforelse
+            <div>
+                {{ $products->links() }}
+            </div>
+        </div>
     </div>
+</div>
 
-    @if(auth()->user()->isAdmin())
-        @foreach($products as $product)
-            <div class="modal fade" id="deleteModal{{ $product->id }}" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                    <div class="modal-content rounded-4">
-                        <div class="modal-header border-0">
-                            <h5 class="modal-title">Hapus barang?</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">Ini akan menghapus {{ $product->name }} dari inventaris.</div>
-                        <div class="modal-footer border-0 form-actions">
-                            <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
-                            <form action="{{ route('products.destroy', $product) }}" method="POST">@csrf @method('DELETE')<button type="submit" class="btn btn-danger rounded-pill">Hapus</button></form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endforeach
-    @endif
+{{-- Single Delete Modals for Products --}}
+@if(auth()->user()->isAdmin())
+    @foreach($products as $product)
+        <div id="deleteModal{{ $product->id }}" class="modal-container fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 text-center animate-fade-in">
+                <button type="button" data-modal-close class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <i class="bi bi-x-lg text-sm"></i>
+                </button>
 
-    <div class="modal fade" id="bulkDeleteModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content rounded-4">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title">Hapus semua barang?</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center text-2xl mx-auto mb-4">
+                    <i class="bi bi-trash"></i>
                 </div>
-                <div class="modal-body">
-                    <p class="mb-0">Yakin ingin menghapus <span id="bulk-delete-count">0</span> barang?</p>
-                </div>
-                <div class="modal-footer border-0 form-actions">
-                    <button type="button" class="btn btn-secondary rounded-pill" data-bs-dismiss="modal">Batal</button>
-                    <form id="bulk-delete-form" action="{{ route('products.destroySelected') }}" method="POST">
+
+                <h3 class="text-base font-bold text-slate-900 dark:text-white mb-2">Hapus Barang?</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+                    Apakah Anda yakin ingin menghapus <strong class="text-slate-800 dark:text-slate-200">{{ $product->name }}</strong> dari inventaris? Tindakan ini tidak dapat dibatalkan.
+                </p>
+
+                <div class="flex items-center gap-3">
+                    <button type="button" data-modal-close class="flex-1 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors">
+                        Batal
+                    </button>
+                    <form action="{{ route('products.destroy', $product) }}" method="POST" class="flex-1">
                         @csrf
-                        <div id="selected-ids-container"></div>
-                        <button type="submit" class="btn btn-danger rounded-pill">Ya</button>
+                        @method('DELETE')
+                        <button type="submit" class="w-full px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 shadow-sm transition-all">
+                            Hapus
+                        </button>
                     </form>
                 </div>
             </div>
         </div>
-    </div>
+    @endforeach
+@endif
 
-    <div id="paginationContainer" class="d-flex justify-content-between align-items-center mt-4 mobile-header-pad">
-        <p class="text-muted mb-0 small">Menampilkan {{ $products->firstItem() ?? 0 }} - {{ $products->lastItem() ?? 0 }} dari {{ $products->total() }}</p>
-        {{ $products->links() }}
+{{-- Bulk Delete Modal --}}
+<div id="bulkDeleteModal" class="modal-container fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 text-center animate-fade-in">
+        <button type="button" data-modal-close class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+            <i class="bi bi-x-lg text-sm"></i>
+        </button>
+
+        <div class="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center text-2xl mx-auto mb-4">
+            <i class="bi bi-exclamation-triangle"></i>
+        </div>
+
+        <h3 class="text-base font-bold text-slate-900 dark:text-white mb-2">Hapus Barang Terpilih?</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+            Yakin ingin menghapus <span id="bulk-delete-count" class="font-bold text-rose-600">0</span> barang yang dipilih secara masal?
+        </p>
+
+        <div class="flex items-center gap-3">
+            <button type="button" data-modal-close class="flex-1 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors">
+                Batal
+            </button>
+            <form id="bulk-delete-form" action="{{ route('products.destroySelected') }}" method="POST" class="flex-1">
+                @csrf
+                <div id="selected-ids-container"></div>
+                <button type="submit" class="w-full px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 shadow-sm transition-all">
+                    Ya, Hapus Semua
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -351,9 +370,13 @@ document.addEventListener('DOMContentLoaded', function () {
     let debounceTimer = null;
 
     function updateRowHighlight(checkbox) {
-        const row = checkbox.closest('tr, .mobile-item');
+        const row = checkbox.closest('tr, .product-mobile-card');
         if (!row) return;
-        row.classList.toggle('row-selected-for-delete', checkbox.checked);
+        if (checkbox.checked) {
+            row.classList.add('bg-rose-50/50', 'dark:bg-rose-950/20');
+        } else {
+            row.classList.remove('bg-rose-50/50', 'dark:bg-rose-950/20');
+        }
     }
 
     function syncSelectionState() {
@@ -361,54 +384,56 @@ document.addEventListener('DOMContentLoaded', function () {
         const count = selected.length;
         const isAllSelected = checkboxes.length > 0 && count === checkboxes.length;
 
-        selectedSummary.textContent = `${count} dipilih`;
-        bulkDeleteCount.textContent = count;
-        btnBulkDelete.disabled = count === 0;
-        if(selectAllCheckbox) selectAllCheckbox.checked = isAllSelected;
+        if (selectedSummary) selectedSummary.textContent = `${count} dipilih`;
+        if (bulkDeleteCount) bulkDeleteCount.textContent = count;
+        if (btnBulkDelete) btnBulkDelete.disabled = count === 0;
+        if (selectAllCheckbox) selectAllCheckbox.checked = isAllSelected;
         
-        if(selectAllBtn) {
-            selectAllBtn.textContent = isAllSelected ? 'Batal' : 'Semua';
+        if (selectAllBtn) {
+            selectAllBtn.textContent = isAllSelected ? 'Batal Semua' : 'Pilih Semua';
         }
 
-        selectedIdsContainer.innerHTML = '';
-        selected.forEach(id => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'selected_ids[]';
-            input.value = id;
-            selectedIdsContainer.appendChild(input);
-        });
+        if (selectedIdsContainer) {
+            selectedIdsContainer.innerHTML = '';
+            selected.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'selected_ids[]';
+                input.value = id;
+                selectedIdsContainer.appendChild(input);
+            });
+        }
     }
 
     function toggleDeleteMode() {
         deleteModeEnabled = !deleteModeEnabled;
         
-        if(deleteModeEnabled) {
+        if (deleteModeEnabled) {
             deleteModeToggle.innerHTML = '<i class="bi bi-x-circle me-1"></i>Selesai';
-            deleteModeToggle.classList.remove('btn-outline-danger');
-            deleteModeToggle.classList.add('btn-danger');
+            deleteModeToggle.classList.remove('text-rose-600', 'bg-rose-50');
+            deleteModeToggle.classList.add('text-white', 'bg-rose-600');
+            deleteToolbar?.classList.remove('hidden');
+            deleteToolbar?.classList.add('flex');
+            exportButton?.classList.add('hidden');
+            addProductButton?.classList.add('hidden');
         } else {
-            deleteModeToggle.innerHTML = '<i class="bi bi-trash me-1"></i>Hapus';
-            deleteModeToggle.classList.remove('btn-danger');
-            deleteModeToggle.classList.add('btn-outline-danger');
+            deleteModeToggle.innerHTML = '<i class="bi bi-trash me-1"></i>Mode Hapus';
+            deleteModeToggle.classList.remove('text-white', 'bg-rose-600');
+            deleteModeToggle.classList.add('text-rose-600', 'bg-rose-50');
+            deleteToolbar?.classList.add('hidden');
+            deleteToolbar?.classList.remove('flex');
+            exportButton?.classList.remove('hidden');
+            addProductButton?.classList.remove('hidden');
         }
 
-        deleteToolbar.classList.toggle('d-none', !deleteModeEnabled);
-        deleteModeCells.forEach(cell => cell.classList.toggle('d-none', !deleteModeEnabled));
-
-        if (exportButton) {
-            exportButton.classList.toggle('d-none', deleteModeEnabled);
-        }
-        if (addProductButton) {
-            addProductButton.classList.toggle('d-none', deleteModeEnabled);
-        }
+        deleteModeCells.forEach(cell => cell.classList.toggle('hidden', !deleteModeEnabled));
 
         if (!deleteModeEnabled) {
             checkboxes.forEach(ch => {
                 ch.checked = false;
                 updateRowHighlight(ch);
             });
-            if(selectAllCheckbox) selectAllCheckbox.checked = false;
+            if (selectAllCheckbox) selectAllCheckbox.checked = false;
             syncSelectionState();
         }
     }
@@ -436,7 +461,6 @@ document.addEventListener('DOMContentLoaded', function () {
         updateRowHighlight(this);
         syncSelectionState();
     }));
-    syncSelectionState();
 
     let isUserTyping = false;
 

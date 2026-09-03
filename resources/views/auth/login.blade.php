@@ -1,597 +1,202 @@
 @extends('layouts.auth')
 
-@section('title', 'Login')
+@section('title', 'Masuk ke Sistem')
 
 @section('content')
-    <div class="auth-page">
+<div class="auth-page min-h-screen w-full flex items-center justify-center p-4 sm:p-6 relative overflow-hidden bg-slate-950">
+    {{-- Ambient Gradient Glows --}}
+    <div class="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-blue-600/20 blur-[130px] pointer-events-none"></div>
+    <div class="absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-indigo-600/20 blur-[130px] pointer-events-none"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-blue-500/10 blur-[150px] pointer-events-none"></div>
 
-        {{-- Static blur circles --}}
-        <div class="blob blob-tl"></div>
-        <div class="blob blob-br"></div>
+    <div class="w-full max-w-[420px] relative z-10 space-y-4 animate-fade-in">
+        {{-- Main Glass Card --}}
+        <div class="rounded-3xl bg-slate-900/80 border border-slate-700/60 shadow-2xl backdrop-blur-2xl p-6 sm:p-8 space-y-6">
+            
+            {{-- Brand Header & Logo --}}
+            <div class="text-center space-y-3">
+                <div class="inline-flex p-2.5 rounded-2xl bg-white shadow-lg shadow-blue-500/15 border border-slate-100 transform hover:scale-105 transition-transform duration-200">
+                    <img src="{{ asset('images/logo-diskominfo.png') }}" alt="Logo Diskominfo Garut" class="w-16 h-16 object-contain">
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tight text-white">
+                        Sistem Inventaris Aset
+                    </h1>
+                    <p class="text-xs font-medium text-blue-300/80 mt-0.5">
+                        Diskominfo Kabupaten Garut
+                    </p>
+                </div>
+            </div>
 
-        {{-- LEBAR CARD DIUBAH DARI 430px JADI 380px --}}
-        <div class="w-full relative z-10" style="max-width: 380px;">
-            <div class="login-card">
+            {{-- Flash Alert Messages --}}
+            @if(session('success'))
+                <div class="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-medium flex items-center gap-2.5">
+                    <i class="bi bi-check-circle-fill text-emerald-400 text-sm"></i>
+                    <span>{{ session('success') }}</span>
+                </div>
+            @endif
 
-                {{-- Logo --}}
-                <div class="flex justify-center mb-3">
-                    <div
-                        class="w-16 h-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center shadow-lg overflow-hidden shrink-0">
-                        <img src="{{ asset('images/logo.png') }}" alt="Logo"
-                            class="w-full h-full object-cover rounded-full">
+            @if($errors->any())
+                <div class="p-3.5 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs space-y-1">
+                    @foreach($errors->all() as $error)
+                        <div class="flex items-center gap-2">
+                            <i class="bi bi-exclamation-circle-fill text-rose-400 text-xs shrink-0"></i>
+                            <span>{{ $error }}</span>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
+            {{-- Login Form --}}
+            <form action="{{ route('login') }}" method="POST" id="loginForm" class="space-y-4">
+                @csrf
+
+                {{-- Email Input --}}
+                <div class="space-y-1.5 text-left">
+                    <label for="email" class="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                        Alamat Email
+                    </label>
+                    <div class="relative">
+                        <i class="bi bi-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input type="email" id="email" name="email" value="{{ old('email') }}" required autofocus
+                               placeholder="nama@garutkab.go.id"
+                               class="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm bg-slate-800/80 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all">
                     </div>
                 </div>
 
-                <h1 class="form-title">Login</h1>
-                <p class="form-subtitle">Masuk ke akun Anda untuk melanjutkan</p>
-
-                {{-- Error Messages --}}
-                @if ($errors->any())
-                    <div class="error-box">
-                        @foreach ($errors->all() as $error)
-                            <p>{{ $error }}</p>
-                        @endforeach
+                {{-- Password Input --}}
+                <div class="space-y-1.5 text-left">
+                    <label for="password" class="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                        Kata Sandi
+                    </label>
+                    <div class="relative">
+                        <i class="bi bi-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input type="password" id="password" name="password" required
+                               placeholder="••••••••"
+                               class="w-full pl-10 pr-11 py-2.5 rounded-xl text-sm bg-slate-800/80 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all">
+                        <button type="button" id="togglePassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1 transition-colors">
+                            <i class="bi bi-eye"></i>
+                        </button>
                     </div>
-                @endif
+                </div>
 
-                <form action="{{ route('login') }}" method="POST" id="loginForm">
-                    @csrf
+                {{-- Remember & Forgot Password --}}
+                <div class="flex items-center justify-between text-xs pt-0.5">
+                    <label class="flex items-center gap-2 text-slate-300 cursor-pointer select-none">
+                        <input type="checkbox" name="remember_me" value="1" class="w-4 h-4 rounded text-blue-600 bg-slate-800 border-slate-700 focus:ring-blue-500">
+                        <span>Ingat saya</span>
+                    </label>
+                    <a href="{{ route('password.request') }}" class="text-blue-400 hover:text-blue-300 transition-colors font-medium">
+                        Lupa password?
+                    </a>
+                </div>
 
-                    {{-- Email --}}
-                    <div class="input-group">
-                        <label for="email">Email</label>
-                        <div class="input-wrap">
-                            <i class="bi bi-envelope icon-left"></i>
-                            <input type="email" id="email" name="email" value="{{ old('email') }}"
-                                placeholder="you@example.com" required>
-                        </div>
-                        @error('email')
-                            <p class="field-error">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    {{-- Password --}}
-                    <div class="input-group">
-                        <label for="password">Password</label>
-                        <div class="input-wrap">
-                            <i class="bi bi-lock icon-left"></i>
-                            <input type="password" id="password" name="password" placeholder="••••••••" required>
-                            <button type="button" id="togglePassword" class="toggle-eye">
-                                <i class="bi bi-eye"></i>
-                            </button>
-                        </div>
-                        @error('password')
-                            <p class="field-error">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    {{-- Remember & Forgot --}}
-                    <div class="form-row">
-                        <label class="remember-label">
-                            <input type="checkbox" name="remember_me" value="1">
-                            <span>Remember me</span>
+                {{-- Security Verification (Captcha) --}}
+                <div class="space-y-2 text-left pt-1">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                            Verifikasi Keamanan
                         </label>
-                        <a href="{{ route('password.request') }}" class="forgot-link">Forgot password?</a>
+                        <button type="button" id="refreshSecCodeBtn" class="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors cursor-pointer">
+                            <i class="bi bi-arrow-repeat"></i>
+                            <span>Ganti Kode</span>
+                        </button>
                     </div>
 
-                    {{-- Verifikasi Keamanan / Security Code --}}
-                    <div class="input-group">
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                            <label style="margin-bottom: 0;">Verifikasi Keamanan</label>
-                            <span id="refreshSecCodeBtn"
-                                style="font-size: 11px; color: #9DB2E8; cursor: pointer; display: flex; align-items: center; gap: 4px;"
-                                title="Klik untuk memperbarui kode verifikasi">
-                                <i class="bi bi-arrow-repeat"></i> Refresh
-                            </span>
+                    <div id="secChallengeBox" class="h-14 w-full bg-white rounded-xl border border-slate-200 overflow-hidden flex items-center justify-center cursor-pointer shadow-inner hover:border-blue-400 transition-colors" title="Klik untuk mengganti kode verifikasi">
+                        <div id="secChallengeRender" class="w-full h-full flex items-center justify-center">
+                            {!! $captchaSvg ?? \App\Services\CaptchaGenerator::generateSVG($captchaCode ?? session('captcha_code')) !!}
                         </div>
-                        <div class="sec-code-box" id="secChallengeBox" title="Klik untuk mengubah kode verifikasi" style="display: flex !important; visibility: visible !important; opacity: 1 !important;">
-                            <div class="sec-code-preview" id="secChallengeRender" style="display: flex !important; visibility: visible !important; opacity: 1 !important; width: 100% !important; height: 100% !important;">
-                                {!! $captchaSvg ?? \App\Services\CaptchaGenerator::generateSVG($captchaCode ?? session('captcha_code')) !!}
-                            </div>
-                        </div>
-                        <input type="text" name="security_code" id="secChallengeInput" class="sec-code-input"
-                            placeholder="Masukkan kode di atas" required autocomplete="off" style="display: block !important; visibility: visible !important; opacity: 1 !important;">
-                        @error('security_code')
-                            <p class="field-error">{{ $message }}</p>
-                        @enderror
-                        @error('captcha')
-                            <p class="field-error">{{ $message }}</p>
-                        @enderror
                     </div>
 
-                    {{-- Submit Button --}}
-                    <button type="submit" id="loginBtn" class="btn-login">
-                        {{-- Spinner Loading (Sejajar dengan Teks) --}}
-                        <svg id="loginSpinner" class="spinner hidden" xmlns="http://www.w3.org/2000/svg" fill="none"
-                            viewBox="0 0 24 24">
-                            <circle style="opacity: 0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                            </circle>
-                            <path style="opacity: 0.75;" fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                            </path>
-                        </svg>
+                    <input type="text" name="security_code" id="secChallengeInput" required autocomplete="off"
+                           placeholder="Masukkan kode huruf/angka di atas"
+                           class="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-800/80 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-mono tracking-wider text-center">
+                </div>
 
-                        {{-- Teks Tombol --}}
-                        <span id="loginBtnText">Login</span>
-                    </button>
-                </form>
+                {{-- Submit Button --}}
+                <button type="submit" id="loginBtn" class="w-full py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer mt-2">
+                    <span id="loginBtnText">Masuk ke Sistem</span>
+                    <i class="bi bi-arrow-right text-base"></i>
+                </button>
+            </form>
 
-                <p class="footer-text">
-                    Belum punya akun?
-                    <a href="{{ route('register') }}">Register</a>
-                </p>
+            {{-- Footer Links --}}
+            <div class="pt-2 text-center text-xs text-slate-400 border-t border-slate-800">
+                <span>Belum memiliki akun operator?</span>
+                <a href="{{ route('register') }}" class="text-blue-400 hover:text-blue-300 font-semibold ml-1">
+                    Daftar Akun Baru
+                </a>
             </div>
-
-            <p class="copyright-text">&copy; 2026 Inventory Management. All rights reserved.</p>
         </div>
+
+        {{-- Copyright Notice --}}
+        <p class="text-center text-[11px] text-slate-500">
+            &copy; 2026 Diskominfo Kabupaten Garut. Hak Cipta Dilindungi.
+        </p>
     </div>
-@endsection
-
-@section('extra-css')
-    <style>
-        .auth-page {
-            position: relative;
-            min-height: 100vh;
-            width: 100%;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-            background: linear-gradient(135deg, #081120, #10264d, #183b72, #10264d);
-        }
-
-        /* Static blur circles */
-        .blob {
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            filter: blur(140px);
-            opacity: .35;
-            pointer-events: none;
-        }
-
-        .blob-tl {
-            top: -80px;
-            left: -80px;
-            background: #2563EB;
-        }
-
-        .blob-br {
-            bottom: -80px;
-            right: -80px;
-            background: #3357d8;
-        }
-
-        .login-card {
-            position: relative;
-            z-index: 10;
-            width: 100%;
-            background: rgba(255, 255, 255, .08);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, .15);
-            box-shadow: 0 15px 45px rgba(0, 0, 0, .35);
-            padding: 24px 26px 20px;
-        }
-
-        .form-title {
-            text-align: center;
-            font-size: 24px;
-            font-weight: 700;
-            color: #fff;
-            margin: 0 0 4px;
-            line-height: 1.2;
-        }
-
-        .form-subtitle {
-            text-align: center;
-            font-size: 13px;
-            color: #D5DBF3;
-            margin: 0 0 18px;
-        }
-
-        .error-box {
-            background: rgba(239, 68, 68, .1);
-            border: 1px solid rgba(248, 113, 113, .3);
-            border-radius: 10px;
-            padding: 8px 12px;
-            margin-bottom: 12px;
-        }
-
-        .error-box p {
-            color: #FCA5A5;
-            font-size: 12px;
-            margin: 0;
-        }
-
-        .error-box p+p {
-            margin-top: 2px;
-        }
-
-        .input-group {
-            margin-bottom: 12px;
-        }
-
-        .input-group label {
-            display: block;
-            font-size: 12px;
-            color: #D5DBF3;
-            margin-bottom: 4px;
-            font-weight: 500;
-        }
-
-        .field-error {
-            color: #FCA5A5;
-            font-size: 11px;
-            margin: 3px 0 0;
-        }
-
-        .input-wrap {
-            position: relative;
-        }
-
-        .input-wrap .icon-left {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #AEB8D8;
-            font-size: 15px;
-        }
-
-        .input-wrap input {
-            width: 100%;
-            height: 42px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, .07);
-            border: 1px solid rgba(255, 255, 255, .15);
-            color: #fff;
-            padding: 0 38px;
-            font-size: 13px;
-            transition: background .2s ease, border-color .2s ease, box-shadow .2s ease;
-        }
-
-        .input-wrap input::placeholder {
-            color: #AEB8D8;
-        }
-
-        .input-wrap input:hover {
-            background: rgba(255, 255, 255, .11);
-        }
-
-        .input-wrap input:focus {
-            outline: none;
-            border-color: #3B82F6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, .15);
-            background: rgba(255, 255, 255, .1);
-        }
-
-        .toggle-eye {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: #AEB8D8;
-            cursor: pointer;
-            font-size: 15px;
-            padding: 2px;
-            line-height: 1;
-        }
-
-        .toggle-eye:hover {
-            color: #fff;
-        }
-
-        /* Security Verification Badge Styling (AdBlock Resistant) */
-        .sec-code-box {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            margin-bottom: 8px !important;
-            background: #ffffff !important;
-            border-radius: 10px !important;
-            border: 1px solid rgba(255, 255, 255, .25) !important;
-            height: 60px !important;
-            min-height: 60px !important;
-            max-height: 60px !important;
-            cursor: pointer !important;
-            transition: all .2s ease !important;
-            position: relative !important;
-            overflow: hidden !important;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, .05), 0 4px 12px rgba(0, 0, 0, .15) !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-        }
-
-        .sec-code-box:hover {
-            border-color: #3B82F6 !important;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, .05), 0 0 0 3px rgba(59, 130, 246, .25) !important;
-        }
-
-        .sec-code-preview {
-            width: 100% !important;
-            height: 100% !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            transition: opacity .15s ease !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            pointer-events: none !important;
-        }
-
-        .sec-code-preview svg {
-            width: 100% !important;
-            height: 100% !important;
-            display: block !important;
-            visibility: visible !important;
-        }
-
-        .sec-code-text {
-            font-size: 32px !important;
-            font-weight: 800 !important;
-            letter-spacing: 6px !important;
-            color: #0f172a !important;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1) !important;
-            user-select: none !important;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
-            transform: skewX(-10deg) !important;
-        }
-
-        .sec-code-input {
-            width: 100% !important;
-            height: 42px !important;
-            border-radius: 10px !important;
-            background: rgba(255, 255, 255, .07) !important;
-            border: 1px solid rgba(255, 255, 255, .15) !important;
-            color: #fff !important;
-            padding: 0 14px !important;
-            font-size: 13px !important;
-            transition: background .2s ease, border-color .2s ease, box-shadow .2s ease !important;
-            letter-spacing: 2px !important;
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-        }
-
-        .sec-code-input::placeholder {
-            color: #AEB8D8 !important;
-        }
-
-        .sec-code-input:hover {
-            background: rgba(255, 255, 255, .11) !important;
-        }
-
-        .sec-code-input:focus {
-            outline: none !important;
-            border-color: #3B82F6 !important;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, .15) !important;
-            background: rgba(255, 255, 255, .1) !important;
-        }
-
-        .form-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-            font-size: 12px;
-        }
-
-        .remember-label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: #D5DBF3;
-            cursor: pointer;
-        }
-
-        .remember-label input {
-            width: 14px;
-            height: 14px;
-            accent-color: #2563EB;
-            cursor: pointer;
-        }
-
-        .forgot-link {
-            color: #9DB2E8;
-            text-decoration: none;
-        }
-
-        .forgot-link:hover {
-            color: #fff;
-        }
-
-        /* Tombol Login Simetris & Rapi */
-        .btn-login {
-            width: 100%;
-            height: 42px;
-            border: none;
-            border-radius: 10px;
-            background: linear-gradient(180deg, #2563EB, #1D4ED8);
-            color: #fff;
-            font-size: 14px;
-            font-weight: 600;
-            letter-spacing: .3px;
-            cursor: pointer;
-            transition: background .2s ease, transform .2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-login:hover {
-            background: linear-gradient(180deg, #3B82F6, #2563EB);
-        }
-
-        .btn-login:active {
-            transform: scale(.98);
-        }
-
-        .btn-login:disabled {
-            opacity: .7;
-            cursor: not-allowed;
-        }
-
-        /* Spinner Animasi */
-        .spinner {
-            width: 18px;
-            height: 18px;
-            animation: spin 0.7s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .footer-text {
-            text-align: center;
-            font-size: 12px;
-            color: #D5DBF3;
-            margin-top: 14px;
-        }
-
-        .footer-text a {
-            color: #fff;
-            font-weight: 600;
-            text-decoration: none;
-        }
-
-        .footer-text a:hover {
-            text-decoration: underline;
-        }
-
-        .copyright-text {
-            text-align: center;
-            font-size: 11px;
-            color: rgba(213, 219, 243, .4);
-            margin-top: 12px;
-        }
-
-        @media (max-width: 640px) {
-            .login-card {
-                width: 100%;
-                padding: 20px 18px;
-            }
-
-            .form-title {
-                font-size: 20px;
-            }
-        }
-    </style>
+</div>
 @endsection
 
 @section('extra-js')
-    <script>
-        // Toggle password visibility
-        const togglePasswordBtn = document.getElementById('togglePassword');
-        const passwordInput = document.getElementById('password');
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Password visibility toggle
+    const togglePasswordBtn = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
 
-        togglePasswordBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            const icon = togglePasswordBtn.querySelector('i');
+    togglePasswordBtn?.addEventListener('click', function () {
+        const icon = togglePasswordBtn.querySelector('i');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.className = 'bi bi-eye-slash';
+        } else {
+            passwordInput.type = 'password';
+            icon.className = 'bi bi-eye';
+        }
+    });
 
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                icon.classList.remove('bi-eye');
-                icon.classList.add('bi-eye-slash');
-            } else {
-                passwordInput.type = 'password';
-                icon.classList.remove('bi-eye-slash');
-                icon.classList.add('bi-eye');
-            }
-        });
+    // Form submission loading indicator
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginBtnText = document.getElementById('loginBtnText');
 
-        // Loading state saat tombol Login diklik
-        const loginForm = document.getElementById('loginForm');
-        const loginBtn = document.getElementById('loginBtn');
-        const loginBtnText = document.getElementById('loginBtnText');
-        const loginSpinner = document.getElementById('loginSpinner');
+    loginForm?.addEventListener('submit', function () {
+        loginBtn.disabled = true;
+        loginBtn.classList.add('opacity-75', 'cursor-not-allowed');
+        loginBtnText.innerHTML = '<span class="inline-flex items-center gap-2"><svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Memverifikasi...</span>';
+    });
 
-        loginForm.addEventListener('submit', function () {
-            loginBtn.disabled = true;
-            loginSpinner.classList.remove('hidden');
-            loginBtnText.textContent = 'Signing in...';
-        });
+    // Captcha Refresh
+    const secBox = document.getElementById('secChallengeBox');
+    const refreshSecBtn = document.getElementById('refreshSecCodeBtn');
+    const secRender = document.getElementById('secChallengeRender');
+    const secInput = document.getElementById('secChallengeInput');
 
-        // Anti-AdBlock Persistence & Refresh Challenge
-        const secBox = document.getElementById('secChallengeBox');
-        const refreshSecBtn = document.getElementById('refreshSecCodeBtn');
-        const secRender = document.getElementById('secChallengeRender');
-        const secInput = document.getElementById('secChallengeInput');
-
-        // Anti-Tamper: Force elements to stay visible even if extensions try to hide them
-        function enforceVisibility() {
-            [secBox, secRender, secInput].forEach(el => {
-                if (el) {
-                    if (el.style.display === 'none' || getComputedStyle(el).display === 'none') {
-                        el.style.setProperty('display', el === secInput ? 'block' : 'flex', 'important');
-                    }
-                    if (el.style.visibility === 'hidden' || getComputedStyle(el).visibility === 'hidden') {
-                        el.style.setProperty('visibility', 'visible', 'important');
-                    }
-                    if (el.style.opacity === '0' || getComputedStyle(el).opacity === '0') {
-                        el.style.setProperty('opacity', '1', 'important');
-                    }
-                    if (el.hidden) el.hidden = false;
+    function refreshCaptcha() {
+        if (!secRender) return;
+        secRender.style.opacity = '0.4';
+        fetch('{{ route("security.refresh") }}')
+            .then(res => res.json())
+            .then(data => {
+                if (data.svg) {
+                    secRender.innerHTML = data.svg;
+                } else if (data.code) {
+                    secRender.innerHTML = '<div class="text-2xl font-bold font-mono tracking-widest text-slate-900">' + data.code + '</div>';
                 }
+                if (secInput) {
+                    secInput.value = '';
+                    secInput.focus();
+                }
+            })
+            .catch(err => console.error('Error refreshing captcha:', err))
+            .finally(() => {
+                secRender.style.opacity = '1';
             });
-        }
+    }
 
-        // MutationObserver to self-heal instantly if an extension alters styles
-        if (window.MutationObserver && secBox) {
-            const observer = new MutationObserver(enforceVisibility);
-            observer.observe(secBox, { attributes: true, attributeFilter: ['style', 'class', 'hidden'] });
-            if (secRender) observer.observe(secRender, { attributes: true, attributeFilter: ['style', 'class', 'hidden'] });
-            if (secInput) observer.observe(secInput, { attributes: true, attributeFilter: ['style', 'class', 'hidden'] });
-        }
-        setInterval(enforceVisibility, 1000);
-
-        function refreshSecurityChallenge() {
-            if (!secRender) return;
-            secRender.style.opacity = '0.5';
-            fetch('{{ route('security.refresh') }}')
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.svg) {
-                        secRender.innerHTML = data.svg;
-                    } else if (data.code) {
-                        secRender.innerHTML = '<div class="sec-code-text">' + data.code + '</div>';
-                    }
-                    if (secInput) {
-                        secInput.value = '';
-                        secInput.focus();
-                    }
-                    enforceVisibility();
-                })
-                .catch(error => console.error('Error refreshing security challenge:', error))
-                .finally(() => {
-                    secRender.style.opacity = '1';
-                });
-        }
-
-        if (secBox) secBox.addEventListener('click', refreshSecurityChallenge);
-        if (refreshSecBtn) refreshSecBtn.addEventListener('click', refreshSecurityChallenge);
-
-        // Auto-focus email
-        const emailInput = document.getElementById('email');
-        if (emailInput && !emailInput.value) {
-            emailInput.focus();
-        }
-    </script>
+    secBox?.addEventListener('click', refreshCaptcha);
+    refreshSecBtn?.addEventListener('click', refreshCaptcha);
+});
+</script>
 @endsection

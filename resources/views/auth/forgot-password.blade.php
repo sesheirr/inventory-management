@@ -1,308 +1,140 @@
 @extends('layouts.auth')
 
-@section('title', 'Reset Password')
+@section('title', 'Atur Ulang Kata Sandi')
 
 @section('content')
-<div class="auth-page">
+<div class="auth-page min-h-screen w-full flex items-center justify-center p-4 sm:p-6 relative overflow-hidden bg-slate-950">
+    {{-- Ambient Gradient Glows --}}
+    <div class="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-blue-600/20 blur-[130px] pointer-events-none"></div>
+    <div class="absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-indigo-600/20 blur-[130px] pointer-events-none"></div>
 
-    <div class="blob blob-tl"></div>
-    <div class="blob blob-br"></div>
-
-    <div class="w-full relative z-10" style="max-width: 380px;">
-        <div class="login-card">
-
-            <div class="flex justify-center mb-3">
-                <div class="avatar-icon">
-                    <i class="bi bi-key-fill"></i>
+    <div class="w-full max-w-[420px] relative z-10 space-y-4 animate-fade-in my-6">
+        <div class="rounded-3xl bg-slate-900/80 border border-slate-700/60 shadow-2xl backdrop-blur-2xl p-6 sm:p-8 space-y-5">
+            
+            {{-- Brand Header & Logo --}}
+            <div class="text-center space-y-2">
+                <div class="inline-flex p-2.5 rounded-2xl bg-white shadow-lg shadow-blue-500/15 border border-slate-100 transform hover:scale-105 transition-transform duration-200">
+                    <img src="{{ asset('images/logo-diskominfo.png') }}" alt="Logo Diskominfo Garut" class="w-14 h-14 object-contain">
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tight text-white">
+                        Atur Ulang Password
+                    </h1>
+                    <p class="text-xs font-medium text-blue-300/80 mt-0.5">
+                        Masukkan email dan kata sandi baru Anda
+                    </p>
                 </div>
             </div>
 
-            <h1 class="form-title">Reset Password</h1>
-            <p class="form-subtitle">Masukkan email dan password baru Anda</p>
-
-            {{-- Alert Sukses --}}
-            @if (session('status'))
-                <div class="success-box">
-                    <p>{{ session('status') }}</p>
+            {{-- Flash Messages --}}
+            @if(session('status'))
+                <div class="p-3.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-medium flex items-center gap-2">
+                    <i class="bi bi-check-circle-fill text-emerald-400 text-sm"></i>
+                    <span>{{ session('status') }}</span>
                 </div>
             @endif
 
-            {{-- Alert Error --}}
-            @if ($errors->any())
-                <div class="error-box">
-                    @foreach ($errors->all() as $error)
-                        <p>{{ $error }}</p>
+            @if($errors->any())
+                <div class="p-3.5 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs space-y-1">
+                    @foreach($errors->all() as $error)
+                        <div class="flex items-center gap-2">
+                            <i class="bi bi-exclamation-circle-fill text-rose-400 text-xs shrink-0"></i>
+                            <span>{{ $error }}</span>
+                        </div>
                     @endforeach
                 </div>
             @endif
 
-            <form action="{{ route('password.direct_reset') }}" method="POST" id="resetDirectForm">
+            <form action="{{ route('password.direct_reset') }}" method="POST" id="resetDirectForm" class="space-y-4">
                 @csrf
 
                 {{-- Email --}}
-                <div class="input-group">
-                    <label for="email">Email Akun</label>
-                    <div class="input-wrap">
-                        <i class="bi bi-envelope icon-left"></i>
-                        <input
-                            type="email"
-                            id="email"
-                            name="email"
-                            value="{{ old('email') }}"
-                            placeholder="you@example.com"
-                            required
-                            autofocus
-                        >
+                <div class="space-y-1.5 text-left">
+                    <label for="email" class="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                        Alamat Email Akun
+                    </label>
+                    <div class="relative">
+                        <i class="bi bi-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input type="email" id="email" name="email" value="{{ old('email') }}" required autofocus
+                               placeholder="nama@garutkab.go.id"
+                               class="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm bg-slate-800/80 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all">
                     </div>
                 </div>
 
                 {{-- Password Baru --}}
-                <div class="input-group">
-                    <label for="password">Password Baru</label>
-                    <div class="input-wrap">
-                        <i class="bi bi-lock icon-left"></i>
-                        <input
-                            type="password"
-                            id="password"
-                            name="password"
-                            placeholder="••••••••"
-                            required
-                        >
-                        <button type="button" id="togglePassword" class="toggle-eye">
+                <div class="space-y-1.5 text-left">
+                    <label for="password" class="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                        Kata Sandi Baru
+                    </label>
+                    <div class="relative">
+                        <i class="bi bi-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input type="password" id="password" name="password" required
+                               placeholder="••••••••"
+                               class="w-full pl-10 pr-11 py-2.5 rounded-xl text-sm bg-slate-800/80 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all">
+                        <button type="button" id="togglePassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1 transition-colors">
                             <i class="bi bi-eye"></i>
                         </button>
                     </div>
                 </div>
 
-                {{-- Konfirmasi Password Baru --}}
-                <div class="input-group">
-                    <label for="password_confirmation">Konfirmasi Password Baru</label>
-                    <div class="input-wrap">
-                        <i class="bi bi-lock-fill icon-left"></i>
-                        <input
-                            type="password"
-                            id="password_confirmation"
-                            name="password_confirmation"
-                            placeholder="••••••••"
-                            required
-                        >
-                        <button type="button" id="toggleConfirmPassword" class="toggle-eye">
+                {{-- Konfirmasi Password --}}
+                <div class="space-y-1.5 text-left">
+                    <label for="password_confirmation" class="block text-xs font-semibold uppercase tracking-wider text-slate-300">
+                        Konfirmasi Kata Sandi Baru
+                    </label>
+                    <div class="relative">
+                        <i class="bi bi-lock-fill absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                        <input type="password" id="password_confirmation" name="password_confirmation" required
+                               placeholder="••••••••"
+                               class="w-full pl-10 pr-11 py-2.5 rounded-xl text-sm bg-slate-800/80 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all">
+                        <button type="button" id="toggleConfirmPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1 transition-colors">
                             <i class="bi bi-eye"></i>
                         </button>
                     </div>
                 </div>
 
                 {{-- Submit Button --}}
-                <button type="submit" id="resetBtn" class="btn-login" style="margin-top: 14px;">
-                    <span id="btnText">Simpan Password Baru</span>
-                    <span id="btnSpinner" class="hidden">
-                        <svg class="spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Memproses...
-                    </span>
+                <button type="submit" id="resetBtn" class="w-full py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer mt-2">
+                    <span id="btnText">Perbarui Kata Sandi</span>
+                    <i class="bi bi-check-lg text-base"></i>
                 </button>
             </form>
 
-            <p class="footer-text">
-                Ingat password Anda?
-                <a href="{{ route('login') }}">Kembali ke Login</a>
-            </p>
+            {{-- Footer Links --}}
+            <div class="pt-2 text-center text-xs text-slate-400 border-t border-slate-800">
+                <a href="{{ route('login') }}" class="text-blue-400 hover:text-blue-300 font-semibold inline-flex items-center gap-1.5">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Kembali ke Halaman Login</span>
+                </a>
+            </div>
         </div>
 
-        <p class="copyright-text">&copy; 2026 Inventory Management. All rights reserved.</p>
+        <p class="text-center text-[11px] text-slate-500">
+            &copy; 2026 Diskominfo Kabupaten Garut. Hak Cipta Dilindungi.
+        </p>
     </div>
 </div>
 @endsection
 
-@section('extra-css')
-<style>
-    .auth-page {
-        position: relative;
-        min-height: 100vh;
-        width: 100%;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 16px;
-        background: linear-gradient(135deg, #081120, #10264d, #183b72, #10264d);
-    }
-
-    .blob {
-        position: absolute;
-        width: 300px;
-        height: 300px;
-        border-radius: 50%;
-        filter: blur(140px);
-        opacity: .35;
-        pointer-events: none;
-    }
-    .blob-tl { top: -80px; left: -80px; background: #2563EB; }
-    .blob-br { bottom: -80px; right: -80px; background: #3357d8; }
-
-    .login-card {
-        position: relative;
-        z-index: 10;
-        width: 100%;
-        background: rgba(255, 255, 255, .08);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, .15);
-        box-shadow: 0 15px 45px rgba(0, 0, 0, .35);
-        padding: 24px 26px 20px;
-    }
-
-    .avatar-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: linear-gradient(180deg, #3357d8, #2748bb);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, .25);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .avatar-icon i { font-size: 28px; color: #fff; }
-
-    .form-title {
-        text-align: center;
-        font-size: 24px;
-        font-weight: 700;
-        color: #fff;
-        margin: 0 0 4px;
-        line-height: 1.2;
-    }
-    .form-subtitle {
-        text-align: center;
-        font-size: 13px;
-        color: #D5DBF3;
-        margin: 0 0 18px;
-    }
-
-    .success-box {
-        background: rgba(34, 197, 94, .15);
-        border: 1px solid rgba(74, 222, 128, .3);
-        border-radius: 10px;
-        padding: 8px 12px;
-        margin-bottom: 12px;
-    }
-    .success-box p { color: #86EFAC; font-size: 12px; margin: 0; text-align: center; }
-
-    .error-box {
-        background: rgba(239, 68, 68, .1);
-        border: 1px solid rgba(248, 113, 113, .3);
-        border-radius: 10px;
-        padding: 8px 12px;
-        margin-bottom: 12px;
-    }
-    .error-box p { color: #FCA5A5; font-size: 12px; margin: 0; }
-
-    .input-group { margin-bottom: 12px; }
-    .input-group label {
-        display: block;
-        font-size: 12px;
-        color: #D5DBF3;
-        margin-bottom: 4px;
-        font-weight: 500;
-    }
-
-    .input-wrap { position: relative; }
-    .input-wrap .icon-left {
-        position: absolute;
-        left: 14px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #AEB8D8;
-        font-size: 15px;
-    }
-    .input-wrap input {
-        width: 100%;
-        height: 42px;
-        border-radius: 10px;
-        background: rgba(255, 255, 255, .07);
-        border: 1px solid rgba(255, 255, 255, .15);
-        color: #fff;
-        padding: 0 38px;
-        font-size: 13px;
-    }
-    .input-wrap input:focus {
-        outline: none;
-        border-color: #3B82F6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, .15);
-    }
-    .toggle-eye {
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: none;
-        border: none;
-        color: #AEB8D8;
-        cursor: pointer;
-        font-size: 15px;
-    }
-
-    .btn-login {
-        width: 100%;
-        height: 42px;
-        border: none;
-        border-radius: 10px;
-        background: linear-gradient(180deg, #2563EB, #1D4ED8);
-        color: #fff;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-    }
-
-    .spinner { width: 16px; height: 16px; animation: spin 0.7s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .hidden { display: none !important; }
-
-    .footer-text { text-align: center; font-size: 12px; color: #D5DBF3; margin-top: 14px; }
-    .footer-text a { color: #fff; font-weight: 600; text-decoration: none; }
-
-    .copyright-text { text-align: center; font-size: 11px; color: rgba(213, 219, 243, .4); margin-top: 12px; }
-</style>
-@endsection
-
 @section('extra-js')
 <script>
-    function setupToggle(buttonId, inputId) {
-        const btn = document.getElementById(buttonId);
+document.addEventListener('DOMContentLoaded', function () {
+    function setupToggle(btnId, inputId) {
+        const btn = document.getElementById(btnId);
         const input = document.getElementById(inputId);
-        btn.addEventListener('click', function (e) {
-            e.preventDefault();
+        btn?.addEventListener('click', function () {
             const icon = btn.querySelector('i');
             if (input.type === 'password') {
                 input.type = 'text';
-                icon.classList.remove('bi-eye');
-                icon.classList.add('bi-eye-slash');
+                icon.className = 'bi bi-eye-slash';
             } else {
                 input.type = 'password';
-                icon.classList.remove('bi-eye-slash');
-                icon.classList.add('bi-eye');
+                icon.className = 'bi bi-eye';
             }
         });
     }
     setupToggle('togglePassword', 'password');
     setupToggle('toggleConfirmPassword', 'password_confirmation');
-
-    const form = document.getElementById('resetDirectForm');
-    const btn = document.getElementById('resetBtn');
-    const btnText = document.getElementById('btnText');
-    const btnSpinner = document.getElementById('btnSpinner');
-
-    form.addEventListener('submit', function () {
-        btn.disabled = true;
-        btnText.classList.add('hidden');
-        btnSpinner.classList.remove('hidden');
-    });
+});
 </script>
 @endsection

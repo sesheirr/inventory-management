@@ -49,17 +49,21 @@ class ProfileController extends Controller
 
     private function storeAvatar($file, $user): string
     {
-        if (app()->runningUnitTests()) {
+        if (app()->runningUnitTests() || empty(env('CLOUDINARY_CLOUD_NAME'))) {
             return \Illuminate\Support\Facades\Storage::disk('public')->putFile('avatars', $file);
         }
 
-        $avatarUrl = $this->uploadAvatarToCloudinary($file);
+        try {
+            $avatarUrl = $this->uploadAvatarToCloudinary($file);
 
-        if (empty($avatarUrl)) {
-            throw new \RuntimeException('Gagal mengunggah foto profil ke Cloudinary. Periksa konfigurasi CLOUDINARY_URL atau variabel Cloudinary Anda.');
+            if (!empty($avatarUrl)) {
+                return $avatarUrl;
+            }
+        } catch (\Throwable $e) {
+            // Fallback ke local storage jika Cloudinary gagal
         }
 
-        return $avatarUrl;
+        return \Illuminate\Support\Facades\Storage::disk('public')->putFile('avatars', $file);
     }
 
     private function uploadAvatarToCloudinary($file)
