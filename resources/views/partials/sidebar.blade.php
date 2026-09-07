@@ -38,6 +38,26 @@
                 </a>
 
                 @if(!auth()->user()->isSuperAdmin())
+                {{-- Ruangan --}}
+                <a href="{{ route('rooms.index') }}"
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
+                   {{ request()->routeIs('rooms.*')
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-blue-600 dark:hover:text-blue-400' }}">
+                    <i class="bi bi-building text-base {{ request()->routeIs('rooms.*') ? 'text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' }}"></i>
+                    <span>Ruangan</span>
+                </a>
+
+                {{-- Kategori --}}
+                <a href="{{ route('categories.index') }}"
+                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
+                   {{ request()->routeIs('categories.*')
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-blue-600 dark:hover:text-blue-400' }}">
+                    <i class="bi bi-tags text-base {{ request()->routeIs('categories.*') ? 'text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' }}"></i>
+                    <span>Kategori</span>
+                </a>
+
                 {{-- Barang --}}
                 <a href="{{ route('products.index') }}"
                    class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
@@ -56,26 +76,6 @@
                       : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-blue-600 dark:hover:text-blue-400' }}">
                     <i class="bi bi-qr-code-scan text-base {{ request()->routeIs('products.scan') ? 'text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' }}"></i>
                     <span>Scan Barcode</span>
-                </a>
-
-                {{-- Kategori --}}
-                <a href="{{ route('categories.index') }}"
-                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
-                   {{ request()->routeIs('categories.*')
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold'
-                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-blue-600 dark:hover:text-blue-400' }}">
-                    <i class="bi bi-tags text-base {{ request()->routeIs('categories.*') ? 'text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' }}"></i>
-                    <span>Kategori</span>
-                </a>
-
-                {{-- Ruangan --}}
-                <a href="{{ route('rooms.index') }}"
-                   class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
-                   {{ request()->routeIs('rooms.*')
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold'
-                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-blue-600 dark:hover:text-blue-400' }}">
-                    <i class="bi bi-building text-base {{ request()->routeIs('rooms.*') ? 'text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' }}"></i>
-                    <span>Ruangan</span>
                 </a>
 
                 {{-- Mutasi Barang --}}

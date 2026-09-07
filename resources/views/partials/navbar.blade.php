@@ -5,17 +5,11 @@
         $showBackButton = false;
     } elseif (Route::is('reports.index') || Route::is('reports.*')) {
         $showBackButton = true;
-    } elseif (Route::is('products.index')) {
-        $showBackButton = false;
-    } elseif (Route::is('products.*')) {
+    } elseif (Route::is('products.index') || Route::is('products.*')) {
         $showBackButton = true;
-    } elseif (Route::is('categories.index')) {
-        $showBackButton = false;
-    } elseif (Route::is('categories.*')) {
+    } elseif (Route::is('categories.index') || Route::is('categories.*')) {
         $showBackButton = true;
-    } elseif (Route::is('rooms.index')) {
-        $showBackButton = false;
-    } elseif (Route::is('rooms.*')) {
+    } elseif (Route::is('rooms.index') || Route::is('rooms.*')) {
         $showBackButton = true;
     } elseif (Route::is('mutations.index') || Route::is('mutations.*')) {
         $showBackButton = true;
