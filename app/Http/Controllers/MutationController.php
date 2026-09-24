@@ -18,6 +18,7 @@ class MutationController extends Controller
         $categoryId = $request->input('category_id');
         $roomId = $request->input('room_id');
         $type = $request->input('type');
+        $status = $request->input('status');
         $search = trim((string) $request->input('search', ''));
 
         $categories = \App\Models\Category::orderBy('name')->get();
@@ -50,6 +51,10 @@ class MutationController extends Controller
             $mutationQuery->where('type', $type);
         }
 
+        if ($status) {
+            $mutationQuery->where('status', $status);
+        }
+
         if ($search !== '') {
             $mutationQuery->where(function ($query) use ($search) {
                 $query->whereHas('product', function ($query) use ($search) {
@@ -60,7 +65,14 @@ class MutationController extends Controller
             });
         }
 
-        $mutations = $mutationQuery->latest('mutation_date')->paginate(10)->withQueryString();
+        // Yang paling baru ditambahkan tampil paling atas.
+        // (mutation_date hanya berisi tanggal tanpa jam, jadi tidak cukup untuk mengurutkan
+        // data di hari yang sama. id dipakai sebagai pembeda agar urutan selalu stabil.)
+        $mutations = $mutationQuery
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->paginate(10)
+            ->withQueryString();
 
         return view('mutations.index', compact(
             'mutations',
@@ -71,6 +83,7 @@ class MutationController extends Controller
             'categoryId',
             'roomId',
             'type',
+            'status',
             'search'
         ));
     }
@@ -104,7 +117,7 @@ class MutationController extends Controller
             throw ValidationException::withMessages(['product_id' => 'Barang tidak ditemukan.']);
         }
 
-        $isAdminAction = in_array(auth()->user()->role, ['admin', 'superadmin'], true);
+        $isAdminAction = auth()->user()->isAdmin();
         $type = $data['type'];
         $toRoomId = $data['to_room_id'] ?? null;
 
@@ -154,23 +167,9 @@ class MutationController extends Controller
         return redirect()->route('mutations.index')->with('success', 'Pengajuan mutasi berhasil dikirim dan menunggu persetujuan admin.');
     }
 
-    public function approvals()
-    {
-        if (!in_array(auth()->user()->role, ['admin', 'superadmin'], true)) {
-            abort(403, 'Anda tidak memiliki izin untuk melihat halaman approval mutasi.');
-        }
-
-        $mutations = Mutation::with(['product.category', 'product.room', 'fromRoom', 'toRoom', 'user', 'approver'])
-            ->where('status', 'pending')
-            ->latest('mutation_date')
-            ->get();
-
-        return view('mutations.approvals', compact('mutations'));
-    }
-
     public function approve(Mutation $mutation)
     {
-        if (!in_array(auth()->user()->role, ['admin', 'superadmin'], true)) {
+        if (!auth()->user()->isAdmin()) {
             abort(403, 'Anda tidak memiliki izin untuk memproses persetujuan mutasi.');
         }
 
@@ -187,7 +186,7 @@ class MutationController extends Controller
 
     public function reject(Request $request, Mutation $mutation)
     {
-        if (!in_array(auth()->user()->role, ['admin', 'superadmin'], true)) {
+        if (!auth()->user()->isAdmin()) {
             abort(403, 'Anda tidak memiliki izin untuk memproses persetujuan mutasi.');
         }
 

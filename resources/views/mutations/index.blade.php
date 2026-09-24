@@ -104,6 +104,7 @@
     </div>
 
     {{-- Main Mutations Data Table --}}
+    <div id="mutationResults" class="transition-opacity duration-150">
     <div class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-sm overflow-hidden">
         
         {{-- Desktop Table View --}}
@@ -333,9 +334,11 @@
             </div>
         </div>
     </div>
+    </div>
 </div>
 
 {{-- Rejection & Reason Modals --}}
+<div id="mutationModals">
 @foreach($mutations as $mutation)
     @if($mutation->status === 'pending' && (auth()->user()->isAdmin() || auth()->user()->isSuperAdmin()))
         <div id="rejectModal{{ $mutation->id }}" class="modal-container fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
@@ -399,6 +402,7 @@
         </div>
     @endif
 @endforeach
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -417,32 +421,146 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    const filterForm = document.getElementById('filterForm');
+    // ---------------------------------------------------------------
+    // Pencarian & filter otomatis TANPA reload halaman (AJAX)
+    // Input tetap fokus, jadi bisa mengetik dengan lancar.
+    // ---------------------------------------------------------------
+    const SEARCH_MIN_CHARS = 2;    // pencarian baru jalan setelah minimal 2 huruf
+    const SEARCH_DELAY_MS  = 500;  // jeda setelah berhenti mengetik
+    const CLEAR_DELAY_MS   = 300;  // jeda saat kolom dikosongkan (reset)
+
+    const filterForm     = document.getElementById('filterForm');
     const realtimeSearch = document.getElementById('realtimeSearch');
-    const baseUrl = "{{ route('mutations.index') }}";
-
-    function updateResults() {
-        if (!filterForm) return;
-        const formData = new FormData(filterForm);
-        const params = new URLSearchParams();
-
-        for (const [key, value] of formData.entries()) {
-            if (value !== null && value !== '') {
-                params.append(key, value);
-            }
-        }
-        const queryString = params.toString();
-        window.location.href = queryString ? `${baseUrl}?${queryString}` : baseUrl;
-    }
+    const resultsBox     = document.getElementById('mutationResults');
+    const modalsBox      = document.getElementById('mutationModals');
+    const baseUrl        = "{{ route('mutations.index') }}";
 
     let debounceTimer = null;
-    realtimeSearch?.addEventListener('input', function () {
+    let controller    = null;
+    let isComposing   = false;
+
+    function buildUrl() {
+        const params = new URLSearchParams();
+        for (const [key, value] of new FormData(filterForm).entries()) {
+            if (value !== null && String(value).trim() !== '') params.append(key, String(value).trim());
+        }
+        const qs = params.toString();
+        return qs ? `${baseUrl}?${qs}` : baseUrl;
+    }
+
+    let lastUrl = buildUrl();
+
+    // Modal di dalam hasil ikut diganti saat data diperbarui, jadi di-bind ulang.
+    function bindModals(scope) {
+        scope.querySelectorAll('[data-modal-target]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const modal = document.getElementById(btn.getAttribute('data-modal-target'));
+                if (modal) {
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                    document.body.classList.add('overflow-hidden');
+                }
+            });
+        });
+        scope.querySelectorAll('[data-modal-close]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const modal = btn.closest('.modal-container');
+                if (modal) {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    document.body.classList.remove('overflow-hidden');
+                }
+            });
+        });
+        scope.querySelectorAll('.modal-container').forEach(modal => {
+            modal.addEventListener('click', e => {
+                if (e.target === modal) {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    document.body.classList.remove('overflow-hidden');
+                }
+            });
+        });
+    }
+
+    async function updateResults(url = buildUrl(), { force = false } = {}) {
+        if (!resultsBox || !filterForm) return;
+        if (!force && url === lastUrl) return; // tidak ada perubahan, tidak perlu request
+
+        if (controller) controller.abort();     // batalkan request lama yang belum selesai
+        const myController = controller = new AbortController();
+        resultsBox.classList.add('opacity-60');
+        resultsBox.setAttribute('aria-busy', 'true');
+
+        try {
+            const res = await fetch(url, {
+                headers: { 'Accept': 'text/html' },
+                credentials: 'same-origin',
+                signal: myController.signal,
+            });
+
+            // Sesi habis -> server mengarahkan ke halaman login, ikuti saja.
+            if (res.redirected && !res.url.startsWith(baseUrl)) {
+                window.location.href = res.url;
+                return;
+            }
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+
+            const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+            const newResults = doc.getElementById('mutationResults');
+            if (!newResults) throw new Error('Format respons tidak dikenali');
+
+            resultsBox.innerHTML = newResults.innerHTML;
+            if (modalsBox) modalsBox.innerHTML = doc.getElementById('mutationModals')?.innerHTML ?? '';
+
+            bindModals(resultsBox);
+            if (modalsBox) bindModals(modalsBox);
+
+            lastUrl = url;
+            history.replaceState(null, '', url);
+        } catch (err) {
+            if (err.name === 'AbortError') return;  // digantikan request yang lebih baru
+            window.location.href = url;             // cadangan: muat ulang halaman penuh
+        } finally {
+            if (controller === myController) {
+                resultsBox.classList.remove('opacity-60');
+                resultsBox.removeAttribute('aria-busy');
+            }
+        }
+    }
+
+    // --- Ketik di kolom pencarian: tunggu berhenti mengetik, minimal beberapa huruf ---
+    function scheduleSearch() {
         clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(updateResults, 350);
+        if (isComposing) return; // sedang mengetik dengan IME (mis. keyboard HP)
+        const len = realtimeSearch.value.trim().length;
+        if (len > 0 && len < SEARCH_MIN_CHARS) return; // terlalu pendek, tunggu huruf berikutnya
+        debounceTimer = setTimeout(() => updateResults(), len === 0 ? CLEAR_DELAY_MS : SEARCH_DELAY_MS);
+    }
+
+    realtimeSearch?.addEventListener('input', scheduleSearch);
+    realtimeSearch?.addEventListener('compositionstart', () => { isComposing = true; });
+    realtimeSearch?.addEventListener('compositionend', () => { isComposing = false; scheduleSearch(); });
+
+    // Enter = cari sekarang juga (tanpa reload halaman)
+    filterForm?.addEventListener('submit', function (e) {
+        e.preventDefault();
+        clearTimeout(debounceTimer);
+        updateResults();
     });
 
+    // Filter tanggal / kategori / ruangan / jenis / status: langsung, tanpa jeda
     document.querySelectorAll('.trigger-auto-submit').forEach(el => {
-        el.addEventListener('change', updateResults);
+        el.addEventListener('change', () => { clearTimeout(debounceTimer); updateResults(); });
+    });
+
+    // Pagination juga tanpa reload halaman
+    resultsBox?.addEventListener('click', function (e) {
+        const link = e.target.closest('a[href*="page="]');
+        if (!link || e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
+        e.preventDefault();
+        clearTimeout(debounceTimer);
+        updateResults(link.href).then(() => resultsBox.scrollIntoView({ behavior: 'smooth', block: 'start' }));
     });
 });
 </script>
