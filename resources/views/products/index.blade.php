@@ -29,35 +29,36 @@
 
             {{-- Action Buttons Toolbar --}}
             <div class="flex items-center flex-wrap gap-2 justify-end">
-                {{-- Delete Mode Toggle --}}
-                <button type="button" 
-                        id="delete-mode-toggle" 
-                        class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-900/40 transition-colors cursor-pointer">
-                    <i class="bi bi-trash"></i>
-                    <span>Mode Hapus</span>
-                </button>
-
-                {{-- Bulk Delete Controls (Hidden until delete mode is enabled) --}}
-                <div id="delete-toolbar" class="hidden items-center gap-2">
+                @if(!auth()->user()->isAdmin())
+                    {{-- Delete Mode Toggle --}}
                     <button type="button" 
-                            id="select-all-btn" 
-                            class="px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer">
-                        Pilih Semua
-                    </button>
-                    
-                    <button type="button" 
-                            id="btn-bulk-delete" 
-                            data-modal-target="bulkDeleteModal"
-                            disabled 
-                            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-50 disabled:pointer-events-none transition-colors cursor-pointer">
-                        <i class="bi bi-trash-fill"></i>
-                        <span>Hapus Pilihan</span>
+                            id="delete-mode-toggle"
+                            class="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-900/40 transition-colors cursor-pointer">
+                        <i class="bi bi-trash"></i>
+                        <span>Mode Hapus</span>
                     </button>
 
-                    <span id="selected-summary" class="text-xs font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                        0 dipilih
-                    </span>
-                </div>
+                    {{-- Bulk Delete Controls (Hidden until delete mode is enabled) --}}
+                    <div id="delete-toolbar" class="hidden items-center gap-2">
+                            <button type="button"
+                                id="select-all-btn"
+                                class="px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                            Pilih Semua
+                        </button>
+                        <button type="button"
+                            id="btn-bulk-delete"
+                                data-modal-target="bulkDeleteModal"
+                                disabled
+                                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-50 disabled:pointer-events-none transition-colors cursor-pointer">
+                            <i class="bi bi-trash-fill"></i>
+                            <span>Hapus Pilihan</span>
+                        </button>
+
+                        <span id="selected-summary" class="text-xs font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                            0 dipilih
+                        </span>
+                    </div>
+                @endif
 
                 {{-- Export Excel Button --}}
                 <a id="export-btn" 
@@ -285,7 +286,7 @@
 </div>
 
 {{-- Single Delete Modals for Products --}}
-@if(auth()->user()->isAdmin())
+@if(!auth()->user()->isAdmin())
     @foreach($products as $product)
         <div id="deleteModal{{ $product->id }}" class="modal-container fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
             <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 text-center animate-fade-in">
@@ -320,6 +321,7 @@
 @endif
 
 {{-- Bulk Delete Modal --}}
+@if(!auth()->user()->isAdmin())
 <div id="bulkDeleteModal" class="modal-container fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
     <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 text-center animate-fade-in">
         <button type="button" data-modal-close class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
@@ -349,6 +351,7 @@
         </div>
     </div>
 </div>
+@endif
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {

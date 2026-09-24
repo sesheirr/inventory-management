@@ -68,11 +68,6 @@ Route::middleware('guest')->group(function () {
 // Note: Registered before generic param routes to avoid /create matching /{id}
 // ==========================================
 Route::middleware(['auth', 'admin'])->group(function () {
-    // Produk (Hapus)
-    Route::post('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected');
-    Route::delete('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected.delete');
-    Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
-
     // Kategori & Ruangan (Manajemen Penuh: Tambah, Ubah, Hapus)
     Route::resource('categories', CategoryController::class)->only(['edit', 'update', 'destroy']);
     Route::resource('rooms', RoomController::class)->except(['index', 'show']);
@@ -125,6 +120,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/scan-barcode', [ProductController::class, 'scanBarcode'])->name('products.scan');
     Route::post('/scan-barcode/cari', [ProductController::class, 'scanBarcodeSearch'])->name('products.scan.search');
     Route::get('products/export-excel', [ProductController::class, 'exportExcel'])->name('products.export');
+    Route::post('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected');
+    Route::delete('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected.delete');
+    Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
     Route::resource('products', ProductController::class)->except(['destroy']);
     Route::get('/products/{product}/barcode/print', [ProductController::class, 'printBarcode'])->name('products.barcode.print');
 
