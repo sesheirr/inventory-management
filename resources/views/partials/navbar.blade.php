@@ -3,8 +3,6 @@
 
     if (Route::is('dashboard')) {
         $showBackButton = false;
-    } elseif (Route::is('reports.index') || Route::is('reports.*')) {
-        $showBackButton = true;
     } elseif (Route::is('products.index') || Route::is('products.*')) {
         $showBackButton = true;
     } elseif (Route::is('categories.index') || Route::is('categories.*')) {
@@ -54,9 +52,8 @@
                 @elseif(Route::is('categories.*')) Kategori Barang
                 @elseif(Route::is('rooms.*')) Manajemen Ruangan
                 @elseif(Route::is('mutations.*')) Mutasi & Distribusi Barang
-                @elseif(Route::is('reports.*')) Laporan Inventaris
-                @elseif(Route::is('activity-logs.*')) Log Aktivitas Sistem
                 @elseif(Route::is('users.*')) Manajemen Akun Pengguna
+                @elseif(Route::is('activity-logs.*')) Log Aktivitas Sistem
                 @elseif(Route::is('profile.*')) Profil Pengguna
                 @elseif(Route::is('settings')) Pengaturan Sistem
                 @else Sistem Informasi Inventaris @endif

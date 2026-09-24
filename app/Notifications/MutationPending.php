@@ -25,7 +25,7 @@ class MutationPending extends Notification
     public function toDatabase($notifiable)
     {
         $productName = $this->mutation->product?->name ?? 'Barang';
-        $url = route('mutations.approvals');
+        $url = route('mutations.index', ['status' => 'pending']);
 
         return [
             'mutation_id' => $this->mutation->id,

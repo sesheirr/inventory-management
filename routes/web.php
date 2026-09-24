@@ -8,7 +8,6 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MutationController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Http\Request;
@@ -110,11 +109,9 @@ Route::middleware('auth')->group(function () {
         return view('settings', ['user' => auth()->user()]);
     })->name('settings');
 
-    // Profil & Laporan
+    // Profil
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
-    Route::get('reports/export-excel', [ReportController::class, 'exportExcel'])->name('reports.exportExcel');
 
     // Barcode & Products (Read / Standar User)
     Route::get('/scan-barcode', [ProductController::class, 'scanBarcode'])->name('products.scan');
@@ -132,7 +129,6 @@ Route::middleware('auth')->group(function () {
 
     // Mutasi Barang (Kecuali Hapus)
     Route::resource('mutations', MutationController::class)->except(['destroy']);
-    Route::get('/mutations/approvals', [MutationController::class, 'approvals'])->name('mutations.approvals');
 
     // Route Notifikasi
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
