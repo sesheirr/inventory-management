@@ -60,6 +60,24 @@
 
             {{-- Main Content --}}
             <main class="flex-1 px-4 sm:px-6 lg:px-8 py-6 max-w-[1600px] w-full mx-auto animate-fade-in">
+                @if($errors->any())
+                    <div class="mb-6 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 p-4 text-rose-700 dark:text-rose-300 shadow-sm">
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0 mt-0.5">
+                                <i class="bi bi-exclamation-triangle-fill text-sm"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-xs sm:text-sm font-bold text-rose-800 dark:text-rose-200">Terdapat kesalahan pada data yang dimasukkan:</h3>
+                                <ul class="mt-1.5 list-disc list-inside text-xs space-y-1 text-rose-600 dark:text-rose-300">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 @yield('content')
             </main>
 

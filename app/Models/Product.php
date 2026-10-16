@@ -7,8 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Traits\LogsActivity;
+use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+
 class Product extends Model implements HasMedia
 {
     use HasFactory;
@@ -68,6 +70,54 @@ class Product extends Model implements HasMedia
 
         $rawRoom = $this->attributes['room'] ?? null;
         return (is_string($rawRoom) && trim($rawRoom) !== '') ? trim($rawRoom) : null;
+    }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        $media = $this->getFirstMedia('images');
+        if (!$media) {
+            return null;
+        }
+
+        $relativePath = $media->id . '/' . $media->file_name;
+        try {
+            if (Storage::disk($media->disk)->exists($relativePath)) {
+                return '/storage/' . $media->id . '/' . rawurlencode($media->file_name);
+            }
+        } catch (\Throwable $e) {
+            // Fallback below
+        }
+
+        $legacyPath = $media->getCustomProperty('legacy_path');
+        if (is_string($legacyPath) && $legacyPath !== '') {
+            try {
+                if (Storage::disk('public')->exists($legacyPath)) {
+                    return '/storage/' . ltrim($legacyPath, '/');
+                }
+            } catch (\Throwable $e) {
+                // Fallback below
+            }
+        }
+
+        $dataUrl = $media->getCustomProperty('data_url');
+        if (is_string($dataUrl) && str_starts_with($dataUrl, 'data:image/')) {
+            return $dataUrl;
+        }
+
+        return '/storage/' . $media->id . '/' . rawurlencode($media->file_name);
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        if ($this->status === 'out_of_stock' || (int) $this->stock <= 0) {
+            return 'Stok Habis';
+        }
+
+        if ($this->status === 'active') {
+            return 'Aktif';
+        }
+
+        return 'Tidak Aktif';
     }
 
     public function mutations(): HasMany

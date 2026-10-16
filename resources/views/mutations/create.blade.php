@@ -23,16 +23,16 @@
                 </label>
                 <select name="product_id" required 
                         class="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors">
-                    <option value="" disabled selected>Pilih Barang yang Dimutasi</option>
+                    <option value="" disabled @selected(!old('product_id', $selectedProductId ?? null))>Pilih Barang yang Dimutasi</option>
                     @foreach($items as $item)
-                        <option value="{{ $item->id }}" @selected(old('product_id') == $item->id)>
+                        <option value="{{ $item->id }}" @selected(old('product_id', $selectedProductId ?? null) == $item->id)>
                             {{ $item->name }} 
                             @if(!empty($item->barcode))
                                 [Barcode: {{ $item->barcode }}]
                             @elseif(!empty($item->kode_barang))
                                 [Kode: {{ $item->kode_barang }}]
                             @endif
-                            — Stok: {{ $item->stock }}
+                            — Lokasi: {{ $item->room?->name ?? 'Belum ditentukan' }} — Stok: {{ $item->stock }}
                         </option>
                     @endforeach
                 </select>

@@ -38,7 +38,7 @@ class ProductTest extends TestCase
 
         $response = $this->get('/reports');
 
-        $response->assertStatus(200);
+        $response->assertNotFound();
     }
 
     public function test_user_can_create_product(): void

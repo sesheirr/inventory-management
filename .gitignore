@@ -29,3 +29,26 @@ Thumbs.db
 /storage/framework/sessions/*
 /storage/framework/views/*
 /storage/logs/*
+
+# Local SQLite databases
+database/database.sqlite
+database/database.sqlite-journal
+defaultdb
+
+# Bun lockfiles
+bun.lock
+bun.lockb
+
+# Local Docker overrides
+docker-compose.override.yml
+
+# Local documentation, scratchpad & workflow notes (LOCAL ONLY - DO NOT COMMIT)
+docs/local/
+*.local.md
+local-notes/
+WORKFLOW*.md
+TODO*.md
+SCRATCH*.md
+scratch/
+*.notes.md
+.notes/

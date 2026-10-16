@@ -43,7 +43,7 @@ class User extends Authenticatable
 
         $avatar = (string) $this->avatar;
 
-        if (str_starts_with($avatar, 'http://') || str_starts_with($avatar, 'https://')) {
+        if (str_starts_with($avatar, 'http://') || str_starts_with($avatar, 'https://') || str_starts_with($avatar, 'data:image/')) {
             return $avatar;
         }
 
@@ -52,10 +52,10 @@ class User extends Authenticatable
         }
 
         if (str_starts_with($avatar, 'storage/')) {
-            return asset($avatar);
+            return '/' . ltrim($avatar, '/');
         }
 
-        return Storage::url($avatar);
+        return '/storage/' . ltrim($avatar, '/');
     }
 
     public function isAdmin(): bool

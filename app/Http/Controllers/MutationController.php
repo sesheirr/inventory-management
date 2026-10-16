@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Mutation;
 use App\Models\Product;
 use App\Models\Room;
+use App\Models\User;
+use App\Notifications\MutationPending;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 
 class MutationController extends Controller
@@ -59,7 +62,11 @@ class MutationController extends Controller
             $mutationQuery->where(function ($query) use ($search) {
                 $query->whereHas('product', function ($query) use ($search) {
                     $query->where('name', 'like', "%{$search}%")
-                          ->orWhere('kode_barang', 'like', "%{$search}%");
+                          ->orWhere('kode_barang', 'like', "%{$search}%")
+                          ->orWhere('barcode', 'like', "%{$search}%");
+                })
+                ->orWhereHas('user', function ($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%");
                 })
                 ->orWhere('note', 'like', "%{$search}%");
             });
@@ -88,12 +95,13 @@ class MutationController extends Controller
         ));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        $items = Product::orderBy('name')->get();
+        $items = Product::with('room')->orderBy('name')->get();
         $rooms = Room::orderBy('name')->get();
+        $selectedProductId = $request->input('product_id');
 
-        return view('mutations.create', compact('items', 'rooms'));
+        return view('mutations.create', compact('items', 'rooms', 'selectedProductId'));
     }
 
     public function store(Request $request)
@@ -162,6 +170,18 @@ class MutationController extends Controller
 
         if ($isAdminAction) {
             return redirect()->route('mutations.index')->with('success', 'Mutasi berhasil dibuat dan otomatis disetujui karena Anda login sebagai admin.');
+        }
+
+        if ($mutation) {
+            try {
+                $mutation->load(['product', 'user']);
+                $admins = User::whereIn('role', ['admin', 'superadmin'])->get();
+                if ($admins->isNotEmpty()) {
+                    Notification::send($admins, new MutationPending($mutation));
+                }
+            } catch (\Throwable $e) {
+                // Jangan gagalkan request mutasi jika pengiriman notifikasi gagal
+            }
         }
 
         return redirect()->route('mutations.index')->with('success', 'Pengajuan mutasi berhasil dikirim dan menunggu persetujuan admin.');

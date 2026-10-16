@@ -20,13 +20,8 @@
         <div class="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
         <div class="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-6 text-center sm:text-left">
             <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-white/20 border-2 border-white/40 shadow-md overflow-hidden flex items-center justify-center shrink-0">
-                @if(!empty($user->avatar))
-                    @php
-                        $avatarUrl = \Illuminate\Support\Str::startsWith($user->avatar, ['http://', 'https://'])
-                            ? $user->avatar
-                            : asset('storage/' . $user->avatar);
-                    @endphp
-                    <img src="{{ $avatarUrl }}" alt="{{ $user->name }}" class="w-full h-full object-cover">
+                @if(!empty($user->avatar_url))
+                    <img src="{{ $user->avatar_url }}" alt="{{ $user->name }}" class="w-full h-full object-cover">
                 @else
                     <span class="text-3xl font-extrabold">{{ strtoupper(substr($user->name ?? 'U', 0, 2)) }}</span>
                 @endif

@@ -2,10 +2,31 @@
 
 @section('content')
 <div class="space-y-6">
-    <div class="flex items-center justify-between pb-4 border-b border-slate-200/80 dark:border-slate-800/80">
-        <div>
-            <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Log Aktivitas Sistem</h1>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Audit trail seluruh operasi dan interaksi data oleh pengguna di sistem</p>
+    <div class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 p-4 sm:p-5 shadow-sm">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Log Aktivitas Sistem</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Audit trail seluruh operasi dan interaksi data oleh pengguna di sistem</p>
+            </div>
+
+            <form action="{{ route('activity-logs.index') }}" method="GET" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                <div class="relative w-full sm:w-64">
+                    <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="search" name="search" value="{{ $search ?? '' }}" placeholder="Cari pengguna atau aktivitas..."
+                           class="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40">
+                </div>
+                <select name="action" onchange="this.form.submit()" class="px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200">
+                    <option value="">Semua Aksi</option>
+                    <option value="created" @selected(($actionFilter ?? '') === 'created')>Dibuat</option>
+                    <option value="updated" @selected(($actionFilter ?? '') === 'updated')>Diperbarui</option>
+                    <option value="deleted" @selected(($actionFilter ?? '') === 'deleted')>Dihapus</option>
+                </select>
+                @if(!empty($search) || !empty($actionFilter))
+                    <a href="{{ route('activity-logs.index') }}" class="px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 text-center">
+                        Reset
+                    </a>
+                @endif
+            </form>
         </div>
     </div>
 
@@ -26,13 +47,8 @@
                         <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
                             <td class="px-6 py-3.5">
                                 <div class="flex items-center gap-3">
-                                    @if(!empty($log->user?->avatar))
-                                        @php
-                                            $avatarUrl = \Illuminate\Support\Str::startsWith($log->user->avatar, ['http://', 'https://'])
-                                                ? $log->user->avatar
-                                                : asset('storage/' . $log->user->avatar);
-                                        @endphp
-                                        <img src="{{ $avatarUrl }}" alt="{{ $log->user->name }}" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0">
+                                    @if(!empty($log->user?->avatar_url))
+                                        <img src="{{ $log->user->avatar_url }}" alt="{{ $log->user->name }}" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0">
                                     @else
                                         <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs flex items-center justify-center border border-slate-200 dark:border-slate-700 shrink-0">
                                             {{ strtoupper(substr($log->user?->name ?? 'S', 0, 1)) }}
@@ -77,13 +93,8 @@
                 <div class="p-4 space-y-2">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            @if(!empty($log->user?->avatar))
-                                @php
-                                    $avatarUrl = \Illuminate\Support\Str::startsWith($log->user->avatar, ['http://', 'https://'])
-                                        ? $log->user->avatar
-                                        : asset('storage/' . $log->user->avatar);
-                                @endphp
-                                <img src="{{ $avatarUrl }}" alt="{{ $log->user->name }}" class="w-6 h-6 rounded-full object-cover">
+                            @if(!empty($log->user?->avatar_url))
+                                <img src="{{ $log->user->avatar_url }}" alt="{{ $log->user->name }}" class="w-6 h-6 rounded-full object-cover">
                             @else
                                 <div class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 text-xs font-bold flex items-center justify-center">
                                     {{ strtoupper(substr($log->user?->name ?? 'S', 0, 1)) }}
@@ -99,6 +110,12 @@
                 <div class="p-8 text-center text-xs text-slate-400">Tidak ada log aktivitas.</div>
             @endforelse
         </div>
+
+        @if(method_exists($activityLogs, 'hasPages') && $activityLogs->hasPages())
+            <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800">
+                {{ $activityLogs->links() }}
+            </div>
+        @endif
     </div>
 </div>
 @endsection

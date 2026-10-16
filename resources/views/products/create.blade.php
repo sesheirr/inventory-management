@@ -34,17 +34,26 @@
 
                 {{-- Kategori --}}
                 <div class="space-y-1.5">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                        Kategori <span class="text-rose-500">*</span>
-                    </label>
-                    <select name="category_id" required 
-                            class="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors">
-                        <option value="" disabled selected>Pilih Kategori Barang</option>
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                            Kategori <span class="text-rose-500">*</span>
+                        </label>
+                        <button type="button" id="toggleNewCategoryBtn" class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
+                            + Kategori Baru
+                        </button>
+                    </div>
+                    <select name="category_id" id="categorySelect" @if($categories->isNotEmpty() && !old('category')) required @endif
+                            class="{{ ($categories->isEmpty() || old('category')) ? 'hidden' : '' }} w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors">
+                        <option value="" disabled @selected(!old('category_id'))>Pilih Kategori Barang</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>{{ $category->name }}</option>
                         @endforeach
                     </select>
+                    <input type="text" name="category" id="newCategoryInput" value="{{ old('category') }}"
+                           placeholder="Ketik nama kategori baru (contoh: Perangkat Jaringan)"
+                           class="{{ ($categories->isEmpty() || old('category')) ? '' : 'hidden' }} w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors placeholder-slate-400">
                     @error('category_id')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
+                    @error('category')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
                 </div>
 
                 {{-- Kapasitas / Subkategori --}}
@@ -60,17 +69,26 @@
 
                 {{-- Ruangan --}}
                 <div class="space-y-1.5">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                        Lokasi Ruangan <span class="text-rose-500">*</span>
-                    </label>
-                    <select name="room_id" required 
-                            class="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors">
-                        <option value="" disabled selected>Pilih Ruangan Penyimpanan</option>
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                            Lokasi Ruangan <span class="text-rose-500">*</span>
+                        </label>
+                        <button type="button" id="toggleNewRoomBtn" class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
+                            + Ruangan Baru
+                        </button>
+                    </div>
+                    <select name="room_id" id="roomSelect" @if($rooms->isNotEmpty() && !old('room')) required @endif
+                            class="{{ ($rooms->isEmpty() || old('room')) ? 'hidden' : '' }} w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors">
+                        <option value="" disabled @selected(!old('room_id'))>Pilih Ruangan Penyimpanan</option>
                         @foreach($rooms as $room)
                             <option value="{{ $room->id }}" @selected(old('room_id') == $room->id)>{{ $room->name }}</option>
                         @endforeach
                     </select>
+                    <input type="text" name="room" id="newRoomInput" value="{{ old('room') }}"
+                           placeholder="Ketik nama ruangan baru (contoh: Ruang Server & NOC)"
+                           class="{{ ($rooms->isEmpty() || old('room')) ? '' : 'hidden' }} w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors placeholder-slate-400">
                     @error('room_id')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
+                    @error('room')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
                 </div>
 
                 {{-- Jumlah Stok --}}
@@ -78,7 +96,7 @@
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                         Jumlah Stok Unit <span class="text-rose-500">*</span>
                     </label>
-                    <input type="number" min="0" name="stock" value="{{ old('stock', 0) }}" required 
+                    <input type="number" min="0" name="stock" value="{{ old('stock', 1) }}" required 
                            class="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors">
                     @error('stock')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
                 </div>
@@ -90,8 +108,9 @@
                     </label>
                     <select name="status" required 
                             class="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors">
-                        <option value="active" @selected(old('status') === 'active')>Aktif (Tersedia / Digunakan)</option>
+                        <option value="active" @selected(old('status', 'active') === 'active')>Aktif (Tersedia / Digunakan)</option>
                         <option value="inactive" @selected(old('status') === 'inactive')>Tidak Aktif (Rusak / Afkir)</option>
+                        <option value="out_of_stock" @selected(old('status') === 'out_of_stock')>Stok Habis (0 Unit)</option>
                     </select>
                     @error('status')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
                 </div>
@@ -111,9 +130,9 @@
             {{-- Foto Barang --}}
             <div class="space-y-1.5">
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                    Foto Barang
+                    Foto Barang <span class="text-[11px] font-normal text-slate-400">(JPG, PNG, WEBP — Maks. 5MB)</span>
                 </label>
-                <input type="file" name="image" accept="image/*" 
+                <input type="file" name="image" accept="image/jpeg,image/png,image/webp" 
                        class="w-full px-4 py-2 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-950/40 dark:file:text-blue-300 hover:file:bg-blue-100">
                 @error('image')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
             </div>
@@ -268,5 +287,51 @@ document.getElementById('btn-scan-camera')?.addEventListener('click', function()
 
 document.getElementById('btn-close-scanner')?.addEventListener('click', closeScannerModal);
 document.getElementById('btn-stop-scanner')?.addEventListener('click', closeScannerModal);
+
+const toggleNewCategoryBtn = document.getElementById('toggleNewCategoryBtn');
+const categorySelect = document.getElementById('categorySelect');
+const newCategoryInput = document.getElementById('newCategoryInput');
+
+toggleNewCategoryBtn?.addEventListener('click', function () {
+    const isInputVisible = !newCategoryInput.classList.contains('hidden');
+    if (isInputVisible && categorySelect.options.length > 1) {
+        newCategoryInput.classList.add('hidden');
+        newCategoryInput.value = '';
+        newCategoryInput.required = false;
+        categorySelect.classList.remove('hidden');
+        categorySelect.required = true;
+        this.textContent = '+ Kategori Baru';
+    } else {
+        categorySelect.classList.add('hidden');
+        categorySelect.required = false;
+        newCategoryInput.classList.remove('hidden');
+        newCategoryInput.required = true;
+        newCategoryInput.focus();
+        this.textContent = 'Pilih dari Daftar';
+    }
+});
+
+const toggleNewRoomBtn = document.getElementById('toggleNewRoomBtn');
+const roomSelect = document.getElementById('roomSelect');
+const newRoomInput = document.getElementById('newRoomInput');
+
+toggleNewRoomBtn?.addEventListener('click', function () {
+    const isInputVisible = !newRoomInput.classList.contains('hidden');
+    if (isInputVisible && roomSelect.options.length > 1) {
+        newRoomInput.classList.add('hidden');
+        newRoomInput.value = '';
+        newRoomInput.required = false;
+        roomSelect.classList.remove('hidden');
+        roomSelect.required = true;
+        this.textContent = '+ Ruangan Baru';
+    } else {
+        roomSelect.classList.add('hidden');
+        roomSelect.required = false;
+        newRoomInput.classList.remove('hidden');
+        newRoomInput.required = true;
+        newRoomInput.focus();
+        this.textContent = 'Pilih dari Daftar';
+    }
+});
 </script>
 @endsection

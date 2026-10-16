@@ -11,12 +11,15 @@ class RoomController extends Controller
     {
         $query = trim((string) $request->input('search', ''));
 
-        $rooms = Room::with('products')
+        $rooms = Room::with(['products' => fn ($q) => $q->with('category')->latest()])
             ->withCount('products')
             ->when($query !== '', function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('description', 'like', "%{$query}%")
                     ->orWhereHas('products', function ($productQuery) use ($query) {
-                        $productQuery->where('name', 'like', "%{$query}%");
+                        $productQuery->where('name', 'like', "%{$query}%")
+                            ->orWhere('kode_barang', 'like', "%{$query}%")
+                            ->orWhere('barcode', 'like', "%{$query}%");
                     });
             })
             ->orderBy('name')
@@ -46,7 +49,13 @@ class RoomController extends Controller
 
     public function show(Room $room)
     {
-        return view('rooms.show', compact('room'));
+        $room->loadCount('products');
+        $products = $room->products()
+            ->with(['category', 'media'])
+            ->latest()
+            ->paginate(10);
+
+        return view('rooms.show', compact('room', 'products'));
     }
 
     public function edit(Room $room)

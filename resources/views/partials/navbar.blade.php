@@ -61,23 +61,41 @@
         </div>
     </div>
 
-    {{-- Right Side: Theme Switcher & User Profile Chip --}}
-    <div class="flex items-center gap-3">
+    {{-- Right Side: Quick Actions, Notifications, Theme Switcher & User Profile Chip --}}
+    <div class="flex items-center gap-2.5">
+        @php
+            $unreadNotificationsCount = 0;
+            if ($currentUser) {
+                try {
+                    $unreadNotificationsCount = $currentUser->unreadNotifications()->count();
+                } catch (\Throwable $e) {
+                    $unreadNotificationsCount = 0;
+                }
+            }
+        @endphp
+
+        {{-- Notification Bell Button --}}
+        <a href="{{ route('notifications.index') }}"
+           class="relative w-9 h-9 rounded-xl flex items-center justify-center text-slate-600 dark:text-slate-300 bg-slate-100/80 dark:bg-slate-800/80 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-slate-700/80 dark:hover:text-blue-400 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+           title="Notifikasi Sistem">
+            <i class="bi bi-bell text-base"></i>
+            @if($unreadNotificationsCount > 0)
+                <span class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center shadow-sm">
+                    {{ $unreadNotificationsCount > 99 ? '99+' : $unreadNotificationsCount }}
+                </span>
+            @endif
+        </a>
+
         {{-- Theme Switcher Button (Desktop) --}}
-        <button type="button" id="darkModeToggle" class="hidden sm:flex w-9 h-9 rounded-xl items-center justify-center text-slate-600 dark:text-slate-300 bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200/80 dark:hover:bg-slate-700/80 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/40" title="Ganti Mode Tampilan (Gelap / Terang)">
+        <button type="button" id="darkModeToggle" class="hidden sm:flex w-9 h-9 rounded-xl items-center justify-center text-slate-600 dark:text-slate-300 bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200/80 dark:hover:bg-slate-700/80 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer" title="Ganti Mode Tampilan (Gelap / Terang)">
             <i id="themeIcon" class="bi bi-moon-stars text-base"></i>
         </button>
 
         {{-- User Profile Pill Link --}}
         <a href="{{ route('profile') }}" class="flex items-center gap-2.5 p-1.5 pr-3 rounded-full bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 hover:border-blue-400 dark:hover:border-blue-500/50 shadow-sm transition-all duration-150 group">
             <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shadow-sm overflow-hidden shrink-0">
-                @if(!empty($currentUser?->avatar))
-                    @php
-                        $avatarUrl = \Illuminate\Support\Str::startsWith($currentUser->avatar, ['http://', 'https://'])
-                            ? $currentUser->avatar
-                            : asset('storage/' . $currentUser->avatar);
-                    @endphp
-                    <img src="{{ $avatarUrl }}" alt="{{ $currentUser->name }}" class="w-full h-full object-cover">
+                @if(!empty($currentUser?->avatar_url))
+                    <img src="{{ $currentUser->avatar_url }}" alt="{{ $currentUser->name }}" class="w-full h-full object-cover">
                 @else
                     <span>{{ strtoupper(substr($currentUser->name ?? 'U', 0, 2)) }}</span>
                 @endif

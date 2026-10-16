@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
 <div class="space-y-6">
@@ -44,8 +44,10 @@
                                     <i class="bi bi-tag"></i>
                                 </div>
                                 <div>
-                                    <h3 class="text-base font-bold text-slate-900 dark:text-white leading-tight">{{ $category->name }}</h3>
-                                    <span class="text-xs font-semibold text-blue-600 dark:text-blue-400">{{ $category->products_count }} total barang</span>
+                                    <a href="{{ route('categories.show', $category) }}" class="text-base font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 leading-tight transition-colors">
+                                        {{ $category->name }}
+                                    </a>
+                                    <div class="text-xs font-semibold text-blue-600 dark:text-blue-400">{{ $category->products_count }} total barang</div>
                                 </div>
                             </div>
 
@@ -70,25 +72,29 @@
                             @endif
                         </div>
 
+                        @if($category->description)
+                            <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-2">{{ $category->description }}</p>
+                        @endif
+
                         {{-- Product Preview Items --}}
                         @if($category->products->isEmpty())
                             <p class="text-xs text-slate-400 dark:text-slate-500 italic py-2">Belum ada barang di kategori ini.</p>
                         @else
                             <div class="space-y-1.5 my-3 pt-2 border-t border-slate-100 dark:border-slate-800/80">
                                 @foreach($category->products->take(3) as $product)
-                                    <div class="flex items-center justify-between text-xs py-1">
-                                        <span class="text-slate-700 dark:text-slate-300 truncate max-w-[180px]">{{ $product->name }}</span>
+                                    <a href="{{ route('products.show', $product) }}" class="flex items-center justify-between text-xs py-1 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                        <span class="text-slate-700 dark:text-slate-300 truncate max-w-[180px] hover:underline">{{ $product->name }}</span>
                                         <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                                             {{ $product->stock }} unit
                                         </span>
-                                    </div>
+                                    </a>
                                 @endforeach
                             </div>
                         @endif
                     </div>
 
                     <div class="pt-3 border-t border-slate-100 dark:border-slate-800/80 mt-2">
-                        <a href="{{ route('products.index', ['search' => $category->name, 'from' => 'categories']) }}" class="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
+                        <a href="{{ route('products.index', ['category_id' => $category->id, 'from' => 'categories']) }}" class="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
                             <span>Lihat Semua Barang</span>
                             <i class="bi bi-arrow-right text-[10px]"></i>
                         </a>

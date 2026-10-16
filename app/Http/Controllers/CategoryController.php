@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -12,12 +13,15 @@ class CategoryController extends Controller
     {
         $query = trim((string) $request->input('search', ''));
 
-        $categories = Category::with(['products.room'])
+        $categories = Category::with(['products' => fn ($q) => $q->with('room')->latest()])
             ->withCount('products')
             ->when($query !== '', function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('description', 'like', "%{$query}%")
                     ->orWhereHas('products', function ($productQuery) use ($query) {
                         $productQuery->where('name', 'like', "%{$query}%")
+                            ->orWhere('kode_barang', 'like', "%{$query}%")
+                            ->orWhere('barcode', 'like', "%{$query}%")
                             ->orWhere('subcategory', 'like', "%{$query}%")
                             ->orWhere('description', 'like', "%{$query}%")
                             ->orWhereHas('room', function ($roomQuery) use ($query) {
@@ -52,7 +56,13 @@ class CategoryController extends Controller
 
     public function show(Category $category)
     {
-        return view('categories.show', compact('category'));
+        $category->loadCount('products');
+        $products = $category->products()
+            ->with(['room', 'media'])
+            ->latest()
+            ->paginate(10);
+
+        return view('categories.show', compact('category', 'products'));
     }
 
     public function edit(Category $category)
@@ -69,6 +79,10 @@ class CategoryController extends Controller
 
         $data['name'] = trim((string) $data['name']);
         $category->update($data);
+
+        Product::where('category_id', $category->id)->update([
+            'category' => $category->name,
+        ]);
 
         return redirect()->route('categories.index')->with('success', 'Kategori berhasil diperbarui.');
     }

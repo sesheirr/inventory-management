@@ -51,6 +51,24 @@
                 </a>
             </div>
         </div>
+
+        {{-- Quick Find Inventory Bar inside Hero --}}
+        <form action="{{ route('products.index') }}" method="GET" class="relative z-10 mt-6 pt-5 border-t border-white/15">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                <div class="relative flex-1">
+                    <i class="bi bi-search absolute left-4 top-1/2 -translate-y-1/2 text-blue-200 text-sm pointer-events-none"></i>
+                    <input type="search" name="search" placeholder="Cari barang inventaris berdasarkan nama, kode barang, barcode, ruangan, atau kategori..."
+                           class="w-full pl-11 pr-4 py-3 rounded-2xl text-xs sm:text-sm bg-white/15 hover:bg-white/20 focus:bg-white text-white focus:text-slate-900 placeholder-blue-100/80 focus:placeholder-slate-400 border border-white/25 focus:border-white focus:outline-none focus:ring-4 focus:ring-white/20 backdrop-blur-md transition-all"
+                           autocomplete="off">
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold text-blue-700 bg-white hover:bg-blue-50 shadow-md shadow-blue-950/20 active:scale-95 transition-all cursor-pointer shrink-0">
+                        <i class="bi bi-search"></i>
+                        <span>Cari Barang</span>
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 
     {{-- Metric Stat Cards (4 Grid) --}}
@@ -120,8 +138,15 @@
             <div class="flex items-center justify-between">
                 <div>
                     <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Mutasi</span>
-                    <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-1.5 tracking-tight">
-                        {{ number_format($totalMutations) }}
+                    <div class="flex items-baseline gap-2 mt-1.5">
+                        <span class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                            {{ number_format($totalMutations) }}
+                        </span>
+                        @if(($pendingMutationsCount ?? 0) > 0)
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400">
+                                {{ $pendingMutationsCount }} pending
+                            </span>
+                        @endif
                     </div>
                 </div>
                 <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xl shadow-inner group-hover:scale-110 transition-transform duration-200 shrink-0">
@@ -132,6 +157,114 @@
                 <a href="{{ route('mutations.index') }}" class="text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
                     Riwayat perpindahan <i class="bi bi-arrow-right text-[10px]"></i>
                 </a>
+            </div>
+        </div>
+    </div>
+
+    {{-- Recent Products & Low Stock Attention Grid --}}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {{-- Barang Terbaru Ditambahkan --}}
+        <div class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-sm overflow-hidden flex flex-col justify-between">
+            <div>
+                <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                    <div>
+                        <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i class="bi bi-box-seam text-blue-600 dark:text-blue-400"></i>
+                            <span>Barang Terbaru Ditambahkan</span>
+                        </h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Aset yang baru didaftarkan ke dalam inventaris</p>
+                    </div>
+                    <a href="{{ route('products.index') }}" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline shrink-0">
+                        Lihat Semua
+                    </a>
+                </div>
+
+                <div class="divide-y divide-slate-100 dark:divide-slate-800">
+                    @forelse($recentProducts ?? [] as $item)
+                        <a href="{{ route('products.show', $item) }}" class="flex items-center justify-between gap-3 px-5 py-3.5 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                            <div class="flex items-center gap-3 min-w-0">
+                                @if($item->image_url)
+                                    <img src="{{ $item->image_url }}" alt="{{ $item->name }}" class="w-10 h-10 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0">
+                                @else
+                                    <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                                        <i class="bi bi-box-seam"></i>
+                                    </div>
+                                @endif
+                                <div class="min-w-0">
+                                    <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">{{ $item->name }}</div>
+                                    <div class="flex flex-wrap items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                        <span><i class="bi bi-tag me-1"></i>{{ $item->category?->name ?? $item->getRawOriginal('category') ?? 'Tanpa Kategori' }}</span>
+                                        <span>•</span>
+                                        <span><i class="bi bi-geo-alt me-1"></i>{{ $item->room?->name ?? 'Belum ditentukan' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold {{ $item->stock > 5 ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' : ($item->stock > 0 ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400') }}">
+                                    {{ $item->stock }} unit
+                                </span>
+                                @if($item->barcode || $item->kode_barang)
+                                    <div class="text-[10px] font-mono text-slate-400 mt-0.5">{{ $item->barcode ?: $item->kode_barang }}</div>
+                                @endif
+                            </div>
+                        </a>
+                    @empty
+                        <div class="p-8 text-center text-xs text-slate-400">
+                            Belum ada data barang yang terdaftar.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+
+        {{-- Perlu Perhatian: Stok Menipis / Habis --}}
+        <div class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-sm overflow-hidden flex flex-col justify-between">
+            <div>
+                <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                    <div>
+                        <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i class="bi bi-exclamation-triangle text-amber-500"></i>
+                            <span>Perhatian Stok Barang</span>
+                        </h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Barang dengan stok menipis (&le; 5 unit) atau stok habis</p>
+                    </div>
+                    <a href="{{ route('products.index', ['status' => 'low_stock']) }}" class="text-xs font-semibold text-amber-600 dark:text-amber-400 hover:underline shrink-0">
+                        Filter Stok Menipis
+                    </a>
+                </div>
+
+                <div class="divide-y divide-slate-100 dark:divide-slate-800">
+                    @forelse($lowStockProducts ?? [] as $lowItem)
+                        <a href="{{ route('products.show', $lowItem) }}" class="flex items-center justify-between gap-3 px-5 py-3.5 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                            <div class="min-w-0">
+                                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">{{ $lowItem->name }}</div>
+                                <div class="flex flex-wrap items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                    <span><i class="bi bi-geo-alt me-1"></i>{{ $lowItem->room?->name ?? 'Belum ditentukan' }}</span>
+                                    @if($lowItem->kode_barang)
+                                        <span>•</span>
+                                        <span class="font-mono">{{ $lowItem->kode_barang }}</span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="shrink-0">
+                                @if($lowItem->stock <= 0 || $lowItem->status === 'out_of_stock')
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400">
+                                        <i class="bi bi-x-circle"></i> Habis (0 unit)
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                                        <i class="bi bi-exclamation-circle"></i> Sisa {{ $lowItem->stock }} unit
+                                    </span>
+                                @endif
+                            </div>
+                        </a>
+                    @empty
+                        <div class="p-8 text-center text-xs text-emerald-600 dark:text-emerald-400">
+                            <i class="bi bi-check-circle-fill text-2xl mb-1.5 block"></i>
+                            Seluruh stok barang inventaris dalam kondisi mencukupi.
+                        </div>
+                    @endforelse
+                </div>
             </div>
         </div>
     </div>
@@ -155,10 +288,12 @@
                         </button>
                     </form>
                 @endif
-                <a href="{{ route('activity-logs.index') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                    <span>Lihat Semua Log</span>
-                    <i class="bi bi-arrow-right"></i>
-                </a>
+                @if(auth()->user()->isAdmin())
+                    <a href="{{ route('activity-logs.index') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                        <span>Lihat Semua Log</span>
+                        <i class="bi bi-arrow-right"></i>
+                    </a>
+                @endif
             </div>
         </div>
 
@@ -178,13 +313,8 @@
                         <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
                             <td class="px-6 py-3.5">
                                 <div class="flex items-center gap-3">
-                                    @if(!empty($log->user?->avatar))
-                                        @php
-                                            $avatarUrl = \Illuminate\Support\Str::startsWith($log->user->avatar, ['http://', 'https://'])
-                                                ? $log->user->avatar
-                                                : asset('storage/' . $log->user->avatar);
-                                        @endphp
-                                        <img src="{{ $avatarUrl }}" alt="{{ $log->user->name }}" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0">
+                                    @if(!empty($log->user?->avatar_url))
+                                        <img src="{{ $log->user->avatar_url }}" alt="{{ $log->user->name }}" class="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0">
                                     @else
                                         <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs flex items-center justify-center border border-slate-200 dark:border-slate-700 shrink-0">
                                             {{ strtoupper(substr($log->user?->name ?? 'S', 0, 1)) }}
@@ -237,13 +367,8 @@
                 <div class="p-4 space-y-2">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            @if(!empty($log->user?->avatar))
-                                @php
-                                    $avatarUrl = \Illuminate\Support\Str::startsWith($log->user->avatar, ['http://', 'https://'])
-                                        ? $log->user->avatar
-                                        : asset('storage/' . $log->user->avatar);
-                                @endphp
-                                <img src="{{ $avatarUrl }}" alt="{{ $log->user->name }}" class="w-6 h-6 rounded-full object-cover">
+                            @if(!empty($log->user?->avatar_url))
+                                <img src="{{ $log->user->avatar_url }}" alt="{{ $log->user->name }}" class="w-6 h-6 rounded-full object-cover">
                             @else
                                 <div class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 text-xs font-bold flex items-center justify-center">
                                     {{ strtoupper(substr($log->user?->name ?? 'S', 0, 1)) }}
