@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="fwzann-abd (https://github.com/fwzann-abd)">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Masuk') - Inventaris Diskominfo</title>
 
@@ -31,7 +32,7 @@
         })();
     </script>
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/app.tsx'])
     @yield('extra-css')
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased selection:bg-blue-600 selection:text-white min-h-[100dvh] transition-colors duration-300">

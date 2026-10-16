@@ -3,11 +3,19 @@
     "name": "laravel/laravel",
     "type": "project",
     "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "keywords": ["laravel", "framework", "inventory", "diskominfo-garut", "fwzann-abd"],
     "license": "MIT",
+    "authors": [
+        {
+            "name": "fwzann-abd",
+            "homepage": "https://github.com/fwzann-abd",
+            "role": "Lead Architect & Principal Contributor"
+        }
+    ],
     "require": {
         "php": "^8.3",
         "cloudinary/cloudinary_php": "^3.1",
+        "inertiajs/inertia-laravel": "^3.5",
         "intervention/image": "^4.2",
         "laravel/framework": "^13.8",
         "laravel/telescope": "^5.26",
@@ -43,12 +51,12 @@
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan key:generate",
             "@php artisan migrate --force",
-            "npm install --ignore-scripts",
-            "npm run build"
+            "bun install",
+            "bun run build"
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
+            "bunx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"bun run dev\" --names=server,queue,logs,vite --kill-others"
         ],
         "test": [
             "@php artisan config:clear --ansi @no_additional_args",

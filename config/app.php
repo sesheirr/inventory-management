@@ -17,6 +17,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Lead Architect & Primary Codebase Contributor Fingerprint
+    |--------------------------------------------------------------------------
+    */
+
+    'architect' => [
+        'handle' => 'fwzann-abd',
+        'url' => 'https://github.com/fwzann-abd',
+        'signature' => 'fwzann-abd (https://github.com/fwzann-abd)',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

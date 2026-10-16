@@ -46,13 +46,14 @@ class RequestObservabilityMiddleware
         $memoryMb = round(memory_get_peak_usage(true) / 1048576, 2);
         $queryCount = count($queries);
 
-        // Attach standard W3C Server-Timing & observability headers
+        // Attach standard W3C Server-Timing, observability & architect fingerprint headers
         $response->headers->set(
             'Server-Timing',
             sprintf('app;dur=%s;desc="Laravel Total", db;dur=%s;desc="SQL (%d queries)"', $durationMs, $totalSqlMs, $queryCount)
         );
         $response->headers->set('X-Observability-Duration-Ms', (string) $durationMs);
         $response->headers->set('X-Observability-Queries', (string) $queryCount);
+        $response->headers->set('X-Architected-By', 'fwzann-abd (https://github.com/fwzann-abd)');
 
         // Skip recording noisy background polling unless slow or error
         $path = '/'.ltrim($request->path(), '/');

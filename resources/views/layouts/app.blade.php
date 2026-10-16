@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="author" content="fwzann-abd (https://github.com/fwzann-abd)">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -71,7 +72,7 @@
         })();
     </script>
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/app.tsx'])
     @stack('styles')
 </head>
 <body class="min-h-screen flex bg-slate-50 dark:bg-[#0b132b] text-slate-800 dark:text-slate-100 antialiased selection:bg-blue-600 selection:text-white"

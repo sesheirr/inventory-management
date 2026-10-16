@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="fwzann-abd (https://github.com/fwzann-abd)">
     <meta name="description" content="Sistem Informasi Manajemen Inventaris, Pemetaan Ruangan, dan Pelacakan Mutasi Aset TIK Dinas Komunikasi dan Informatika Kabupaten Garut.">
     <title>SIM-Inventaris TIK — Diskominfo Kabupaten Garut</title>
 

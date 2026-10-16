@@ -30,8 +30,8 @@ run: ## Magic all-in-one local runner WITHOUT Docker (auto-detects .env & smart 
 tunnel: ## Expose local/Docker server via Cloudflare Free HTTPS (*.trycloudflare.com) for remote CRUD testing
 	@bash ./docker/run-tunnel.sh
 
-lint: ## Check PHP syntax, Laravel Pint formatting, and frontend production build
-	@docker compose run --rm app sh -c "find app bootstrap config database routes tests -name '*.php' -print0 | xargs -0 -n1 php -l >/dev/null && ./vendor/bin/pint --test && bun run build"
+lint: ## Check PHP syntax, Laravel Pint formatting, TypeScript typecheck, and frontend production build
+	@docker compose run --rm app sh -c "find app bootstrap config database routes tests -name '*.php' -print0 | xargs -0 -n1 php -l >/dev/null && ./vendor/bin/pint --test && bun run typecheck && bun run build"
 
 install: build ## Setup project completely via Docker (env, deps, db, build)
 	@echo "$(COLOR_INFO)Checking .env configuration...$(COLOR_RESET)"

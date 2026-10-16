@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="fwzann-abd (https://github.com/fwzann-abd)">
     <title>503 — Pemeliharaan Terjadwal Sistem Inventaris Diskominfo Garut</title>
 
     <script>
