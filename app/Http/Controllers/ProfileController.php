@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -96,6 +97,14 @@ class ProfileController extends Controller
 
         $user->fill($data);
         $user->save();
+
+        ActivityLog::record(
+            'updated',
+            "Memperbarui informasi profil pribadi ({$user->name})",
+            $user,
+            $user->id,
+            $user->id
+        );
 
         return redirect()->route('profile')->with('success', 'Profil berhasil diperbarui.');
     }

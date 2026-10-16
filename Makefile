@@ -1,4 +1,4 @@
-.PHONY: help dev run tunnel lint up down build install test artisan composer bun migrate migrate-fresh seed bash sh logs clean restart
+.PHONY: help dev run webhook deploy tunnel lint up down build install test artisan composer bun migrate migrate-fresh seed bash sh logs clean restart
 
 # Default goal
 .DEFAULT_GOAL := help
@@ -12,20 +12,27 @@ COLOR_TITLE   = \033[1;34m
 
 help: ## Show this help documentation
 	@echo ""
-	@echo "$(COLOR_TITLE)Inventory Management - Docker, Local & Tunnel Commands$(COLOR_RESET)"
-	@echo "=========================================================="
+	@echo "$(COLOR_TITLE)Inventory Management - Docker, Local, Webhook & Deploy Commands$(COLOR_RESET)"
+	@echo "=================================================================="
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(COLOR_INFO)%-15s$(COLOR_RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 	@echo "$(COLOR_WARNING)Example:$(COLOR_RESET)"
-	@echo "  make run             # Magic all-in-one local runner (NO Docker, auto-detects .env)"
-	@echo "  make dev             # Start Laravel + Bun Vite dev servers inside Docker"
+	@echo "  make run             # Magic all-in-one local runner + Webhook Server (NO Docker)"
+	@echo "  make dev             # Start Laravel + Bun Vite + Webhook Server inside Docker"
+	@echo "  make deploy          # Run automated production deployment script (scripts/deploy.sh)"
 	@echo "  make tunnel          # Expose app via Cloudflare Free HTTPS (*.trycloudflare.com)"
 	@echo "  make install         # One-time Docker project setup"
 	@echo "  make artisan c=\"route:list\""
 	@echo ""
 
-run: ## Magic all-in-one local runner WITHOUT Docker (auto-detects .env & smart diagnostics)
+run: ## Magic all-in-one local runner + Webhook Server WITHOUT Docker (auto-detects .env & smart diagnostics)
 	@bash ./docker/run-local.sh
+
+webhook: ## Start standalone Webhook Broker (:8085) & Realtime Queue Worker inside Docker
+	@docker compose run --rm --service-ports app php artisan inventory:webhook-server --host=0.0.0.0 --port=8085
+
+deploy: ## Automated production deployment (migrate, build via Bun, optimize cache, restart workers)
+	@bash ./scripts/deploy.sh
 
 tunnel: ## Expose local/Docker server via Cloudflare Free HTTPS (*.trycloudflare.com) for remote CRUD testing
 	@bash ./docker/run-tunnel.sh
@@ -55,9 +62,9 @@ build: ## Build or rebuild Docker images
 	@echo "$(COLOR_INFO)Building Docker images...$(COLOR_RESET)"
 	@docker compose build
 
-dev: ## Start Laravel (port 8000) + Bun Vite (port 5173) in Docker foreground
-	@echo "$(COLOR_SUCCESS)Starting development environment...$(COLOR_RESET)"
-	@docker compose up app
+dev: ## Start Laravel (:8000) + Bun Vite (:5173) + Webhook Server (:8085) in Docker foreground
+	@echo "$(COLOR_SUCCESS)Starting Laravel + Bun Vite + Webhook Server development environment...$(COLOR_RESET)"
+	@docker compose run --rm --service-ports app bash ./docker/run-dev.sh
 
 up: ## Start containers in the background (detached mode)
 	@echo "$(COLOR_SUCCESS)Starting containers in background...$(COLOR_RESET)"

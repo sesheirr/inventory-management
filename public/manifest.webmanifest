@@ -1,15 +1,32 @@
 {
+  "id": "/dashboard?source=pwa",
   "name": "Inventaris Diskominfo Kabupaten Garut",
   "short_name": "Inventaris Diskominfo",
   "description": "Sistem Informasi Inventarisasi Barang, Lokasi Ruangan, Barcode & Mutasi Aset Dinas Komunikasi dan Informatika Kabupaten Garut",
-  "start_url": "/dashboard",
+  "start_url": "/dashboard?source=pwa",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "any",
-  "background_color": "#0b132b",
+  "background_color": "#12100e",
   "theme_color": "#2563eb",
   "lang": "id-ID",
   "categories": ["productivity", "business", "government"],
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  },
+  "protocol_handlers": [
+    {
+      "protocol": "web+inventaris",
+      "url": "/s/%s"
+    }
+  ],
+  "permissions": [
+    "camera",
+    "geolocation",
+    "notifications"
+  ],
   "icons": [
     {
       "src": "/images/logo-diskominfo.png",
@@ -26,24 +43,24 @@
   ],
   "shortcuts": [
     {
-      "name": "Cari Barang Inventaris",
-      "short_name": "Katalog Barang",
-      "description": "Buka daftar katalog barang Diskominfo Garut",
-      "url": "/products",
+      "name": "Scan Barcode Fullscreen",
+      "short_name": "Scan Barcode",
+      "description": "Pindai barcode barang dengan kamera fullscreen",
+      "url": "/scan-barcode?source=pwa",
       "icons": [{ "src": "/images/logo-diskominfo.png", "sizes": "192x192" }]
     },
     {
-      "name": "Scan Barcode Aset",
-      "short_name": "Scan Barcode",
-      "description": "Pindai barcode barang dengan cepat",
-      "url": "/scan-barcode",
+      "name": "Cari Barang Inventaris",
+      "short_name": "Katalog Barang",
+      "description": "Buka daftar katalog barang Diskominfo Garut",
+      "url": "/products?source=pwa",
       "icons": [{ "src": "/images/logo-diskominfo.png", "sizes": "192x192" }]
     },
     {
       "name": "Catat Mutasi Barang",
       "short_name": "Mutasi",
       "description": "Ajukan mutasi masuk, keluar, atau pindah ruangan",
-      "url": "/mutations/create",
+      "url": "/mutations/create?source=pwa",
       "icons": [{ "src": "/images/logo-diskominfo.png", "sizes": "192x192" }]
     }
   ]

@@ -1,0 +1,12 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.query_webapk"
+    ],
+    "target": {
+      "namespace": "web",
+      "site": "https://inventaris.garutkab.go.id"
+    }
+  }
+]

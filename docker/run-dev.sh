@@ -30,21 +30,22 @@ php artisan inventory:smart-db-sync --ansi
 # Clean up stale Vite hot file if present
 rm -f public/hot 2>/dev/null || true
 
-echo "=========================================================="
-echo "🚀 Starting Laravel + Bun Vite Development Environment"
-echo "👉 Laravel Server: http://localhost:8000"
-echo "⚡ Vite HMR:       http://localhost:5173"
-echo "⏹️  Press Ctrl+C to stop both servers gracefully."
-echo "=========================================================="
+echo "=================================================================="
+echo "🚀 Starting Laravel + Bun Vite + Webhook Server (Docker Dev)"
+echo "👉 Laravel Server : http://localhost:8000"
+echo "⚡ Vite HMR       : http://localhost:5173"
+echo "🔔 Webhook Server : http://localhost:8085/webhook"
+echo "⏹️  Press Ctrl+C to stop all servers gracefully."
+echo "=================================================================="
 
 # Graceful cleanup on exit
 cleanup() {
     echo ""
-    echo "🛑 Shutting down dev servers..."
+    echo "🛑 Shutting down dev & webhook servers..."
     rm -f public/hot 2>/dev/null || true
-    kill "$LARAVEL_PID" "$VITE_PID" 2>/dev/null || true
-    wait "$LARAVEL_PID" "$VITE_PID" 2>/dev/null || true
-    echo "✅ Dev servers stopped."
+    kill "${LARAVEL_PID:-}" "${VITE_PID:-}" "${WEBHOOK_PID:-}" 2>/dev/null || true
+    wait "${LARAVEL_PID:-}" "${VITE_PID:-}" "${WEBHOOK_PID:-}" 2>/dev/null || true
+    echo "✅ All dev & webhook servers stopped."
     exit 0
 }
 trap cleanup SIGINT SIGTERM EXIT
@@ -57,5 +58,9 @@ LARAVEL_PID=$!
 bun run dev &
 VITE_PID=$!
 
-# Wait for both processes
-wait -n "$LARAVEL_PID" "$VITE_PID"
+# Start Webhook Broker & Realtime Queue Server in background
+php artisan inventory:webhook-server --host=0.0.0.0 --port=8085 &
+WEBHOOK_PID=$!
+
+# Wait for primary processes
+wait -n "$LARAVEL_PID" "$VITE_PID" "$WEBHOOK_PID"

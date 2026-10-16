@@ -50,12 +50,28 @@
         </div>
     </div>
 
-    {{-- Summary Filter Pills (Live Updated via LiveSyncEngine) --}}
+    {{-- Summary Filter Pills (Live Updated via LiveSyncEngine & Dynamic Active Filter State) --}}
     @if(isset($summary))
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4" data-framer-stagger>
-            <button type="button" data-quick-status="all" class="quick-status-card text-left p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-[#0f1b38] border {{ ($status ?? 'all') === 'all' ? 'border-blue-500 ring-2 ring-blue-500/15' : 'border-slate-200/80 dark:border-slate-800/80' }} shadow-2xs hover:border-blue-400 transition-all cursor-pointer">
+        @php
+            $hasExplicitFilter = request()->filled('search')
+                || request()->filled('category_id')
+                || request()->filled('room_id')
+                || request()->filled('stock_level')
+                || (request()->filled('status') && request('status') !== 'all')
+                || request()->boolean('card_active');
+            $resolvedStatusKey = $status ?? (request('stock_level') === 'low' ? 'low_stock' : 'all');
+            $activeCardKey = $hasExplicitFilter ? $resolvedStatusKey : null;
+        @endphp
+        <div id="productQuickStatusCardsGrid" class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4" data-framer-stagger>
+            <button type="button"
+                    data-quick-status="all"
+                    data-card-active="{{ $activeCardKey === 'all' ? 'true' : 'false' }}"
+                    class="quick-status-card text-left p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-[#1c1917] border {{ $activeCardKey === 'all' ? 'border-blue-500 ring-2 ring-blue-500/25 bg-blue-50/35 dark:bg-blue-950/25' : 'border-slate-200/80 dark:border-slate-800/80' }} shadow-2xs hover:border-blue-400 transition-all cursor-pointer">
                 <div class="flex items-center justify-between">
-                    <span class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Total</span>
+                    <span class="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        <span>Total</span>
+                        <span data-card-active-dot class="{{ $activeCardKey === 'all' ? 'inline-block' : 'hidden' }} w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+                    </span>
                     <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                         <i class="bi bi-box-seam text-xs sm:text-sm"></i>
                     </span>
@@ -63,9 +79,15 @@
                 <div data-live-summary="total" class="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-1 tabular-nums">{{ $summary['total'] ?? 0 }}</div>
             </button>
 
-            <button type="button" data-quick-status="active" class="quick-status-card text-left p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-[#0f1b38] border {{ ($status ?? '') === 'active' ? 'border-emerald-500 ring-2 ring-emerald-500/15' : 'border-slate-200/80 dark:border-slate-800/80' }} shadow-2xs hover:border-emerald-400 transition-all cursor-pointer">
+            <button type="button"
+                    data-quick-status="active"
+                    data-card-active="{{ $activeCardKey === 'active' ? 'true' : 'false' }}"
+                    class="quick-status-card text-left p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-[#1c1917] border {{ $activeCardKey === 'active' ? 'border-emerald-500 ring-2 ring-emerald-500/25 bg-emerald-50/35 dark:bg-emerald-950/25' : 'border-slate-200/80 dark:border-slate-800/80' }} shadow-2xs hover:border-emerald-400 transition-all cursor-pointer">
                 <div class="flex items-center justify-between">
-                    <span class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Aktif</span>
+                    <span class="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        <span>Aktif</span>
+                        <span data-card-active-dot class="{{ $activeCardKey === 'active' ? 'inline-block' : 'hidden' }} w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    </span>
                     <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                         <i class="bi bi-check2-circle text-xs sm:text-sm"></i>
                     </span>
@@ -73,9 +95,15 @@
                 <div data-live-summary="active" class="text-lg sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 tabular-nums">{{ $summary['active'] ?? 0 }}</div>
             </button>
 
-            <button type="button" data-quick-status="low_stock" class="quick-status-card text-left p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-[#0f1b38] border {{ ($status ?? '') === 'low_stock' ? 'border-amber-500 ring-2 ring-amber-500/15' : 'border-slate-200/80 dark:border-slate-800/80' }} shadow-2xs hover:border-amber-400 transition-all cursor-pointer">
+            <button type="button"
+                    data-quick-status="low_stock"
+                    data-card-active="{{ $activeCardKey === 'low_stock' ? 'true' : 'false' }}"
+                    class="quick-status-card text-left p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-[#1c1917] border {{ $activeCardKey === 'low_stock' ? 'border-amber-500 ring-2 ring-amber-500/25 bg-amber-50/35 dark:bg-amber-950/25' : 'border-slate-200/80 dark:border-slate-800/80' }} shadow-2xs hover:border-amber-400 transition-all cursor-pointer">
                 <div class="flex items-center justify-between">
-                    <span class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Menipis</span>
+                    <span class="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        <span>Menipis</span>
+                        <span data-card-active-dot class="{{ $activeCardKey === 'low_stock' ? 'inline-block' : 'hidden' }} w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                    </span>
                     <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                         <i class="bi bi-exclamation-triangle text-xs sm:text-sm"></i>
                     </span>
@@ -83,9 +111,15 @@
                 <div data-live-summary="low_stock" class="text-lg sm:text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1 tabular-nums">{{ $summary['low_stock'] ?? 0 }}</div>
             </button>
 
-            <button type="button" data-quick-status="out_of_stock" class="quick-status-card text-left p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-[#0f1b38] border {{ ($status ?? '') === 'out_of_stock' ? 'border-rose-500 ring-2 ring-rose-500/15' : 'border-slate-200/80 dark:border-slate-800/80' }} shadow-2xs hover:border-rose-400 transition-all cursor-pointer">
+            <button type="button"
+                    data-quick-status="out_of_stock"
+                    data-card-active="{{ $activeCardKey === 'out_of_stock' ? 'true' : 'false' }}"
+                    class="quick-status-card text-left p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-[#1c1917] border {{ $activeCardKey === 'out_of_stock' ? 'border-rose-500 ring-2 ring-rose-500/25 bg-rose-50/35 dark:bg-rose-950/25' : 'border-slate-200/80 dark:border-slate-800/80' }} shadow-2xs hover:border-rose-400 transition-all cursor-pointer">
                 <div class="flex items-center justify-between">
-                    <span class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Habis</span>
+                    <span class="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        <span>Habis</span>
+                        <span data-card-active-dot class="{{ $activeCardKey === 'out_of_stock' ? 'inline-block' : 'hidden' }} w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                    </span>
                     <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center">
                         <i class="bi bi-x-octagon text-xs sm:text-sm"></i>
                     </span>
@@ -893,6 +927,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 applyProductViewMode(currentViewMode, false);
                 bindListCheckboxes();
                 syncSelectionState();
+                syncQuickStatusCardsActiveState();
                 if (typeof window.runFramerMotionEntrance === 'function') {
                     window.runFramerMotionEntrance(currentWrapper);
                 }
@@ -906,33 +941,108 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    let explicitAllCardClicked = {{ request()->boolean('card_active') ? 'true' : 'false' }};
+
+    function syncQuickStatusCardsActiveState(forceClearAll = false) {
+        const statusVal = filterStatusSelect ? filterStatusSelect.value : 'all';
+        const searchVal = (realtimeSearch?.value || '').trim();
+        let hasOtherFilter = searchVal.length > 0;
+        filterSelects.forEach(s => {
+            if ((s.name === 'category_id' || s.name === 'room_id') && s.value) {
+                hasOtherFilter = true;
+            }
+        });
+
+        let activeKey = null;
+        if (!forceClearAll) {
+            if (statusVal && statusVal !== 'all') {
+                activeKey = statusVal;
+            } else if (explicitAllCardClicked || hasOtherFilter) {
+                activeKey = 'all';
+            }
+        }
+
+        const activeStylesMap = {
+            all: ['border-blue-500', 'ring-2', 'ring-blue-500/25', 'bg-blue-50/35', 'dark:bg-blue-950/25'],
+            active: ['border-emerald-500', 'ring-2', 'ring-emerald-500/25', 'bg-emerald-50/35', 'dark:bg-emerald-950/25'],
+            low_stock: ['border-amber-500', 'ring-2', 'ring-amber-500/25', 'bg-amber-50/35', 'dark:bg-amber-950/25'],
+            out_of_stock: ['border-rose-500', 'ring-2', 'ring-rose-500/25', 'bg-rose-50/35', 'dark:bg-rose-950/25'],
+        };
+        const allPossibleActiveClasses = Object.values(activeStylesMap).flat();
+
+        quickStatusCards.forEach(card => {
+            const key = card.getAttribute('data-quick-status') || '';
+            const isCardActive = activeKey !== null && key === activeKey;
+            card.setAttribute('data-card-active', isCardActive ? 'true' : 'false');
+            card.classList.remove(...allPossibleActiveClasses, 'border-slate-200/80', 'dark:border-slate-800/80');
+
+            if (isCardActive && activeStylesMap[key]) {
+                card.classList.add(...activeStylesMap[key]);
+            } else {
+                card.classList.add('border-slate-200/80', 'dark:border-slate-800/80');
+            }
+
+            const dot = card.querySelector('[data-card-active-dot]');
+            if (dot) {
+                dot.classList.toggle('hidden', !isCardActive);
+                dot.classList.toggle('inline-block', isCardActive);
+            }
+        });
+    }
+
     window.refreshProductsTableRealtime = fetchProductsAjax;
 
     filterForm?.addEventListener('submit', function (e) {
         e.preventDefault();
+        syncQuickStatusCardsActiveState();
         fetchProductsAjax();
     });
 
     realtimeSearch?.addEventListener('input', function () {
+        syncQuickStatusCardsActiveState();
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(fetchProductsAjax, 260);
     });
 
     filterSelects.forEach(select => {
-        select.addEventListener('change', fetchProductsAjax);
+        select.addEventListener('change', function () {
+            if (select.name === 'status' && select.value !== 'all') {
+                explicitAllCardClicked = false;
+            }
+            syncQuickStatusCardsActiveState();
+            fetchProductsAjax();
+        });
     });
 
     quickStatusCards.forEach(card => {
         card.addEventListener('click', function () {
             const targetStatus = this.getAttribute('data-quick-status') || 'all';
+            const currentlyActive = this.getAttribute('data-card-active') === 'true';
+
+            if (currentlyActive) {
+                // Clicking an already-active card toggles it off (resets status filter)
+                explicitAllCardClicked = false;
+                if (filterStatusSelect) {
+                    filterStatusSelect.value = 'all';
+                    if (typeof filterStatusSelect._ssRefresh === 'function') filterStatusSelect._ssRefresh();
+                }
+                syncQuickStatusCardsActiveState(true);
+                fetchProductsAjax();
+                return;
+            }
+
+            explicitAllCardClicked = (targetStatus === 'all');
             if (filterStatusSelect) {
                 filterStatusSelect.value = targetStatus;
-                filterStatusSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                if (typeof filterStatusSelect._ssRefresh === 'function') filterStatusSelect._ssRefresh();
+                syncQuickStatusCardsActiveState();
+                fetchProductsAjax();
             }
         });
     });
 
     resetFilterBtn?.addEventListener('click', function () {
+        explicitAllCardClicked = false;
         if (realtimeSearch) realtimeSearch.value = '';
         filterSelects.forEach(select => {
             if (select.name === 'status') select.value = 'all';
@@ -940,12 +1050,14 @@ document.addEventListener('DOMContentLoaded', function () {
             else select.value = '';
             if (typeof select._ssRefresh === 'function') select._ssRefresh();
         });
+        syncQuickStatusCardsActiveState(true);
         fetchProductsAjax();
     });
 
     applyProductViewMode(currentViewMode, false);
     bindListCheckboxes();
     syncSelectionState();
+    syncQuickStatusCardsActiveState();
 });
 </script>
 @endsection

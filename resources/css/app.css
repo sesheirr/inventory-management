@@ -20,6 +20,28 @@
         --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
         --ease-spring: cubic-bezier(0.22, 1.18, 0.36, 1);
         --hand-cursor: pointer;
+        --warm-dark-bg: #12100e;
+        --warm-dark-surface: #1c1917;
+        --warm-dark-elevated: #26221e;
+        --warm-dark-border: #36302b;
+        --warm-dark-text: #f5f5f4;
+        --warm-dark-muted: #a8a29e;
+    }
+
+    /* Warm Dark Mode Palette: Remap cool slate variables in dark mode to warm stone/espresso tones */
+    html.dark {
+        color-scheme: dark;
+        --color-slate-50: #fafaf9;
+        --color-slate-100: #f5f5f4;
+        --color-slate-200: #e7e5e4;
+        --color-slate-300: #d6d3d1;
+        --color-slate-400: #a8a29e;
+        --color-slate-500: #8a817c;
+        --color-slate-600: #57534e;
+        --color-slate-700: #44403c;
+        --color-slate-800: #292524;
+        --color-slate-900: #1c1917;
+        --color-slate-950: #12100e;
     }
 
     html {
@@ -30,8 +52,31 @@
     }
 
     body {
-        @apply bg-slate-50 text-slate-900 dark:bg-[#0b132b] dark:text-slate-100 antialiased selection:bg-blue-600 selection:text-white;
+        @apply bg-slate-50 text-slate-900 dark:bg-[#12100e] dark:text-[#f5f5f4] antialiased selection:bg-blue-600 selection:text-white;
         font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    }
+
+    /* Remap legacy cool navy dark utilities to cohesive Warm Espresso / Warm Stone surfaces */
+    html.dark .dark\:bg-\[\#0b132b\] {
+        background-color: #12100e !important;
+    }
+    html.dark .dark\:bg-\[\#090D16\] {
+        background-color: #12100e !important;
+    }
+    html.dark .dark\:bg-\[\#0f1b38\] {
+        background-color: #1c1917 !important;
+    }
+    html.dark .dark\:bg-\[\#0f1b38\]\/95 {
+        background-color: rgba(28, 25, 23, 0.95) !important;
+    }
+    html.dark .dark\:bg-\[\#0f1b38\]\/90 {
+        background-color: rgba(28, 25, 23, 0.92) !important;
+    }
+    html.dark .dark\:bg-\[\#0b132b\]\/85 {
+        background-color: rgba(18, 16, 14, 0.88) !important;
+    }
+    html.dark .dark\:border-\[\#0b132b\] {
+        border-color: #12100e !important;
     }
 
     /* Native OS Pointer (Pointing Finger) Cursor Across All Actionable Elements */
@@ -95,6 +140,65 @@
     }
 }
 
+@keyframes pageEnterUniform60 {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 10px, 0) scale3d(0.994, 0.994, 1);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+    }
+}
+
+@keyframes pageExitUniform60 {
+    from {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+    }
+    to {
+        opacity: 0;
+        transform: translate3d(0, -6px, 0) scale3d(0.994, 0.994, 1);
+    }
+}
+
+@keyframes toastFadeIn60 {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, -14px, 0) scale3d(0.95, 0.95, 1);
+    }
+    100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+    }
+}
+
+@keyframes toastFadeOut60 {
+    0% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate3d(0, -12px, 0) scale3d(0.95, 0.95, 1);
+    }
+}
+
+@keyframes scannerLaserSweep {
+    0% {
+        top: 10%;
+        opacity: 0.75;
+    }
+    50% {
+        top: 88%;
+        opacity: 1;
+    }
+    100% {
+        top: 10%;
+        opacity: 0.75;
+    }
+}
+
 @keyframes sheetSlideUp60 {
     from {
         opacity: 0;
@@ -113,14 +217,14 @@
     }
     to {
         opacity: 0;
-        transform: translate3d(0, -4px, 0) scale3d(0.996, 0.996, 1);
+        transform: translate3d(0, -6px, 0) scale3d(0.994, 0.994, 1);
     }
 }
 
 @keyframes viewMainFadeIn {
     from {
         opacity: 0;
-        transform: translate3d(0, 8px, 0) scale3d(0.995, 0.995, 1);
+        transform: translate3d(0, 10px, 0) scale3d(0.994, 0.994, 1);
     }
     to {
         opacity: 1;
@@ -148,6 +252,18 @@
 @keyframes pulseSubtle60 {
     0%, 100% { transform: scale3d(1, 1, 1); }
     50% { transform: scale3d(1.04, 1.04, 1); }
+}
+
+/* Uniform page enter and exit animations across all pages (Desktop & Mobile) */
+#appMainContent,
+.page-transition-wrapper {
+    animation: pageEnterUniform60 0.28s var(--ease-out-expo) both;
+}
+
+html.page-is-exiting #appMainContent,
+html.page-is-exiting .page-transition-wrapper {
+    animation: pageExitUniform60 0.17s var(--ease-in-out-smooth) forwards !important;
+    pointer-events: none;
 }
 
 .animate-fade-in {
@@ -352,7 +468,7 @@ html.theme-transitioning th {
 }
 
 .dark .skeleton-shimmer {
-    background-color: #1e293b;
+    background-color: #292524;
 }
 
 .skeleton-shimmer::after {
@@ -373,7 +489,7 @@ html.theme-transitioning th {
     background: linear-gradient(
         90deg,
         transparent 0%,
-        rgba(148, 163, 184, 0.14) 50%,
+        rgba(214, 211, 209, 0.14) 50%,
         transparent 100%
     );
 }
@@ -411,9 +527,9 @@ html.theme-transitioning th {
 }
 
 .dark .ss-trigger {
-    background-color: #0f172a;
-    border-color: #334155;
-    color: #f1f5f9;
+    background-color: #1c1917;
+    border-color: #44403c;
+    color: #f5f5f4;
 }
 
 .ss-trigger:hover {
@@ -481,9 +597,9 @@ html.theme-transitioning th {
 }
 
 .dark .ss-dropdown {
-    background-color: #0f1b38;
-    border-color: #334155;
-    box-shadow: 0 24px 48px -10px rgba(2, 6, 23, 0.78), 0 0 0 1px rgba(59, 130, 246, 0.14);
+    background-color: #1c1917;
+    border-color: #44403c;
+    box-shadow: 0 24px 48px -10px rgba(12, 10, 9, 0.82), 0 0 0 1px rgba(214, 211, 209, 0.12);
 }
 
 .ss-search-box {
@@ -493,8 +609,8 @@ html.theme-transitioning th {
 }
 
 .dark .ss-search-box {
-    border-bottom-color: #1e293b;
-    background-color: #0b132b;
+    border-bottom-color: #292524;
+    background-color: #12100e;
 }
 
 .ss-search-input {
@@ -508,9 +624,9 @@ html.theme-transitioning th {
 }
 
 .dark .ss-search-input {
-    background-color: #0f172a;
-    border-color: #334155;
-    color: #f8fafc;
+    background-color: #1c1917;
+    border-color: #44403c;
+    color: #f5f5f4;
 }
 
 .ss-search-input:focus {
@@ -537,7 +653,7 @@ html.theme-transitioning th {
 }
 
 .dark .ss-option {
-    color: #cbd5e1;
+    color: #d6d3d1;
 }
 
 .ss-option:hover,
@@ -593,9 +709,9 @@ html.theme-transitioning th {
 }
 
 .dark .cdp-trigger {
-    background-color: #0f172a;
-    border-color: #334155;
-    color: #f1f5f9;
+    background-color: #1c1917;
+    border-color: #44403c;
+    color: #f5f5f4;
 }
 
 .cdp-trigger:hover {
@@ -627,9 +743,9 @@ html.theme-transitioning th {
 }
 
 .dark .cdp-popover {
-    background-color: #0f1b38;
-    border-color: #334155;
-    box-shadow: 0 24px 48px -10px rgba(2, 6, 23, 0.78), 0 0 0 1px rgba(59, 130, 246, 0.14);
+    background-color: #1c1917;
+    border-color: #44403c;
+    box-shadow: 0 24px 48px -10px rgba(12, 10, 9, 0.82), 0 0 0 1px rgba(214, 211, 209, 0.12);
 }
 
 @media (max-width: 639px) {
@@ -655,7 +771,7 @@ html.theme-transitioning th {
 }
 
 .dark .cdp-day {
-    color: #cbd5e1;
+    color: #d6d3d1;
 }
 
 .cdp-day:hover:not(:disabled) {
@@ -753,7 +869,8 @@ html.theme-transitioning th {
     border: 1px solid rgba(203, 213, 225, 0.9);
     box-shadow: 0 18px 38px -8px rgba(15, 23, 42, 0.18), 0 4px 12px -2px rgba(15, 23, 42, 0.08);
     color: #0f172a;
-    animation: fadeIn60 0.22s var(--ease-out-expo) forwards;
+    animation: toastFadeIn60 0.28s var(--ease-out-expo) both;
+    transition: opacity 240ms var(--ease-out-expo), transform 240ms var(--ease-out-expo);
     will-change: transform, opacity;
     touch-action: pan-x;
 }
@@ -766,16 +883,17 @@ html.theme-transitioning th {
 }
 
 .dark .sonner-toast {
-    background-color: rgba(15, 27, 56, 0.97);
-    border-color: rgba(51, 65, 85, 0.9);
-    box-shadow: 0 20px 42px -8px rgba(2, 6, 23, 0.72);
-    color: #f8fafc;
+    background-color: rgba(28, 25, 23, 0.97);
+    border-color: rgba(68, 64, 60, 0.9);
+    box-shadow: 0 20px 42px -8px rgba(12, 10, 9, 0.78);
+    color: #f5f5f4;
 }
 
 .sonner-toast.is-leaving {
+    pointer-events: none;
+    animation: toastFadeOut60 0.24s var(--ease-in-out-smooth) forwards !important;
     opacity: 0;
-    transform: translate3d(0, -12px, 0) scale3d(0.96, 0.96, 1);
-    transition: transform 170ms var(--ease-out-expo), opacity 170ms ease;
+    transform: translate3d(0, -12px, 0) scale3d(0.95, 0.95, 1);
 }
 
 .sonner-progress-track {
@@ -934,4 +1052,53 @@ html.theme-transitioning th {
     transition: transform 16s cubic-bezier(0.4, 0, 0.2, 1), background-color 16s ease, filter 16s ease;
     will-change: transform, filter;
 }
+
+/* ==========================================================================
+   MOBILE PULL-TO-REFRESH (SWIPE DOWN & RELEASE) CAPSULE INDICATOR
+   ========================================================================== */
+.ptr-capsule {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    z-index: 99990;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    background-color: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(203, 213, 225, 0.9);
+    box-shadow: 0 14px 32px -6px rgba(15, 23, 42, 0.18);
+    color: #1e293b;
+    font-size: 0.72rem;
+    font-weight: 800;
+    pointer-events: none;
+    transform: translate3d(-50%, -68px, 0) scale3d(0.88, 0.88, 1);
+    opacity: 0;
+    will-change: transform, opacity;
+}
+
+.dark .ptr-capsule {
+    background-color: rgba(28, 25, 23, 0.96);
+    border-color: rgba(68, 64, 60, 0.9);
+    box-shadow: 0 16px 36px -6px rgba(12, 10, 9, 0.75);
+    color: #f5f5f4;
+}
+
+/* ==========================================================================
+   FULLSCREEN BANKING-STYLE BARCODE SCANNER HUD
+   ========================================================================== */
+.scanner-laser-line {
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    height: 2.5px;
+    border-radius: 9999px;
+    background: linear-gradient(90deg, transparent 0%, #38bdf8 20%, #2563eb 50%, #38bdf8 80%, transparent 100%);
+    box-shadow: 0 0 16px 3px rgba(56, 189, 248, 0.65);
+    animation: scannerLaserSweep 2.4s ease-in-out infinite;
+    pointer-events: none;
+}
+
 

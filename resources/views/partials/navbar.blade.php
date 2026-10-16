@@ -85,69 +85,82 @@
                 </span>
             </button>
 
-            {{-- Mobile Backdrop for Notification Sheet (Portaled to body on mobile to escape header backdrop-filter) --}}
+            {{-- Mobile Backdrop for Notification Popover (Portaled to body on mobile to escape header backdrop-filter) --}}
             <div id="notificationSheetBackdrop"
-                 class="hidden sm:hidden fixed inset-0 bg-slate-900/55 backdrop-blur-xs z-[105] transition-opacity duration-200"></div>
+                 class="hidden sm:hidden fixed inset-0 bg-slate-900/45 backdrop-blur-[2px] z-[105] transition-opacity duration-200"></div>
 
-            {{-- Notification Panel: Mobile Floating Bottom Sheet / Desktop Animated Dropdown --}}
+            {{-- Notification Panel: Anchored Popover Emerging Directly Below Bell Button (Mobile & Desktop) --}}
             <div id="notificationDropdownPanel"
-                 data-animated-sheet="true"
+                 data-animated-popover="true"
                  data-webhook-listener="active"
-                 class="hidden fixed inset-x-3 bottom-4 sm:bottom-auto sm:inset-x-auto sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:w-96 max-h-[80dvh] sm:max-h-[32rem] flex flex-col rounded-3xl sm:rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/90 dark:border-slate-800 shadow-2xl z-[110] overflow-hidden">
-                {{-- Mobile Grab Handle --}}
-                <div class="sheet-grab-handle sm:hidden shrink-0"></div>
+                 class="hidden fixed top-[3.75rem] right-3 left-3 sm:left-auto sm:top-full sm:right-0 sm:absolute sm:mt-2.5 w-auto sm:w-[24rem] max-w-[calc(100vw-1.5rem)] max-h-[76dvh] sm:max-h-[32rem] flex flex-col rounded-2xl bg-white dark:bg-[#1c1917] border border-slate-200/90 dark:border-slate-800 shadow-[0_24px_48px_-12px_rgba(15,23,42,0.28)] dark:shadow-[0_24px_48px_-12px_rgba(0,0,0,0.78)] z-[110] overflow-hidden origin-top-right">
+                {{-- Top Pointer Caret Indicator Aligned Toward Bell Button --}}
+                <div id="notificationBellPointerArrow"
+                     class="pointer-events-none absolute -top-1.5 right-4 sm:right-3.5 w-3 h-3 rotate-45 bg-slate-50 dark:bg-[#26221e] border-t border-l border-slate-200/90 dark:border-slate-800 z-10"></div>
 
-                {{-- Header --}}
-                <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 shrink-0">
+                {{-- Clean 2-Tier Header (Zero Overlap on Any Mobile Viewport) --}}
+                <div class="relative z-20 px-3.5 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/90 dark:bg-[#26221e]/90 shrink-0 space-y-2">
+                    {{-- Tier 1: Title + Webhook Live Status + Close Button --}}
                     <div class="flex items-center justify-between gap-2">
                         <div class="flex items-center gap-2 min-w-0">
                             <span class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                                 <i class="bi bi-bell-fill text-xs"></i>
                             </span>
-                            <div class="min-w-0">
-                                <div class="flex items-center gap-1.5">
-                                    <p class="text-xs font-extrabold text-slate-900 dark:text-white leading-tight">Notifikasi</p>
-                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" title="Terhubung ke Webhook Event Stream">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                        <span>Webhook Live</span>
-                                    </span>
-                                </div>
-                                <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">Klik item untuk menuju detail</p>
-                            </div>
+                            <p class="text-xs font-extrabold text-slate-900 dark:text-white leading-tight truncate">Notifikasi</p>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0" title="Terhubung ke Webhook Event Stream">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span>Webhook Live</span>
+                            </span>
                         </div>
 
+                        <button type="button"
+                                id="closeNotificationSheetBtn"
+                                aria-label="Tutup Notifikasi"
+                                class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors shrink-0">
+                            <i class="bi bi-x-lg text-xs"></i>
+                        </button>
+                    </div>
+
+                    {{-- Tier 2: Subtitle & Non-Overlapping Quick Action Buttons (AJAX Realtime Enabled) --}}
+                    <div class="flex items-center justify-between gap-2 pt-0.5">
+                        <p class="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate">
+                            Klik item untuk menuju detail
+                        </p>
+
                         <div class="flex items-center gap-1.5 shrink-0">
-                            <form action="{{ route('notifications.checkReminders') }}" method="POST" class="inline-flex m-0 shrink-0">
+                            <form action="{{ route('notifications.checkReminders') }}"
+                                  method="POST"
+                                  data-ajax-notif-sync="true"
+                                  class="inline-flex m-0 shrink-0">
                                 @csrf
                                 <button type="submit"
-                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 transition-colors cursor-pointer whitespace-nowrap"
-                                        title="Sinkronkan Stok">
+                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 transition-colors whitespace-nowrap"
+                                        title="Sinkronkan Stok Realtime">
                                     <i class="bi bi-arrow-repeat text-xs"></i>
                                     <span>Sinkronkan</span>
                                 </button>
                             </form>
-                            @if($unreadNotificationsCount > 0)
-                                <form action="{{ route('notifications.markAllAsRead') }}" method="POST" class="inline-flex m-0 shrink-0">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit"
-                                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/15 hover:bg-blue-100/80 dark:hover:bg-blue-500/25 transition-colors cursor-pointer whitespace-nowrap">
-                                        <i class="bi bi-check2-all text-xs"></i>
-                                        <span>Baca Semua</span>
-                                    </button>
-                                </form>
-                            @endif
-                            <button type="button"
-                                    id="closeNotificationSheetBtn"
-                                    class="sm:hidden w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">
-                                <i class="bi bi-x-lg text-xs"></i>
-                            </button>
+
+                            <form id="navbarMarkAllReadForm"
+                                  action="{{ route('notifications.markAllAsRead') }}"
+                                  method="POST"
+                                  data-ajax-notif-read-all="true"
+                                  class="{{ $unreadNotificationsCount > 0 ? 'inline-flex' : 'hidden' }} m-0 shrink-0">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/15 hover:bg-blue-100/80 dark:hover:bg-blue-500/25 border border-blue-200/60 dark:border-blue-500/25 transition-colors whitespace-nowrap">
+                                    <i class="bi bi-check2-all text-xs"></i>
+                                    <span>Baca Semua</span>
+                                </button>
+                            </form>
                         </div>
                     </div>
+
                     @if($recentNavbarNotifications->isNotEmpty())
-                        <p class="sm:hidden text-[10px] text-slate-400 dark:text-slate-500 mt-1.5 flex items-center gap-1">
+                        <p class="sm:hidden text-[10px] text-slate-400 dark:text-slate-500 pt-0.5 flex items-center gap-1">
                             <i class="bi bi-hand-index-thumb text-blue-500"></i>
-                            <span>Geser item ke kiri untuk hapus, kanan untuk tandai dibaca</span>
+                            <span>Geser kiri untuk hapus • kanan untuk tandai dibaca</span>
                         </p>
                     @endif
                 </div>

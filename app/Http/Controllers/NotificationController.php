@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Mutation;
 use App\Models\Product;
 use App\Models\User;
@@ -18,6 +19,29 @@ class NotificationController extends Controller
         $user = auth()->user();
 
         return $user;
+    }
+
+    private function formatRecentNotifications(User $user): array
+    {
+        return $user->notifications()
+            ->latest()
+            ->take(8)
+            ->get()
+            ->map(fn ($n) => [
+                'id' => $n->id,
+                'title' => $n->data['title'] ?? 'Pemberitahuan Sistem',
+                'message' => $n->data['message'] ?? '',
+                'category' => $n->data['category'] ?? 'info',
+                'icon' => $n->data['icon'] ?? 'bi-bell-fill',
+                'is_unread' => is_null($n->read_at),
+                'read_at' => $n->read_at?->toIso8601String(),
+                'created_at_human' => $n->created_at?->diffForHumans(),
+                'go_url' => route('notifications.go', $n->id, false),
+                'mark_read_url' => route('notifications.markAsRead', $n->id, false),
+                'delete_url' => route('notifications.destroy', $n->id, false),
+            ])
+            ->values()
+            ->all();
     }
 
     public function index(Request $request)
@@ -99,11 +123,19 @@ class NotificationController extends Controller
         $notification = $user->notifications()->findOrFail($id);
         $notification->markAsRead();
 
+        ActivityLog::record(
+            'notification_read',
+            'Menandai notifikasi "'.($notification->data['title'] ?? 'Sistem').'" sebagai sudah dibaca.',
+            'Notification'
+        );
+
         if (request()->expectsJson()) {
             return response()->json([
                 'ok' => true,
+                'message' => 'Notifikasi ditandai sudah dibaca.',
                 'unread_count' => $user->unreadNotifications()->count(),
                 'total_count' => $user->notifications()->count(),
+                'recent_notifications' => $this->formatRecentNotifications($user),
             ]);
         }
 
@@ -112,12 +144,22 @@ class NotificationController extends Controller
 
     public function markAllAsRead()
     {
-        $this->currentUser()->unreadNotifications->markAsRead();
+        $user = $this->currentUser();
+        $user->unreadNotifications->markAsRead();
+
+        ActivityLog::record(
+            'notification_read_all',
+            'Menandai seluruh notifikasi sebagai sudah dibaca.',
+            'Notification'
+        );
 
         if (request()->expectsJson()) {
             return response()->json([
                 'ok' => true,
+                'message' => 'Semua notifikasi ditandai sudah dibaca.',
                 'unread_count' => 0,
+                'total_count' => $user->notifications()->count(),
+                'recent_notifications' => $this->formatRecentNotifications($user),
             ]);
         }
 
@@ -175,24 +217,54 @@ class NotificationController extends Controller
             }
         }
 
-        if ($generated > 0) {
-            return back()->with('success', "{$generated} pengingat stok & persetujuan penting berhasil disinkronkan.");
+        $msg = $generated > 0
+            ? "{$generated} pengingat stok & persetujuan penting berhasil disinkronkan."
+            : 'Semua pengingat stok dan persetujuan mutasi sudah mutakhir.';
+
+        ActivityLog::record(
+            'notification_synced',
+            "Menyinkronkan pengingat notifikasi realtime ({$generated} baru).",
+            'Notification'
+        );
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'ok' => true,
+                'generated' => $generated,
+                'message' => $msg,
+                'unread_count' => $user->unreadNotifications()->count(),
+                'total_count' => $user->notifications()->count(),
+                'recent_notifications' => $this->formatRecentNotifications($user),
+            ]);
         }
 
-        return back()->with('info', 'Semua pengingat stok dan persetujuan mutasi sudah mutakhir.');
+        if ($generated > 0) {
+            return back()->with('success', $msg);
+        }
+
+        return back()->with('info', $msg);
     }
 
     public function destroy(string $id)
     {
         $user = $this->currentUser();
         $notification = $user->notifications()->findOrFail($id);
+        $title = $notification->data['title'] ?? 'Sistem';
         $notification->delete();
+
+        ActivityLog::record(
+            'notification_deleted',
+            "Menghapus notifikasi \"{$title}\".",
+            'Notification'
+        );
 
         if (request()->expectsJson()) {
             return response()->json([
                 'ok' => true,
+                'message' => 'Notifikasi berhasil dihapus.',
                 'unread_count' => $user->unreadNotifications()->count(),
                 'total_count' => $user->notifications()->count(),
+                'recent_notifications' => $this->formatRecentNotifications($user),
             ]);
         }
 

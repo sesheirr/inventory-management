@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\BarangExport;
+use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Room;
@@ -611,6 +612,12 @@ class ProductController extends Controller
     {
         $filters = $request->only(['search', 'category_id', 'room_id', 'status']);
 
+        ActivityLog::record(
+            'export',
+            'Mengekspor laporan inventaris barang ke format Excel (.xlsx)',
+            Product::class
+        );
+
         return Excel::download(new BarangExport($filters), 'laporan-inventaris-barang.xlsx');
     }
 
@@ -640,6 +647,12 @@ class ProductController extends Controller
             'room' => $roomId ? Room::find($roomId)?->name : 'Semua Lokasi Ruangan',
             'status' => $status,
         ];
+
+        ActivityLog::record(
+            'export',
+            'Mencetak / mengekspor laporan inventaris barang ke format PDF ('.$products->count().' item)',
+            Product::class
+        );
 
         return view('products.pdf', compact('products', 'summary', 'filterMeta'));
     }
@@ -677,6 +690,13 @@ class ProductController extends Controller
     {
         $product->loadMissing(['category', 'room']);
 
+        ActivityLog::record(
+            'print',
+            "Mencetak label stiker barcode untuk {$product->name} ({$product->barcode})",
+            $product,
+            $product->id
+        );
+
         return view('products.barcode-print', compact('product'));
     }
 
@@ -709,6 +729,13 @@ class ProductController extends Controller
                 'message' => 'Barang dengan barcode tersebut tidak ditemukan.',
             ], 404);
         }
+
+        ActivityLog::record(
+            'scan',
+            "Memindai barcode aset {$product->name} ({$barcode})",
+            $product,
+            $product->id
+        );
 
         return response()->json([
             'found' => true,

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\User;
 use App\Services\CaptchaGenerator;
 use Illuminate\Http\Request;
@@ -174,6 +175,13 @@ class AuthController extends Controller
 
             /** @var User $user */
             $user = Auth::user();
+            ActivityLog::record(
+                'login',
+                "Pengguna {$user->name} ({$user->email}) berhasil masuk ke sistem",
+                $user,
+                $user->id,
+                $user->id
+            );
             $redirect = redirect()->route('dashboard')->with('success', 'Login berhasil!');
 
             if ($remember && $user) {
@@ -210,6 +218,14 @@ class AuthController extends Controller
 
         Auth::login($user, true);
         $request->session()->regenerate();
+
+        ActivityLog::record(
+            'login',
+            "Pengguna {$user->name} masuk menggunakan profil login cepat (Quick Sign-In)",
+            $user,
+            $user->id,
+            $user->id
+        );
 
         return redirect()->route('dashboard')
             ->with('success', 'Selamat datang kembali, '.$user->name.'!');
@@ -275,12 +291,20 @@ class AuthController extends Controller
             ])->withInput();
         }
 
-        User::create([
+        $newUser = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => 'user',
         ]);
+
+        ActivityLog::record(
+            'created',
+            "Mendaftarkan akun pengguna baru {$newUser->name} ({$newUser->email})",
+            $newUser,
+            $newUser->id,
+            $newUser->id
+        );
 
         return redirect()->route('login')->with('success', 'Akun berhasil dibuat, silakan login.');
     }
@@ -290,6 +314,18 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if ($user) {
+            ActivityLog::record(
+                'logout',
+                "Pengguna {$user->name} ({$user->email}) keluar dari sistem",
+                $user,
+                $user->id,
+                $user->id
+            );
+        }
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

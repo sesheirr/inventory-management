@@ -9,6 +9,7 @@ services:
     ports:
       - "8000:8000"
       - "5173:5173"
+      - "8085:8085"
     volumes:
       - .:/var/www/html
     depends_on:

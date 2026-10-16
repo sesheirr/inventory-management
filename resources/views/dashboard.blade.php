@@ -245,28 +245,40 @@
                 </div>
             </div>
 
-            {{-- Semi-Gradient SVG Area + Interactive Bar Columns + Floating Hover/Tap Tooltip --}}
+            {{-- Shadcn UI Pure Line Chart (Zero Combined Bars) Consuming Declarative JSON --}}
             @php
                 $svgW = 640;
-                $svgH = 200;
+                $svgH = 210;
                 $padX = 48;
-                $padTop = 34;
-                $padBot = 36;
+                $padTop = 28;
+                $padBot = 34;
                 $usableW = $svgW - ($padX * 2);
                 $usableH = $svgH - $padTop - $padBot;
                 $countPts = max(1, $analyticsSeries->count());
                 $stepX = $countPts > 1 ? $usableW / ($countPts - 1) : 0;
 
                 $unitPts = [];
+                $masukPts = [];
+                $pindahPts = [];
+                $keluarPts = [];
                 $txPts = [];
+                $newProdPts = [];
+
                 foreach ($analyticsSeries as $idx => $item) {
                     $x = round($padX + ($idx * $stepX), 1);
                     $uRatio = $maxChartUnits > 0 ? ($item['total_units'] / $maxChartUnits) : 0;
+                    $mRatio = $maxChartUnits > 0 ? ($item['masuk_units'] / $maxChartUnits) : 0;
+                    $pRatio = $maxChartUnits > 0 ? ($item['pindah_units'] / $maxChartUnits) : 0;
+                    $kRatio = $maxChartUnits > 0 ? ($item['keluar_units'] / $maxChartUnits) : 0;
                     $tRatio = $maxChartTx > 0 ? ($item['tx_count'] / $maxChartTx) : 0;
-                    $yU = round($padTop + $usableH - ($uRatio * $usableH), 1);
-                    $yT = round($padTop + $usableH - ($tRatio * $usableH), 1);
-                    $unitPts[] = [$x, $yU];
-                    $txPts[] = [$x, $yT];
+                    $nRatio = $maxChartTx > 0 ? (($item['new_products'] ?? 0) / $maxChartTx) : 0;
+
+                    $unitPts[] = [$x, round($padTop + $usableH - ($uRatio * $usableH), 1)];
+                    $masukPts[] = [$x, round($padTop + $usableH - ($mRatio * $usableH), 1)];
+                    $pindahPts[] = [$x, round($padTop + $usableH - ($pRatio * $usableH), 1)];
+                    $keluarPts[] = [$x, round($padTop + $usableH - ($kRatio * $usableH), 1)];
+                    $txPts[] = [$x, round($padTop + $usableH - ($tRatio * $usableH), 1)];
+                    $newProdPts[] = [$x, round($padTop + $usableH - ($nRatio * $usableH), 1)];
                 }
 
                 $buildSmoothPath = function (array $pts) {
@@ -283,22 +295,65 @@
                 };
 
                 $unitLinePath = $buildSmoothPath($unitPts);
-                $baselineY = $padTop + $usableH;
-                $unitAreaPath = $unitLinePath
-                    ? $unitLinePath . ' L ' . end($unitPts)[0] . ' ' . $baselineY . ' L ' . $unitPts[0][0] . ' ' . $baselineY . ' Z'
-                    : '';
-
+                $masukLinePath = $buildSmoothPath($masukPts);
+                $pindahLinePath = $buildSmoothPath($pindahPts);
+                $keluarLinePath = $buildSmoothPath($keluarPts);
                 $txLinePath = $buildSmoothPath($txPts);
-                $txAreaPath = $txLinePath
-                    ? $txLinePath . ' L ' . end($txPts)[0] . ' ' . $baselineY . ' L ' . $txPts[0][0] . ' ' . $baselineY . ' Z'
-                    : '';
+                $newProdLinePath = $buildSmoothPath($newProdPts);
+                $baselineY = $padTop + $usableH;
+
+                $shadcnChartJsonPayload = [
+                    'chartType' => 'shadcn-line',
+                    'xAxisKey' => 'label',
+                    'tooltipLabelKey' => 'full_label',
+                    'config' => [
+                        'total_units' => ['label' => 'Total Unit', 'color' => '#2563eb'],
+                        'masuk_units' => ['label' => 'Stok Masuk', 'color' => '#10b981'],
+                        'pindah_units' => ['label' => 'Transfer Ruang', 'color' => '#6366f1'],
+                        'keluar_units' => ['label' => 'Stok Keluar', 'color' => '#f59e0b'],
+                        'tx_count' => ['label' => 'Frekuensi Mutasi', 'color' => '#10b981'],
+                        'new_products' => ['label' => 'Aset Baru', 'color' => '#3b82f6'],
+                    ],
+                    'data' => $analyticsSeries->values()->all(),
+                ];
             @endphp
 
             <div class="relative z-10 mt-1">
-                <div id="dashChartContainer" class="relative w-full overflow-hidden rounded-2xl bg-slate-50/75 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800/80 p-3 sm:p-4 select-none">
-                    {{-- Floating Interactive Hover/Tap Glass Tooltip --}}
+                <div id="dashChartContainer"
+                     data-shadcn-line-chart="true"
+                     class="relative w-full overflow-hidden rounded-2xl bg-slate-50/75 dark:bg-[#151311]/90 border border-slate-200/70 dark:border-slate-800/80 p-3.5 sm:p-4 select-none">
+
+                    {{-- Declarative JSON Source for Manual Maintenance & Shadcn Chart Hydration --}}
+                    <script type="application/json" id="shadcnLineChartJson">@json($shadcnChartJsonPayload)</script>
+
+                    {{-- Shadcn Chart Legend Header --}}
+                    <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 mb-2 border-b border-slate-200/60 dark:border-slate-800/80 text-[10px] font-bold">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <span class="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-200">
+                                <span class="w-2.5 h-0.5 rounded-full bg-blue-600 inline-block"></span>
+                                <span>Total Unit</span>
+                            </span>
+                            <span class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                                <span class="w-2.5 h-0.5 rounded-full bg-emerald-500 inline-block"></span>
+                                <span>Stok Masuk</span>
+                            </span>
+                            <span class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                                <span class="w-2.5 h-0.5 rounded-full bg-indigo-500 inline-block"></span>
+                                <span>Transfer</span>
+                            </span>
+                            <span class="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
+                                <span class="w-2.5 h-0.5 rounded-full bg-amber-500 inline-block"></span>
+                                <span>Keluar</span>
+                            </span>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-md bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono text-[9px]">
+                            Shadcn Line • JSON Ready
+                        </span>
+                    </div>
+
+                    {{-- Floating Interactive Hover/Tap Shadcn Popover Tooltip --}}
                     <div id="dashChartTooltip"
-                         class="pointer-events-none opacity-0 scale-95 transition-all duration-200 ease-out absolute z-20 top-2.5 left-3 sm:left-4 max-w-[270px] sm:max-w-xs rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-blue-200/80 dark:border-blue-500/30 shadow-lg shadow-blue-950/10 px-3 py-2 text-[11px]">
+                         class="pointer-events-none opacity-0 scale-95 transition-all duration-200 ease-out absolute z-20 top-11 left-3 sm:left-4 max-w-[270px] sm:max-w-xs rounded-xl bg-white/95 dark:bg-[#1c1917]/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-700 shadow-xl px-3 py-2 text-[11px]">
                         <div class="flex items-center justify-between gap-3">
                             <span id="dashTooltipMonth" class="font-extrabold text-slate-900 dark:text-white"></span>
                             <span id="dashTooltipSummaryBadge" class="px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 font-extrabold tabular-nums"></span>
@@ -319,43 +374,29 @@
                         </div>
                     </div>
 
-                    <svg id="dashAnalyticsSvg" viewBox="0 0 {{ $svgW }} {{ $svgH }}" class="w-full h-44 sm:h-52 block" role="img" aria-label="Grafik Pergerakan Inventaris 6 Bulan Terakhir">
+                    <svg id="dashAnalyticsSvg" viewBox="0 0 {{ $svgW }} {{ $svgH }}" class="w-full h-44 sm:h-52 block" role="img" aria-label="Grafik Garis Pergerakan Inventaris 6 Bulan Terakhir">
                         <defs>
                             <linearGradient id="dashPrimaryAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.38" />
-                                <stop offset="60%" stop-color="#6366f1" stop-opacity="0.12" />
-                                <stop offset="100%" stop-color="#6366f1" stop-opacity="0.0" />
-                            </linearGradient>
-                            <linearGradient id="dashSecondaryAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="#10b981" stop-opacity="0.36" />
-                                <stop offset="65%" stop-color="#14b8a6" stop-opacity="0.11" />
-                                <stop offset="100%" stop-color="#14b8a6" stop-opacity="0.0" />
-                            </linearGradient>
-                            <linearGradient id="dashLineStrokeGrad" x1="0" y1="0" x2="1" y2="0">
-                                <stop offset="0%" stop-color="#2563eb" />
-                                <stop offset="50%" stop-color="#4f46e5" />
-                                <stop offset="100%" stop-color="#06b6d4" />
-                            </linearGradient>
-                            <linearGradient id="dashBarFillGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.24" />
-                                <stop offset="100%" stop-color="#6366f1" stop-opacity="0.03" />
-                            </linearGradient>
-                            <linearGradient id="dashBarActiveGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="#2563eb" stop-opacity="0.45" />
-                                <stop offset="100%" stop-color="#4f46e5" stop-opacity="0.08" />
+                                <stop offset="0%" stop-color="#2563eb" stop-opacity="0.24" />
+                                <stop offset="100%" stop-color="#2563eb" stop-opacity="0.0" />
                             </linearGradient>
                         </defs>
-
-                        {{-- Horizontal Guide Lines --}}
+                        {{-- Shadcn Horizontal Cartesian Grid Lines + Y-Axis Scale Labels --}}
                         @foreach([0, 0.5, 1] as $gRatio)
-                            @php $gy = round($padTop + ($usableH * $gRatio), 1); @endphp
-                            <line x1="{{ $padX }}" y1="{{ $gy }}" x2="{{ $svgW - $padX }}" y2="{{ $gy }}" stroke="currentColor" class="text-slate-200/80 dark:text-slate-800" stroke-dasharray="4 4" stroke-width="1" />
+                            @php
+                                $gy = round($padTop + ($usableH * $gRatio), 1);
+                                $yVal = (int) round($maxChartUnits * (1 - $gRatio));
+                            @endphp
+                            <line x1="{{ $padX }}" y1="{{ $gy }}" x2="{{ $svgW - $padX }}" y2="{{ $gy }}" stroke="currentColor" class="text-slate-200/90 dark:text-slate-800" stroke-dasharray="4 4" stroke-width="1" />
+                            <text x="{{ $padX - 10 }}" y="{{ $gy + 3 }}" text-anchor="end" class="fill-slate-400 dark:fill-slate-500 text-[9px] font-mono font-bold tabular-nums pointer-events-none">
+                                {{ $yVal }}
+                            </text>
                         @endforeach
 
                         {{-- Interactive Vertical Crosshair Line --}}
                         <line id="dashChartCrosshair"
                               x1="{{ end($unitPts)[0] ?? $padX }}"
-                              y1="{{ $padTop - 8 }}"
+                              y1="{{ $padTop - 6 }}"
                               x2="{{ end($unitPts)[0] ?? $padX }}"
                               y2="{{ $baselineY }}"
                               stroke="#3b82f6"
@@ -363,52 +404,46 @@
                               stroke-dasharray="3 3"
                               class="opacity-0 transition-all duration-200 pointer-events-none" />
 
-                        {{-- Semi-Gradient Vertical Bars per Month --}}
-                        @foreach($unitPts as $idx => $pt)
-                            @php
-                                $barH = max(8, $baselineY - $pt[1]);
-                                $barY = $baselineY - $barH;
-                            @endphp
-                            <rect data-chart-bar-index="{{ $idx }}"
-                                  x="{{ $pt[0] - 16 }}"
-                                  y="{{ $barY }}"
-                                  width="32"
-                                  height="{{ $barH }}"
-                                  rx="7"
-                                  fill="url(#dashBarFillGrad)"
-                                  class="transition-all duration-300" />
-                        @endforeach
-
-                        {{-- Primary Mode (Units) Area & Smooth Curve --}}
+                        {{-- Primary Mode (Units): Pure Multi-Line Series (No Combined Bars) --}}
                         <g id="dashChartUnitsLayer" class="transition-opacity duration-300">
-                            @if($unitAreaPath)
-                                <path d="{{ $unitAreaPath }}" fill="url(#dashPrimaryAreaGrad)" />
-                                <path d="{{ $unitLinePath }}" fill="none" stroke="url(#dashLineStrokeGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                            @if($masukLinePath)
+                                <path d="{{ $masukLinePath }}" fill="none" stroke="#10b981" stroke-width="2" stroke-dasharray="5 3" stroke-linecap="round" opacity="0.85" />
+                            @endif
+                            @if($pindahLinePath)
+                                <path d="{{ $pindahLinePath }}" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="3 3" stroke-linecap="round" opacity="0.8" />
+                            @endif
+                            @if($keluarLinePath)
+                                <path d="{{ $keluarLinePath }}" fill="none" stroke="#f59e0b" stroke-width="1.75" stroke-linecap="round" opacity="0.75" />
+                            @endif
+                            @if($unitLinePath)
+                                <path d="{{ $unitLinePath }}" fill="none" stroke="#2563eb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
                             @endif
                             @foreach($unitPts as $idx => $pt)
                                 @php $mItem = $analyticsSeries[$idx]; @endphp
                                 <g class="cursor-pointer" data-chart-point-index="{{ $idx }}">
                                     <circle data-chart-ring-unit="{{ $idx }}" cx="{{ $pt[0] }}" cy="{{ $pt[1] }}" r="11" class="fill-blue-500/0 transition-all duration-200" />
-                                    <circle cx="{{ $pt[0] }}" cy="{{ $pt[1] }}" r="5" class="fill-white dark:fill-slate-900 stroke-blue-600 dark:stroke-blue-400 transition-transform duration-200" stroke-width="2.75" />
-                                    <text x="{{ $pt[0] }}" y="{{ max(16, $pt[1] - 11) }}" text-anchor="middle" class="fill-slate-700 dark:fill-slate-200 text-[10px] font-extrabold tabular-nums pointer-events-none">
+                                    <circle cx="{{ $pt[0] }}" cy="{{ $pt[1] }}" r="4.5" class="fill-white dark:fill-[#1c1917] stroke-blue-600 dark:stroke-blue-400 transition-transform duration-200" stroke-width="2.75" />
+                                    <text x="{{ $pt[0] }}" y="{{ max(16, $pt[1] - 10) }}" text-anchor="middle" class="fill-slate-700 dark:fill-slate-200 text-[10px] font-extrabold tabular-nums pointer-events-none">
                                         {{ $mItem['total_units'] }}
                                     </text>
                                 </g>
                             @endforeach
                         </g>
 
-                        {{-- Secondary Mode (Transactions) Area & Smooth Curve --}}
+                        {{-- Secondary Mode (Transactions): Pure Line Series --}}
                         <g id="dashChartTxLayer" class="hidden transition-opacity duration-300">
-                            @if($txAreaPath)
-                                <path d="{{ $txAreaPath }}" fill="url(#dashSecondaryAreaGrad)" />
+                            @if($newProdLinePath)
+                                <path d="{{ $newProdLinePath }}" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4 3" stroke-linecap="round" opacity="0.8" />
+                            @endif
+                            @if($txLinePath)
                                 <path d="{{ $txLinePath }}" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
                             @endif
                             @foreach($txPts as $idx => $pt)
                                 @php $mItem = $analyticsSeries[$idx]; @endphp
                                 <g class="cursor-pointer" data-chart-point-index="{{ $idx }}">
                                     <circle data-chart-ring-tx="{{ $idx }}" cx="{{ $pt[0] }}" cy="{{ $pt[1] }}" r="11" class="fill-emerald-500/0 transition-all duration-200" />
-                                    <circle cx="{{ $pt[0] }}" cy="{{ $pt[1] }}" r="5" class="fill-white dark:fill-slate-900 stroke-emerald-500 transition-transform duration-200" stroke-width="2.75" />
-                                    <text x="{{ $pt[0] }}" y="{{ max(16, $pt[1] - 11) }}" text-anchor="middle" class="fill-emerald-700 dark:fill-emerald-300 text-[10px] font-extrabold tabular-nums pointer-events-none">
+                                    <circle cx="{{ $pt[0] }}" cy="{{ $pt[1] }}" r="4.5" class="fill-white dark:fill-[#1c1917] stroke-emerald-500 transition-transform duration-200" stroke-width="2.75" />
+                                    <text x="{{ $pt[0] }}" y="{{ max(16, $pt[1] - 10) }}" text-anchor="middle" class="fill-emerald-700 dark:fill-emerald-300 text-[10px] font-extrabold tabular-nums pointer-events-none">
                                         {{ $mItem['tx_count'] }} tx
                                     </text>
                                 </g>
@@ -418,7 +453,7 @@
                         {{-- Month Labels along X-Axis --}}
                         @foreach($unitPts as $idx => $pt)
                             @php $mItem = $analyticsSeries[$idx]; @endphp
-                            <text data-chart-xlabel-index="{{ $idx }}" x="{{ $pt[0] }}" y="{{ $svgH - 10 }}" text-anchor="middle" class="fill-slate-500 dark:fill-slate-400 text-[10px] font-bold transition-colors duration-200 pointer-events-none">
+                            <text data-chart-xlabel-index="{{ $idx }}" x="{{ $pt[0] }}" y="{{ $svgH - 8 }}" text-anchor="middle" class="fill-slate-500 dark:fill-slate-400 text-[10px] font-bold transition-colors duration-200 pointer-events-none">
                                 {{ $mItem['label'] }}
                             </text>
                         @endforeach
@@ -794,14 +829,21 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const analyticsData = @json($analyticsSeries ?? []);
+    const jsonEl = document.getElementById('shadcnLineChartJson');
+    let chartPayload = { data: [] };
+    try {
+        chartPayload = jsonEl ? JSON.parse(jsonEl.textContent || '{"data":[]}') : { data: @json($analyticsSeries ?? []) };
+    } catch (e) {
+        chartPayload = { data: @json($analyticsSeries ?? []) };
+    }
+    const analyticsData = Array.isArray(chartPayload.data) ? chartPayload.data : [];
+
     const modeBtns = document.querySelectorAll('[data-chart-mode-btn]');
     const unitsLayer = document.getElementById('dashChartUnitsLayer');
     const txLayer = document.getElementById('dashChartTxLayer');
     const activeLabelEl = document.getElementById('dashActiveMonthLabel');
     const activeDetailEl = document.getElementById('dashActiveMonthDetail');
     const chartPoints = document.querySelectorAll('[data-chart-point-index]');
-    const chartBars = document.querySelectorAll('[data-chart-bar-index]');
     const chartXLabels = document.querySelectorAll('[data-chart-xlabel-index]');
     const unitRings = document.querySelectorAll('[data-chart-ring-unit]');
     const txRings = document.querySelectorAll('[data-chart-ring-tx]');
@@ -864,10 +906,6 @@ document.addEventListener('DOMContentLoaded', function () {
             tooltipEl.classList.add('opacity-100', 'scale-100');
         }
 
-        chartBars.forEach((bar, bIdx) => {
-            bar.setAttribute('fill', bIdx === idx ? 'url(#dashBarActiveGrad)' : 'url(#dashBarFillGrad)');
-        });
-
         chartXLabels.forEach((lbl, lIdx) => {
             lbl.classList.toggle('fill-blue-600', lIdx === idx);
             lbl.classList.toggle('dark:fill-blue-400', lIdx === idx);
@@ -916,7 +954,6 @@ document.addEventListener('DOMContentLoaded', function () {
             crosshairEl.classList.add('opacity-0');
             crosshairEl.classList.remove('opacity-100');
         }
-        chartBars.forEach(bar => bar.setAttribute('fill', 'url(#dashBarFillGrad)'));
     });
 });
 </script>

@@ -8,6 +8,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\Mutation;
 use App\Models\Product;
@@ -184,6 +185,105 @@ class V2MutationsProfileAdminObservabilityTest extends TestCase
         $dashBlade = $this->actingAs($admin)->get('/dashboard')->assertOk();
         $dashBlade->assertDontSee('Total Nilai Aset Tercatat');
         $dashBlade->assertSee('dashChartTooltip', false);
+        $dashBlade->assertSee('shadcnLineChartJson', false);
         $this->assertGreaterThanOrEqual(16, Mutation::count());
+    }
+
+    public function test_v2_mobile_native_ux_warm_dark_telemetry_pwa_and_deploy_suite(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+
+        // 1. Mobile notification popover anchored near bell + PWA install & permissions modal in layout
+        $dashHtml = (string) $this->actingAs($admin)->get('/dashboard')->assertOk()->getContent();
+        $this->assertStringContainsString('id="notificationDropdownPanel"', $dashHtml);
+        $this->assertStringContainsString('id="mobilePwaInstallPromptModal"', $dashHtml);
+        $this->assertStringContainsString('id="pwaOneClickInstallBtn"', $dashHtml);
+        $this->assertStringContainsString('id="pwaManualInstallGuideBox"', $dashHtml);
+        $this->assertStringContainsString('id="pwaRequestPermissionsBtn"', $dashHtml);
+        $this->assertStringContainsString('id="pwaPermCameraBadge"', $dashHtml);
+        $this->assertStringContainsString('id="pwaPermLocationBadge"', $dashHtml);
+        $this->assertStringContainsString('id="pwaPermDeeplinkBadge"', $dashHtml);
+        $this->assertStringContainsString('dark:bg-[#12100e]', $dashHtml);
+
+        // 2. CSS Warm Dark Mode + Toast Fade In/Out + Uniform Page Enter/Exit + Pull-to-Refresh + Scanner HUD
+        $appCss = (string) file_get_contents(base_path('resources/css/app.css'));
+        $this->assertStringContainsString('#12100e', $appCss);
+        $this->assertStringContainsString('toastFadeIn60', $appCss);
+        $this->assertStringContainsString('toastFadeOut60', $appCss);
+        $this->assertStringContainsString('pageEnterUniform60', $appCss);
+        $this->assertStringContainsString('pageExitUniform60', $appCss);
+        $this->assertStringContainsString('.ptr-capsule', $appCss);
+        $this->assertStringContainsString('.scanner-laser-line', $appCss);
+
+        // 3. Fullscreen Banking Barcode Scanner HUD + Reusable Media Uploader Thumbnail Grid
+        $scanHtml = (string) $this->actingAs($admin)->get('/scan-barcode')->assertOk()->getContent();
+        $this->assertStringContainsString('id="bankingScannerFullscreenContainer"', $scanHtml);
+
+        $createProductHtml = (string) $this->actingAs($admin)->get('/products/create')->assertOk()->getContent();
+        $this->assertStringContainsString('data-reusable-media-uploader', $createProductHtml);
+        $this->assertStringContainsString('data-uploader-preview-grid', $createProductHtml);
+
+        // 4. Dynamic Active Filter Cards on /products (and none active when reset)
+        $productsUnfiltered = (string) $this->actingAs($admin)->get('/products')->assertOk()->getContent();
+        $this->assertStringNotContainsString('data-card-active="true"', $productsUnfiltered);
+
+        $productsFiltered = (string) $this->actingAs($admin)->get('/products?stock_level=low')->assertOk()->getContent();
+        $this->assertStringContainsString('data-card-active="true"', $productsFiltered);
+
+        // 5. Rich Activity Log tracking + filtering, sorting & pagination
+        ActivityLog::record(
+            action: 'scan_barcode',
+            module: 'BARCODE',
+            description: 'Memindai barcode inventaris BRG-TEST-01 via Fullscreen Banking HUD.',
+            subjectLabel: 'BRG-TEST-01'
+        );
+
+        $logsRes = $this->actingAs($admin)
+            ->get('/activity-logs?action=scan_barcode&sort=latest&per_page=10')
+            ->assertOk();
+        $logsRes->assertSee('BRG-TEST-01');
+
+        // 6. Observability pagination + 1000ms heartbeat
+        $obsJson = $this->actingAs($admin)
+            ->getJson('/observability/metrics?page=1&per_page=10&method=GET')
+            ->assertOk()
+            ->assertJsonPath('refresh_interval_ms', 1000)
+            ->assertJsonStructure([
+                'ok',
+                'refresh_interval_ms',
+                'entries',
+                'pagination' => ['current_page', 'per_page', 'total', 'last_page', 'from', 'to'],
+            ]);
+        $this->assertSame(10, $obsJson->json('pagination.per_page'));
+
+        // 7. Live Realtime Notification JSON actions (no page reload required)
+        $this->actingAs($admin)
+            ->postJson('/notifications/check-reminders')
+            ->assertOk()
+            ->assertJsonStructure(['ok', 'message', 'unread_count']);
+
+        $this->actingAs($admin)
+            ->patchJson('/notifications/read-all')
+            ->assertOk()
+            ->assertJsonPath('unread_count', 0);
+
+        // 8. PWA Manifest, DeepLink Association, Webhook Server Command & Deployment Script/Guide
+        $manifest = json_decode((string) file_get_contents(public_path('manifest.webmanifest')), true);
+        $this->assertSame('standalone', $manifest['display'] ?? null);
+        $this->assertSame('preferred', $manifest['handle_links'] ?? null);
+        $this->assertContains('camera', $manifest['permissions'] ?? []);
+        $this->assertContains('geolocation', $manifest['permissions'] ?? []);
+
+        $this->artisan('inventory:webhook-server --once')->assertExitCode(0);
+        $this->postJson('/api/webhooks/receiver', ['event' => 'test.ping'])
+            ->assertOk()
+            ->assertJsonPath('ok', true);
+
+        $this->assertFileExists(base_path('scripts/deploy.sh'));
+        $this->assertFileExists(base_path('docs/DEPLOYMENT.md'));
+        $makefile = (string) file_get_contents(base_path('Makefile'));
+        $runDevSh = (string) file_get_contents(base_path('docker/run-dev.sh'));
+        $this->assertStringContainsString('inventory:webhook-server', $runDevSh);
+        $this->assertStringContainsString('deploy:', $makefile);
     }
 }

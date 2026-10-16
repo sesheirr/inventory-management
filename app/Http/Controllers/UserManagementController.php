@@ -82,11 +82,13 @@ class UserManagementController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        ActivityLog::create([
-            'user_id' => $request->user()->id,
-            'action' => 'created',
-            'description' => "Menambahkan akun pengguna baru {$newUser->name} ({$newUser->email}) dengan role {$newUser->role}",
-        ]);
+        ActivityLog::record(
+            'created',
+            "Menambahkan akun pengguna baru {$newUser->name} ({$newUser->email}) dengan role {$newUser->role}",
+            $newUser,
+            $newUser->id,
+            $request->user()->id
+        );
 
         return redirect()
             ->route('users.index')
@@ -133,11 +135,13 @@ class UserManagementController extends Controller
 
         $user->save();
 
-        ActivityLog::create([
-            'user_id' => $request->user()->id,
-            'action' => 'updated',
-            'description' => "Memperbarui profil/akses pengguna {$user->name} ({$user->role})".($passwordChanged ? ' beserta reset password' : ''),
-        ]);
+        ActivityLog::record(
+            'updated',
+            "Memperbarui profil/akses pengguna {$user->name} ({$user->role})".($passwordChanged ? ' beserta reset password' : ''),
+            $user,
+            $user->id,
+            $request->user()->id
+        );
 
         return redirect()
             ->route('users.index')
@@ -173,11 +177,13 @@ class UserManagementController extends Controller
         $oldRole = $user->role;
         $user->update(['role' => $newRole]);
 
-        ActivityLog::create([
-            'user_id' => $request->user()->id,
-            'action' => 'updated',
-            'description' => "Mengubah role pengguna {$user->name} dari {$oldRole} menjadi {$newRole}",
-        ]);
+        ActivityLog::record(
+            'updated',
+            "Mengubah role pengguna {$user->name} dari {$oldRole} menjadi {$newRole}",
+            $user,
+            $user->id,
+            $request->user()->id
+        );
 
         return redirect()
             ->route('users.index')
@@ -204,15 +210,18 @@ class UserManagementController extends Controller
             }
         }
 
+        $deletedId = $user->id;
         $deletedName = $user->name;
         $deletedEmail = $user->email;
         $user->delete();
 
-        ActivityLog::create([
-            'user_id' => $request->user()->id,
-            'action' => 'deleted',
-            'description' => "Menghapus akun pengguna {$deletedName} ({$deletedEmail})",
-        ]);
+        ActivityLog::record(
+            'deleted',
+            "Menghapus akun pengguna {$deletedName} ({$deletedEmail})",
+            User::class,
+            $deletedId,
+            $request->user()->id
+        );
 
         return redirect()
             ->route('users.index')

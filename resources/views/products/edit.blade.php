@@ -125,30 +125,16 @@
                 @error('description')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
             </div>
 
-            {{-- Foto Barang --}}
-            <div class="space-y-3">
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                    Foto & Galeri Barang <span class="text-[11px] font-normal text-slate-400">(Multi-Upload JPG, PNG, WEBP — Maks. 8MB/file)</span>
-                </label>
-                <div data-v2-multi-uploader
-                     data-upload-endpoint="{{ route('uploads.tmp.store') }}"
-                     data-delete-endpoint="{{ route('uploads.tmp.destroy') }}"
-                     data-initial-gallery="{{ json_encode($product->gallery_urls) }}"
-                     data-max-files="8"></div>
-                <input type="file" name="image" accept="image/jpeg,image/png,image/webp" 
-                       class="w-full px-4 py-2 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-950/40 dark:file:text-blue-300 hover:file:bg-blue-100">
-                
-                @if($product->image_url)
-                    <div class="flex items-center gap-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
-                        <img src="{{ $product->image_url }}" alt="Gambar saat ini" class="w-16 h-16 rounded-lg object-cover border border-slate-200 dark:border-slate-700 shrink-0" onerror="this.onerror=null; this.src='{{ asset('images/no-image.png') }}';">
-                        <label class="flex items-center gap-2 text-xs font-medium text-rose-600 dark:text-rose-400 cursor-pointer">
-                            <input type="checkbox" name="remove_image" value="1" class="w-4 h-4 rounded text-rose-600 border-slate-300 focus:ring-rose-500">
-                            <span>Hapus foto saat ini</span>
-                        </label>
-                    </div>
-                @endif
-                @error('image')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
-            </div>
+            {{-- Foto Barang (Reusable Component with Instant Thumbnail Grid Preview) --}}
+            <x-media-uploader
+                name="image"
+                label="Foto & Galeri Barang"
+                hint="(Multi-Upload JPG, PNG, WEBP — Maks. 8MB/file)"
+                :max-files="8"
+                :initial-gallery="$product->gallery_urls ?? []"
+                :initial-image-url="$product->image_url"
+                :allow-remove-existing="true"
+            />
 
             {{-- Barcode Section --}}
             <div class="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
@@ -171,9 +157,9 @@
                                    oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9\-]/g,'')">
                         </div>
 
-                        <button type="button" id="btn-scan-camera" class="px-3 py-2.5 rounded-xl text-xs font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800/40 transition-colors flex items-center gap-1.5 cursor-pointer shrink-0">
-                            <i class="bi bi-camera"></i>
-                            <span>Scan</span>
+                        <button type="button" id="btn-scan-camera" class="px-3.5 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-sm shadow-blue-500/20 transition-all flex items-center gap-1.5 cursor-pointer shrink-0">
+                            <i class="bi bi-qr-code-scan"></i>
+                            <span>Scan Fullscreen</span>
                         </button>
 
                         <button type="button" id="preview-barcode-btn" class="px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer shrink-0">
@@ -211,25 +197,55 @@
     </div>
 </div>
 
-{{-- Camera Scanner Modal --}}
-<div id="scannerModal" class="modal-container responsive-bottom-sheet fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-    <div class="sheet-dialog relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 text-center animate-fade-in">
-        <button type="button" id="btn-close-scanner" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+{{-- Fullscreen Banking-Style Inventory Barcode Scanner HUD Modal --}}
+<div id="scannerModal" class="fixed inset-0 z-[120] hidden flex-col justify-between bg-black/95 backdrop-blur-md text-white select-none">
+    {{-- Top Banking Scanner HUD Bar --}}
+    <div class="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-white/10 bg-black/50">
+        <div class="flex items-center gap-3">
+            <span class="w-9 h-9 rounded-xl bg-blue-600/25 border border-blue-400/40 text-sky-400 flex items-center justify-center">
+                <i class="bi bi-qr-code-scan text-base"></i>
+            </span>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h3 class="text-sm font-extrabold tracking-wide uppercase">Inventory Scanner HUD</h3>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>LIVE OPTIC</span>
+                    </span>
+                </div>
+                <p class="text-[11px] text-white/60">Diskominfo Kab. Garut • Pindai kode128 / QR aset</p>
+            </div>
+        </div>
+        <button type="button" id="btn-close-scanner" class="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-white transition-colors">
             <i class="bi bi-x-lg text-sm"></i>
         </button>
+    </div>
 
-        <h3 class="text-base font-bold text-slate-900 dark:text-white mb-3 flex items-center justify-center gap-2">
-            <i class="bi bi-camera text-blue-600"></i> Scan Barcode
-        </h3>
-
-        <div id="reader" class="w-full rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800"></div>
-        <p class="text-xs text-slate-400 mt-3">Arahkan kamera ke stiker barcode barang.</p>
-
-        <div class="mt-4">
-            <button type="button" id="btn-stop-scanner" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800">
-                Tutup
-            </button>
+    {{-- Center Banking Reticle Viewport --}}
+    <div class="relative flex-1 flex flex-col items-center justify-center p-4 overflow-hidden">
+        <div class="relative w-full max-w-md aspect-[4/3] rounded-3xl overflow-hidden border border-white/20 bg-black shadow-[0_0_60px_rgba(37,99,235,0.3)]">
+            <div id="reader" class="w-full h-full object-cover"></div>
+            {{-- Corner Targeting Brackets --}}
+            <div class="pointer-events-none absolute inset-6">
+                <span class="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-sky-400 rounded-tl-xl"></span>
+                <span class="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-sky-400 rounded-tr-xl"></span>
+                <span class="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-sky-400 rounded-bl-xl"></span>
+                <span class="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-sky-400 rounded-br-xl"></span>
+                <div class="scanner-laser-line"></div>
+            </div>
         </div>
+        <p class="text-xs font-semibold text-sky-300 mt-4 flex items-center gap-2 bg-sky-500/10 border border-sky-400/25 px-4 py-2 rounded-full">
+            <i class="bi bi-bullseye"></i>
+            <span>Posisikan stiker barcode aset di dalam bingkai pemindai</span>
+        </p>
+    </div>
+
+    {{-- Bottom Banking HUD Controls --}}
+    <div class="px-4 sm:px-6 py-4 border-t border-white/10 bg-black/60 flex items-center justify-between gap-3">
+        <span class="text-[11px] text-white/60 font-medium">Mendukung Kamera Optik & USB/Bluetooth HID</span>
+        <button type="button" id="btn-stop-scanner" class="px-5 py-2.5 rounded-xl text-xs font-extrabold text-white bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-600/30 transition-all">
+            Tutup Fullscreen
+        </button>
     </div>
 </div>
 

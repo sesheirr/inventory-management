@@ -1150,12 +1150,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.animateCollapsiblePanel = animateCollapsiblePanel;
 
+    function positionNotificationBellPopover() {
+        if (!notifDropdown || !notifBellBtn) return;
+        const isMobile = window.innerWidth < 640;
+        const bellRect = notifBellBtn.getBoundingClientRect();
+        const arrowEl = document.getElementById('notificationBellPointerArrow');
+
+        if (isMobile) {
+            const topPx = Math.max(54, Math.round((bellRect.bottom || 52) + 8));
+            notifDropdown.style.position = 'fixed';
+            notifDropdown.style.top = `${topPx}px`;
+            notifDropdown.style.right = '12px';
+            notifDropdown.style.left = '12px';
+            notifDropdown.style.bottom = 'auto';
+            notifDropdown.style.transformOrigin = 'top right';
+
+            if (arrowEl && bellRect.width > 0) {
+                const rightOffset = Math.max(16, Math.round(window.innerWidth - (bellRect.left + bellRect.width / 2) - 12 - 7));
+                arrowEl.style.right = `${rightOffset}px`;
+            }
+        } else {
+            notifDropdown.style.position = '';
+            notifDropdown.style.top = '';
+            notifDropdown.style.right = '';
+            notifDropdown.style.left = '';
+            notifDropdown.style.bottom = '';
+            notifDropdown.style.transformOrigin = 'top right';
+            if (arrowEl) {
+                arrowEl.style.right = '';
+            }
+        }
+    }
+
     function animatePopoverOrSheetOpen(panelEl, backdropEl = null) {
         if (!panelEl) return;
         cancelElementAnimations(panelEl);
         panelEl.style.transform = '';
         panelEl.classList.remove('hidden');
         const isMobile = window.innerWidth < 640;
+        const isNotifPopover = panelEl.id === 'notificationDropdownPanel';
+
+        if (isNotifPopover) {
+            positionNotificationBellPopover();
+        }
 
         if (backdropEl && isMobile) {
             cancelElementAnimations(backdropEl);
@@ -1164,19 +1201,19 @@ document.addEventListener('DOMContentLoaded', () => {
             animateSpringElement(backdropEl, [
                 { opacity: 0 },
                 { opacity: 1 },
-            ], { duration: 240, easing: EASE_SHADCN_OUT, fill: 'none' });
+            ], { duration: 220, easing: EASE_SHADCN_OUT, fill: 'none' });
         }
 
         if (isReducedMotion || typeof panelEl.animate !== 'function') return;
 
-        if (isMobile) {
+        if (isMobile && !isNotifPopover) {
             animateSpringElement(panelEl, [
                 { opacity: 0, transform: 'translate3d(0, 40px, 0) scale(0.97)' },
                 { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
             ], { duration: 310, easing: EASE_VAUL_DRAWER, fill: 'none' });
         } else {
             animateSpringElement(panelEl, [
-                { opacity: 0, transform: 'translate3d(0, -6px, 0) scale(0.96)' },
+                { opacity: 0, transform: 'translate3d(0, -8px, 0) scale(0.96)' },
                 { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
             ], { duration: 215, easing: EASE_SHADCN_OUT, fill: 'none' });
         }
@@ -1185,12 +1222,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function animatePopoverOrSheetClose(panelEl, backdropEl = null) {
         if (!panelEl || panelEl.classList.contains('hidden')) return;
         const isMobile = window.innerWidth < 640;
+        const isNotifPopover = panelEl.id === 'notificationDropdownPanel';
 
         if (backdropEl && !backdropEl.classList.contains('hidden')) {
             const bAnim = animateSpringElement(backdropEl, [
                 { opacity: 1 },
                 { opacity: 0 },
-            ], { duration: 190, easing: EASE_SHADCN_IN_OUT, fill: 'forwards' });
+            ], { duration: 185, easing: EASE_SHADCN_IN_OUT, fill: 'forwards' });
             if (bAnim) {
                 bAnim.onfinish = () => {
                     backdropEl.classList.add('hidden');
@@ -1208,19 +1246,19 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const keyframes = isMobile
+        const keyframes = (isMobile && !isNotifPopover)
             ? [
                 { opacity: 1, transform: panelEl.style.transform || 'translate3d(0, 0, 0) scale(1)' },
                 { opacity: 0, transform: 'translate3d(0, 32px, 0) scale(0.97)' },
             ]
             : [
                 { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
-                { opacity: 0, transform: 'translate3d(0, -4px, 0) scale(0.97)' },
+                { opacity: 0, transform: 'translate3d(0, -6px, 0) scale(0.96)' },
             ];
 
         const anim = animateSpringElement(panelEl, keyframes, {
-            duration: isMobile ? 220 : 165,
-            easing: isMobile ? EASE_VAUL_DRAWER : EASE_SHADCN_IN_OUT,
+            duration: (isMobile && !isNotifPopover) ? 220 : 165,
+            easing: (isMobile && !isNotifPopover) ? EASE_VAUL_DRAWER : EASE_SHADCN_IN_OUT,
             fill: 'forwards',
         });
         if (anim) {
@@ -1234,7 +1272,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Profile & Notification Bell Dropdowns / Mobile Sheets
+    // Profile & Notification Bell Dropdowns / Top-Anchored Mobile Notification Popover
     const userMenuBtn = document.getElementById('userMenuButton');
     const userMenuDropdown = document.getElementById('userMenuDropdown');
     const notifDropdownRoot = document.getElementById('notificationDropdownRoot');
@@ -1243,7 +1281,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const notifBackdrop = document.getElementById('notificationSheetBackdrop');
     const closeNotifSheetBtn = document.getElementById('closeNotificationSheetBtn');
 
-    // Escape <header>'s backdrop-filter containing block on mobile (< 640px)
+    // Escape <header>'s backdrop-filter containing block on mobile (< 640px) while anchoring right below #notificationBellBtn
     function syncNotificationPanelMount() {
         if (!notifDropdown || !notifDropdownRoot) return;
         const isMobile = window.innerWidth < 640;
@@ -1254,6 +1292,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (notifDropdown.parentElement !== document.body) {
                 document.body.appendChild(notifDropdown);
             }
+            positionNotificationBellPopover();
         } else {
             if (notifBackdrop && notifBackdrop.parentElement !== notifDropdownRoot) {
                 notifBackdrop.classList.add('hidden');
@@ -1262,6 +1301,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (notifDropdown.parentElement !== notifDropdownRoot) {
                 notifDropdownRoot.appendChild(notifDropdown);
             }
+            positionNotificationBellPopover();
         }
     }
 
@@ -1398,7 +1438,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 ], { duration: 260, easing: EASE_SHADCN_OUT, fill: 'none' });
             }
 
-            // Stagger inner tiles if opening #mobileAppMenuSheet with fill: 'backwards' so zero blink occurs
             if (modalId === 'mobileAppMenuSheet') {
                 const tiles = dialog.querySelectorAll('.grid a, .grid button');
                 tiles.forEach((tile, idx) => {
@@ -1479,22 +1518,23 @@ document.addEventListener('DOMContentLoaded', () => {
     window.openModalById = openModalById;
     window.closeModalEl = closeModalEl;
 
-    // Touch / Pointer Drag-to-Dismiss on .sheet-grab-handle (Native Mobile Bottom Sheet Feel)
+    // Interactive Up & Down Drag for Mobile Bottom Sheets (.sheet-grab-handle & #mobileBottomMenuBtn)
     function initBottomSheetDragHandles() {
-        document.querySelectorAll('.sheet-grab-handle').forEach((handle) => {
+        document.querySelectorAll('.sheet-grab-handle, [data-sheet-drag-handle="true"]').forEach((handle) => {
             if (handle.dataset.dragBound === '1') return;
             handle.dataset.dragBound = '1';
 
             let startY = 0;
-            let currentY = 0;
+            let currentDy = 0;
             let dragging = false;
 
             const sheetTarget = handle.closest('.sheet-dialog') || handle.closest('#notificationDropdownPanel');
             if (!sheetTarget) return;
+            const parentModal = sheetTarget.closest('.modal-container');
 
             const onStart = (clientY) => {
                 startY = clientY;
-                currentY = 0;
+                currentDy = 0;
                 dragging = true;
                 cancelElementAnimations(sheetTarget);
                 sheetTarget.style.transition = 'none';
@@ -1502,33 +1542,64 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const onMove = (clientY) => {
                 if (!dragging) return;
-                const dy = Math.max(0, clientY - startY);
-                currentY = dy;
-                sheetTarget.style.transform = `translate3d(0, ${dy}px, 0)`;
+                const rawDy = clientY - startY;
+                // Allow dragging BOTH upward (negative rawDy with rubber-band / expand) and downward (positive rawDy)
+                if (rawDy < 0) {
+                    currentDy = Math.max(-140, rawDy * 0.65);
+                } else {
+                    currentDy = rawDy;
+                }
+                sheetTarget.style.transform = `translate3d(0, ${Math.round(currentDy)}px, 0)`;
             };
 
             const onEnd = () => {
                 if (!dragging) return;
                 dragging = false;
 
-                if (currentY > 68) {
+                const snapState = parentModal?.getAttribute('data-snap-state') || 'compact';
+
+                if (currentDy < -42 && parentModal) {
+                    // Dragged upward -> expand sheet to full height snap point
+                    parentModal.setAttribute('data-snap-state', 'expanded');
+                    sheetTarget.style.maxHeight = '92dvh';
+                    sheetTarget.style.transition = `transform 280ms ${EASE_VAUL_DRAWER}, max-height 280ms ${EASE_VAUL_DRAWER}`;
+                    sheetTarget.style.transform = 'translate3d(0, 0, 0)';
+                    setTimeout(() => {
+                        sheetTarget.style.transition = '';
+                        sheetTarget.style.transform = '';
+                    }, 285);
+                    return;
+                }
+
+                if (currentDy > 42 && currentDy <= 115 && snapState === 'expanded' && parentModal) {
+                    // Dragged downward slightly from expanded -> snap back to compact
+                    parentModal.setAttribute('data-snap-state', 'compact');
+                    sheetTarget.style.maxHeight = '';
+                    sheetTarget.style.transition = `transform 280ms ${EASE_VAUL_DRAWER}, max-height 280ms ${EASE_VAUL_DRAWER}`;
+                    sheetTarget.style.transform = 'translate3d(0, 0, 0)';
+                    setTimeout(() => {
+                        sheetTarget.style.transition = '';
+                        sheetTarget.style.transform = '';
+                    }, 285);
+                    return;
+                }
+
+                if (currentDy > 68) {
                     sheetTarget.style.transition = '';
-                    const parentModal = sheetTarget.closest('.modal-container');
                     if (parentModal) {
+                        parentModal.setAttribute('data-snap-state', 'compact');
+                        sheetTarget.style.maxHeight = '';
                         closeModalEl(parentModal);
                     } else if (sheetTarget.id === 'notificationDropdownPanel') {
                         closeNotificationCenter();
                     }
-                } else if (currentY > 0) {
+                } else {
                     sheetTarget.style.transition = `transform 260ms ${EASE_SHADCN_OUT}`;
                     sheetTarget.style.transform = 'translate3d(0, 0, 0)';
                     setTimeout(() => {
                         sheetTarget.style.transition = '';
                         sheetTarget.style.transform = '';
                     }, 265);
-                } else {
-                    sheetTarget.style.transition = '';
-                    sheetTarget.style.transform = '';
                 }
             };
 
@@ -1542,7 +1613,65 @@ document.addEventListener('DOMContentLoaded', () => {
 
             handle.addEventListener('touchend', onEnd);
             handle.addEventListener('touchcancel', onEnd);
+            handle.addEventListener('pointerdown', (e) => {
+                if (e.pointerType === 'mouse' && e.button === 0) {
+                    onStart(e.clientY);
+                    const moveListener = (ev) => onMove(ev.clientY);
+                    const upListener = () => {
+                        onEnd();
+                        window.removeEventListener('pointermove', moveListener);
+                        window.removeEventListener('pointerup', upListener);
+                    };
+                    window.addEventListener('pointermove', moveListener);
+                    window.addEventListener('pointerup', upListener);
+                }
+            });
         });
+
+        // Allow dragging #mobileBottomMenuBtn upward to pull #mobileAppMenuSheet open interactively
+        const openerBtn = document.getElementById('mobileBottomMenuBtn');
+        const menuSheetModal = document.getElementById('mobileAppMenuSheet');
+        const menuSheetDialog = document.getElementById('mobileAppMenuDialog');
+        if (openerBtn && menuSheetModal && menuSheetDialog && openerBtn.dataset.openerDragBound !== '1') {
+            openerBtn.dataset.openerDragBound = '1';
+            let startY = 0;
+            let pulledUpPx = 0;
+            let isPullingMenu = false;
+
+            openerBtn.addEventListener('touchstart', (e) => {
+                if (e.touches.length !== 1) return;
+                startY = e.touches[0].clientY;
+                pulledUpPx = 0;
+                isPullingMenu = false;
+            }, { passive: true });
+
+            openerBtn.addEventListener('touchmove', (e) => {
+                if (e.touches.length !== 1) return;
+                const dy = e.touches[0].clientY - startY;
+                if (dy < -10) {
+                    if (!isPullingMenu) {
+                        isPullingMenu = true;
+                        menuSheetModal.classList.remove('hidden');
+                        menuSheetModal.classList.add('flex');
+                        menuSheetDialog.style.transition = 'none';
+                    }
+                    pulledUpPx = Math.min(360, Math.abs(dy));
+                    const remainPercent = Math.max(0, 100 - (pulledUpPx / 3.2));
+                    menuSheetDialog.style.transform = `translate3d(0, ${remainPercent}%, 0)`;
+                }
+            }, { passive: true });
+
+            openerBtn.addEventListener('touchend', () => {
+                if (!isPullingMenu) return;
+                isPullingMenu = false;
+                menuSheetDialog.style.transition = '';
+                if (pulledUpPx >= 36) {
+                    openModalById('mobileAppMenuSheet');
+                } else {
+                    closeModalEl(menuSheetModal, true);
+                }
+            });
+        }
     }
 
     initBottomSheetDragHandles();
@@ -1683,9 +1812,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             progressBar.classList.remove('is-finishing');
             progressBar.classList.add('is-active');
+
+            // Smooth uniform exit transition across all pages and mobile menu navigation
+            const mobileMenuSheet = document.getElementById('mobileAppMenuSheet');
+            if (mobileMenuSheet && !mobileMenuSheet.classList.contains('hidden')) {
+                closeModalEl(mobileMenuSheet, false);
+            }
+            document.documentElement.classList.add('page-is-exiting');
         });
 
         window.addEventListener('pageshow', () => {
+            document.documentElement.classList.remove('page-is-exiting');
             progressBar.classList.remove('is-active');
             progressBar.classList.add('is-finishing');
             setTimeout(() => progressBar.classList.remove('is-finishing'), 200);
@@ -2917,13 +3054,464 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {}
     }
 
+    // =========================================================================
+    // 10. REALTIME AJAX NOTIFICATION ACTIONS (ZERO MANUAL REFRESH)
+    // =========================================================================
+    function initRealtimeNotificationActions() {
+        document.addEventListener('submit', async (e) => {
+            const form = e.target;
+            if (!(form instanceof HTMLFormElement)) return;
+
+            const isSyncForm = form.hasAttribute('data-ajax-notif-sync');
+            const isReadAllForm = form.hasAttribute('data-ajax-notif-read-all');
+            if (!isSyncForm && !isReadAllForm) return;
+
+            e.preventDefault();
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
+
+            try {
+                const res = await fetch(form.action, {
+                    method: (form.getAttribute('method') || 'POST').toUpperCase(),
+                    headers: {
+                        'X-CSRF-TOKEN': getCsrfToken(),
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (typeof data.unread_count === 'number') {
+                        updateUnreadBadgeCount(data.unread_count);
+                    }
+                    if (Array.isArray(data.recent_notifications)) {
+                        renderNavbarNotificationItems(data.recent_notifications);
+                    }
+                    if (isReadAllForm) {
+                        document.querySelectorAll('[data-notif-unread-pill], [data-notif-red-dot], #notificationsPageUnreadBadge').forEach((el) => el.remove());
+                        document.querySelectorAll('[data-swipe-notification]').forEach((row) => {
+                            row.setAttribute('data-is-unread', '0');
+                            row.setAttribute('data-unread', '0');
+                        });
+                    }
+                    window.toast?.success(data.message || (isReadAllForm ? 'Semua notifikasi ditandai dibaca' : 'Notifikasi disinkronkan secara realtime'));
+                }
+            } catch (err) {
+                window.toast?.error('Gagal memproses aksi notifikasi secara realtime.');
+            } finally {
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        });
+    }
+
+    initRealtimeNotificationActions();
+
+    // =========================================================================
+    // 11. REUSABLE MEDIA UPLOADER WITH INSTANT CLIENT-SIDE THUMBNAIL PREVIEW
+    // =========================================================================
+    function initReusableMediaUploaders(root = document) {
+        root.querySelectorAll('[data-reusable-media-uploader="true"]').forEach((uploader) => {
+            if (uploader.dataset.uploaderBound === '1') return;
+            uploader.dataset.uploaderBound = '1';
+
+            const fileInput = uploader.querySelector('[data-uploader-file-input]');
+            const dropzone = uploader.querySelector('[data-uploader-dropzone]');
+            const previewWrap = uploader.querySelector('[data-uploader-preview-wrap]');
+            const previewGrid = uploader.querySelector('[data-uploader-preview-grid]');
+            const countBadge = uploader.querySelector('[data-uploader-count-badge]');
+            const clearBtn = uploader.querySelector('[data-uploader-clear-btn]');
+            const existingWrap = uploader.querySelector('[data-uploader-existing-wrap]');
+            const removeExistingBtn = uploader.querySelector('[data-uploader-remove-existing-btn]');
+            const removeFlagInput = uploader.querySelector('[data-uploader-remove-flag]');
+
+            if (!fileInput || !previewGrid || !previewWrap) return;
+
+            let selectedFiles = [];
+
+            function syncInputFiles() {
+                try {
+                    const dt = new DataTransfer();
+                    selectedFiles.forEach((f) => dt.items.add(f));
+                    fileInput.files = dt.files;
+                } catch (e) {}
+            }
+
+            function renderThumbnails() {
+                previewGrid.innerHTML = '';
+                if (selectedFiles.length === 0) {
+                    previewWrap.classList.add('hidden');
+                    if (countBadge) countBadge.textContent = '0 file dipilih';
+                    return;
+                }
+
+                previewWrap.classList.remove('hidden');
+                if (countBadge) countBadge.textContent = `${selectedFiles.length} foto siap diunggah`;
+
+                selectedFiles.forEach((file, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'group relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xs';
+                    const sizeKb = Math.max(1, Math.round(file.size / 1024));
+                    const sizeLabel = sizeKb >= 1024 ? `${(sizeKb / 1024).toFixed(1)} MB` : `${sizeKb} KB`;
+                    const objectUrl = URL.createObjectURL(file);
+
+                    card.innerHTML = `
+                        <div class="aspect-square w-full bg-slate-100 dark:bg-slate-800 overflow-hidden relative">
+                            <img src="${objectUrl}" alt="${escapeHtmlText(file.name)}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+                            ${idx === 0 ? '<span class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-blue-600/90 text-white text-[9px] font-extrabold uppercase tracking-wider shadow-xs">Utama</span>' : ''}
+                            <button type="button" data-remove-thumb-idx="${idx}" class="absolute top-1.5 right-1.5 w-6 h-6 rounded-lg bg-slate-900/75 hover:bg-rose-600 text-white flex items-center justify-center text-xs transition-colors cursor-pointer" title="Hapus gambar">
+                                <i class="bi bi-x-lg text-[10px]"></i>
+                            </button>
+                        </div>
+                        <div class="p-2">
+                            <p class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">${escapeHtmlText(file.name)}</p>
+                            <p class="text-[10px] font-mono text-slate-400">${sizeLabel}</p>
+                        </div>
+                    `;
+
+                    card.querySelector('[data-remove-thumb-idx]')?.addEventListener('click', (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        selectedFiles.splice(idx, 1);
+                        syncInputFiles();
+                        renderThumbnails();
+                    });
+
+                    previewGrid.appendChild(card);
+                });
+            }
+
+            function handleNewFiles(fileList) {
+                const incoming = Array.from(fileList || []).filter((f) => f.type.startsWith('image/'));
+                if (incoming.length === 0) return;
+
+                const isMultiple = fileInput.hasAttribute('multiple');
+                if (isMultiple) {
+                    selectedFiles = [...selectedFiles, ...incoming].slice(0, 8);
+                } else {
+                    selectedFiles = [incoming[0]];
+                }
+                syncInputFiles();
+                renderThumbnails();
+            }
+
+            fileInput.addEventListener('change', () => {
+                selectedFiles = Array.from(fileInput.files || []).filter((f) => f.type.startsWith('image/'));
+                renderThumbnails();
+            });
+
+            if (dropzone) {
+                ['dragenter', 'dragover'].forEach((evt) => {
+                    dropzone.addEventListener(evt, (e) => {
+                        e.preventDefault();
+                        dropzone.classList.add('border-blue-500', 'bg-blue-50/40', 'dark:bg-blue-950/20');
+                    });
+                });
+                ['dragleave', 'drop'].forEach((evt) => {
+                    dropzone.addEventListener(evt, (e) => {
+                        e.preventDefault();
+                        dropzone.classList.remove('border-blue-500', 'bg-blue-50/40', 'dark:bg-blue-950/20');
+                    });
+                });
+                dropzone.addEventListener('drop', (e) => {
+                    if (e.dataTransfer?.files?.length) {
+                        handleNewFiles(e.dataTransfer.files);
+                    }
+                });
+            }
+
+            clearBtn?.addEventListener('click', () => {
+                selectedFiles = [];
+                fileInput.value = '';
+                renderThumbnails();
+            });
+
+            removeExistingBtn?.addEventListener('click', () => {
+                if (removeFlagInput) removeFlagInput.value = '1';
+                existingWrap?.classList.add('hidden');
+                window.toast?.info('Foto saat ini ditandai untuk dihapus saat disimpan.');
+            });
+        });
+    }
+
+    window.initReusableMediaUploaders = initReusableMediaUploaders;
+    initReusableMediaUploaders(document);
+
+    // =========================================================================
+    // 12. MOBILE PULL-TO-REFRESH ON ANY PAGE (SWIPE DOWN AT TOP & RELEASE)
+    // =========================================================================
+    function initMobilePullToRefresh() {
+        let capsule = document.getElementById('mobilePullToRefreshCapsule');
+        if (!capsule) {
+            capsule = document.createElement('div');
+            capsule.id = 'mobilePullToRefreshCapsule';
+            capsule.className = 'ptr-capsule';
+            capsule.innerHTML = `
+                <i id="ptrCapsuleIcon" class="bi bi-arrow-down-circle-fill text-blue-600 dark:text-blue-400 text-sm transition-transform duration-200"></i>
+                <span id="ptrCapsuleLabel">Tarik untuk memuat ulang</span>
+            `;
+            document.body.appendChild(capsule);
+        }
+
+        const iconEl = document.getElementById('ptrCapsuleIcon');
+        const labelEl = document.getElementById('ptrCapsuleLabel');
+        let startY = 0;
+        let startX = 0;
+        let pullDistance = 0;
+        let pulling = false;
+        const PULL_THRESHOLD = 72;
+
+        document.addEventListener('touchstart', (e) => {
+            if (window.innerWidth >= 1024 || e.touches.length !== 1) return;
+            if (window.scrollY > 2) return;
+            if (document.querySelector('.modal-container.flex') || (notifDropdown && !notifDropdown.classList.contains('hidden'))) return;
+
+            startY = e.touches[0].clientY;
+            startX = e.touches[0].clientX;
+            pullDistance = 0;
+            pulling = true;
+        }, { passive: true });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!pulling || e.touches.length !== 1) return;
+            if (window.scrollY > 2) {
+                pulling = false;
+                capsule.classList.remove('is-visible');
+                return;
+            }
+
+            const dy = e.touches[0].clientY - startY;
+            const dx = e.touches[0].clientX - startX;
+
+            if (dy <= 8 || Math.abs(dx) > Math.abs(dy)) {
+                return;
+            }
+
+            pullDistance = Math.min(125, dy * 0.65);
+            if (pullDistance > 14) {
+                capsule.classList.add('is-visible');
+                const offsetPx = Math.min(34, Math.round(pullDistance * 0.35));
+                capsule.style.transform = `translate3d(-50%, ${offsetPx}px, 0)`;
+
+                const ready = pullDistance >= PULL_THRESHOLD;
+                if (labelEl) {
+                    labelEl.textContent = ready ? 'Lepaskan untuk memuat ulang...' : 'Tarik untuk memuat ulang...';
+                }
+                if (iconEl) {
+                    iconEl.style.transform = ready ? 'rotate(180deg)' : 'rotate(0deg)';
+                }
+            }
+        }, { passive: true });
+
+        const finishPull = () => {
+            if (!pulling) return;
+            pulling = false;
+
+            if (pullDistance >= PULL_THRESHOLD) {
+                capsule.classList.add('is-visible', 'is-refreshing');
+                if (labelEl) labelEl.textContent = 'Memuat ulang halaman...';
+                if (iconEl) iconEl.className = 'bi bi-arrow-repeat text-blue-600 dark:text-blue-400 text-sm animate-spin';
+                setTimeout(() => {
+                    window.location.reload();
+                }, 220);
+            } else {
+                capsule.classList.remove('is-visible', 'is-refreshing');
+                capsule.style.transform = '';
+            }
+            pullDistance = 0;
+        };
+
+        document.addEventListener('touchend', finishPull, { passive: true });
+        document.addEventListener('touchcancel', finishPull, { passive: true });
+    }
+
+    initMobilePullToRefresh();
+
+    // =========================================================================
+    // 13. MOBILE / TABLET PWA HOME SCREEN 1-CLICK INSTALL + CAMERA, LOCATION & DEEPLINK PERMISSIONS
+    // =========================================================================
+    function initMobilePwaInstallAndPermissions() {
+        let deferredInstallPrompt = null;
+        const bannerEl = document.getElementById('mobilePwaInstallPromptModal');
+        const oneClickInstallBtn = document.getElementById('pwaOneClickInstallBtn');
+        const iosGuideBox = document.getElementById('pwaManualInstallGuideBox');
+        const toggleManualGuideBtn = document.getElementById('pwaToggleManualGuideBtn');
+        const openPwaModalBtn = document.getElementById('openPwaInstallModalBtn');
+        const requestPermsBtn = document.getElementById('pwaRequestPermissionsBtn');
+        const dismissPwaBtn = document.getElementById('pwaDismissInstallBtn');
+        const permCameraStatus = document.getElementById('pwaPermCameraBadge');
+        const permGeoStatus = document.getElementById('pwaPermLocationBadge');
+        const permDeeplinkStatus = document.getElementById('pwaPermDeeplinkBadge');
+
+        const isStandalone = window.matchMedia?.('(display-mode: standalone)')?.matches || window.navigator.standalone === true;
+        const ua = navigator.userAgent || '';
+        const isMobileOrTablet = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet/i.test(ua) || window.innerWidth <= 1024;
+
+        // Register ServiceWorker for PWA standalone + Deep Link Notification Click routing
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data?.type === 'NAVIGATE_DEEP_LINK' && event.data?.url) {
+                    window.location.href = event.data.url;
+                }
+            });
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+            if (oneClickInstallBtn) {
+                oneClickInstallBtn.classList.remove('hidden');
+            }
+            if (iosGuideBox) {
+                iosGuideBox.classList.add('hidden');
+            }
+        });
+
+        async function requestDeviceCapabilities(showFeedback = true) {
+            // 1. Camera Permission (for Barcode Scanner & Asset Photo)
+            if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                    stream.getTracks().forEach((t) => t.stop());
+                    if (permCameraStatus) {
+                        permCameraStatus.textContent = 'Kamera: Aktif';
+                        permCameraStatus.className = 'px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/15 text-emerald-600 dark:text-emerald-300';
+                    }
+                } catch (e) {
+                    if (permCameraStatus) {
+                        permCameraStatus.textContent = 'Siap Saat Scan';
+                    }
+                }
+            }
+
+            // 2. Geolocation Permission (for Asset Room & Mutation Audit Location)
+            if ('geolocation' in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        try {
+                            sessionStorage.setItem('inv_last_geo', JSON.stringify({
+                                lat: pos.coords.latitude,
+                                lng: pos.coords.longitude,
+                                ts: Date.now(),
+                            }));
+                        } catch (e) {}
+                        if (permGeoStatus) {
+                            permGeoStatus.textContent = 'Lokasi: Aktif';
+                            permGeoStatus.className = 'px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/15 text-emerald-600 dark:text-emerald-300';
+                        }
+                    },
+                    () => {
+                        if (permGeoStatus) {
+                            permGeoStatus.textContent = 'Lokasi: Opsional';
+                        }
+                    },
+                    { timeout: 6000, maximumAge: 60000 }
+                );
+            }
+
+            // 3. Push Notification & Deep Link Protocol Handler Readiness
+            if ('Notification' in window && Notification.permission === 'default') {
+                try {
+                    await Notification.requestPermission();
+                } catch (e) {}
+            }
+            if (typeof navigator.registerProtocolHandler === 'function') {
+                try {
+                    navigator.registerProtocolHandler('web+inventaris', `${window.location.origin}/s/%s`);
+                } catch (e) {}
+            }
+            if (permDeeplinkStatus) {
+                permDeeplinkStatus.textContent = 'DeepLink: Aktif';
+                permDeeplinkStatus.className = 'px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/15 text-emerald-600 dark:text-emerald-300';
+            }
+
+            if (showFeedback) {
+                window.toast?.success('Izin Kamera, Lokasi & DeepLink Siap!', {
+                    description: 'Aplikasi siap digunakan layaknya aplikasi native.',
+                    duration: 3200,
+                });
+            }
+        }
+
+        window.requestInventoryDevicePermissions = requestDeviceCapabilities;
+
+        const openPwaModal = () => {
+            if (!bannerEl) return;
+            openModalById('mobilePwaInstallPromptModal');
+        };
+
+        const closePwaModal = () => {
+            if (!bannerEl) return;
+            closeModalEl(bannerEl);
+        };
+
+        openPwaModalBtn?.addEventListener('click', () => {
+            const mobileMenuSheet = document.getElementById('mobileAppMenuSheet');
+            if (mobileMenuSheet) closeModalEl(mobileMenuSheet, true);
+            openPwaModal();
+        });
+
+        toggleManualGuideBtn?.addEventListener('click', () => {
+            iosGuideBox?.classList.toggle('hidden');
+        });
+
+        oneClickInstallBtn?.addEventListener('click', async () => {
+            await requestDeviceCapabilities(false);
+            if (deferredInstallPrompt && typeof deferredInstallPrompt.prompt === 'function') {
+                deferredInstallPrompt.prompt();
+                const choice = await deferredInstallPrompt.userChoice;
+                deferredInstallPrompt = null;
+                if (choice?.outcome === 'accepted') {
+                    localStorage.setItem('inv_pwa_installed', '1');
+                    closePwaModal();
+                    window.toast?.success('Aplikasi berhasil diinstal ke Home Screen!');
+                }
+            } else if (iosGuideBox) {
+                iosGuideBox.classList.remove('hidden');
+                window.toast?.info('Ikuti panduan di bawah untuk menambahkan ke Home Screen perangkat Anda.');
+            }
+        });
+
+        requestPermsBtn?.addEventListener('click', async () => {
+            await requestDeviceCapabilities(true);
+        });
+
+        document.querySelectorAll('[data-pwa-close]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                try {
+                    sessionStorage.setItem('inv_pwa_prompt_dismissed', '1');
+                } catch (e) {}
+                closePwaModal();
+            });
+        });
+
+        dismissPwaBtn?.addEventListener('click', () => {
+            try {
+                sessionStorage.setItem('inv_pwa_prompt_dismissed', '1');
+            } catch (e) {}
+            closePwaModal();
+        });
+
+        if (bannerEl && isMobileOrTablet && !isStandalone) {
+            const dismissed = sessionStorage.getItem('inv_pwa_prompt_dismissed') === '1';
+            const installed = localStorage.getItem('inv_pwa_installed') === '1';
+            if (!dismissed && !installed) {
+                setTimeout(() => {
+                    openPwaModal();
+                }, 1400);
+            }
+        }
+    }
+
+    initMobilePwaInstallAndPermissions();
+
     liveChannel?.addEventListener('message', (event) => {
         if (event.data) {
             applyLiveStatePayload(event.data, true);
         }
     });
 
-    setTimeout(pollLiveState, 900);
-    setInterval(pollLiveState, 8000);
-    setInterval(listenWebhookNotificationStream, 3000);
+    setTimeout(pollLiveState, 800);
+    setInterval(pollLiveState, 5000);
+    setInterval(listenWebhookNotificationStream, 2000);
 });

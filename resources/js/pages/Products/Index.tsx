@@ -2,16 +2,17 @@
  * SIM-Inventaris Diskominfo Kabupaten Garut — v2 Products Catalog (React 19 + Inertia v2)
  *
  * Uses `useCatalogStore` for persistent List/Grid view switching, instant search/filter,
- * and Vaul bottom-sheet quick preview on mobile.
+ * dynamic active KPI filter cards, and Vaul bottom-sheet quick preview on mobile.
  *
  * @author fwzann-abd <https://github.com/fwzann-abd>
+ * @collaborator msayib <https://github.com/msayib> — Ideation, System Design, Architecture, Performance, Refactor, Tune-Up, UI/UX & Mobile-First High-Level Engineering
  */
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { AppLayout } from '../../layouts/AppLayout';
 import { useCatalogStore } from '../../stores/useCatalogStore';
 import { ResponsiveModal } from '../../components/ui/ResponsiveModal';
-import { LayoutList, LayoutGrid, Plus, Search, QrCode, Eye } from 'lucide-react';
+import { LayoutList, LayoutGrid, Plus, Search, QrCode, Eye, RotateCcw } from 'lucide-react';
 
 export interface ProductRow {
     id: number;
@@ -40,8 +41,31 @@ export interface ProductsIndexProps {
 export default function ProductsIndex({ products, summary }: ProductsIndexProps) {
     const { viewMode, setViewMode, searchQuery, setSearchQuery } = useCatalogStore();
     const [activeProduct, setActiveProduct] = useState<ProductRow | null>(null);
+    const [activeFilterCard, setActiveFilterCard] = useState<'all' | 'active' | 'low_stock' | 'out_of_stock' | null>(null);
 
-    const items = products?.data ?? [];
+    const items = useMemo(() => {
+        const raw = products?.data ?? [];
+        return raw.filter((item) => {
+            if (searchQuery.trim()) {
+                const q = searchQuery.toLowerCase();
+                const match =
+                    item.name.toLowerCase().includes(q) ||
+                    (item.kode_barang ?? '').toLowerCase().includes(q) ||
+                    (item.barcode ?? '').toLowerCase().includes(q) ||
+                    (item.room_name ?? '').toLowerCase().includes(q);
+                if (!match) return false;
+            }
+            if (activeFilterCard === 'active') return item.status === 'active' && item.stock > 0;
+            if (activeFilterCard === 'low_stock') return item.stock > 0 && item.stock <= 5;
+            if (activeFilterCard === 'out_of_stock') return item.status === 'out_of_stock' || item.stock <= 0;
+            return true;
+        });
+    }, [products, searchQuery, activeFilterCard]);
+
+    const handleResetFilters = () => {
+        setSearchQuery('');
+        setActiveFilterCard(null);
+    };
 
     return (
         <AppLayout
@@ -49,15 +73,27 @@ export default function ProductsIndex({ products, summary }: ProductsIndexProps)
             subtitle="Kelola inventaris perangkat dengan tampilan List/Grid adaptif dan pratinjau cepat."
         >
             <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-                <div className="relative flex-1 min-w-[220px] max-w-md">
-                    <Search className="h-4 w-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                        type="search"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Cari nama barang, kode, barcode, ruangan..."
-                        className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-10 pr-4 py-2 text-xs sm:text-sm outline-none focus:border-blue-500"
-                    />
+                <div className="flex items-center gap-2 flex-1 min-w-[220px] max-w-lg">
+                    <div className="relative flex-1">
+                        <Search className="h-4 w-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <input
+                            type="search"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Cari nama barang, kode, barcode, ruangan..."
+                            className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 pl-10 pr-4 py-2 text-xs sm:text-sm outline-none focus:border-blue-500"
+                        />
+                    </div>
+                    {(activeFilterCard !== null || searchQuery.trim() !== '') && (
+                        <button
+                            type="button"
+                            onClick={handleResetFilters}
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:border-blue-400"
+                        >
+                            <RotateCcw className="h-3.5 w-3.5" />
+                            <span>Reset</span>
+                        </button>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -102,22 +138,77 @@ export default function ProductsIndex({ products, summary }: ProductsIndexProps)
 
             {summary && (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-                    <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-3">
-                        <div className="text-[11px] font-semibold text-slate-500">Total Item</div>
-                        <div className="text-lg font-extrabold">{summary.total ?? 0}</div>
-                    </div>
-                    <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-3">
-                        <div className="text-[11px] font-semibold text-slate-500">Aktif</div>
-                        <div className="text-lg font-extrabold text-emerald-600">{summary.active ?? 0}</div>
-                    </div>
-                    <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-3">
-                        <div className="text-[11px] font-semibold text-slate-500">Stok Menipis</div>
-                        <div className="text-lg font-extrabold text-amber-500">{summary.low_stock ?? 0}</div>
-                    </div>
-                    <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-3">
-                        <div className="text-[11px] font-semibold text-slate-500">Stok Habis</div>
-                        <div className="text-lg font-extrabold text-rose-500">{summary.out_of_stock ?? 0}</div>
-                    </div>
+                    <button
+                        type="button"
+                        data-quick-status="all"
+                        data-card-active={activeFilterCard === 'all' ? 'true' : 'false'}
+                        onClick={() => setActiveFilterCard((prev) => (prev === 'all' ? null : 'all'))}
+                        className={`quick-status-card text-left rounded-2xl border p-3.5 transition-all ${
+                            activeFilterCard === 'all'
+                                ? 'border-blue-500 ring-2 ring-blue-500/25 bg-blue-50/40 dark:bg-blue-950/25'
+                                : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900'
+                        }`}
+                    >
+                        <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+                            <span>Total Item</span>
+                            {activeFilterCard === 'all' && <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />}
+                        </div>
+                        <div className="text-lg font-extrabold mt-0.5 tabular-nums">{summary.total ?? 0}</div>
+                    </button>
+
+                    <button
+                        type="button"
+                        data-quick-status="active"
+                        data-card-active={activeFilterCard === 'active' ? 'true' : 'false'}
+                        onClick={() => setActiveFilterCard((prev) => (prev === 'active' ? null : 'active'))}
+                        className={`quick-status-card text-left rounded-2xl border p-3.5 transition-all ${
+                            activeFilterCard === 'active'
+                                ? 'border-emerald-500 ring-2 ring-emerald-500/25 bg-emerald-50/40 dark:bg-emerald-950/25'
+                                : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900'
+                        }`}
+                    >
+                        <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+                            <span>Aktif</span>
+                            {activeFilterCard === 'active' && <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />}
+                        </div>
+                        <div className="text-lg font-extrabold text-emerald-600 mt-0.5 tabular-nums">{summary.active ?? 0}</div>
+                    </button>
+
+                    <button
+                        type="button"
+                        data-quick-status="low_stock"
+                        data-card-active={activeFilterCard === 'low_stock' ? 'true' : 'false'}
+                        onClick={() => setActiveFilterCard((prev) => (prev === 'low_stock' ? null : 'low_stock'))}
+                        className={`quick-status-card text-left rounded-2xl border p-3.5 transition-all ${
+                            activeFilterCard === 'low_stock'
+                                ? 'border-amber-500 ring-2 ring-amber-500/25 bg-amber-50/40 dark:bg-amber-950/25'
+                                : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900'
+                        }`}
+                    >
+                        <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+                            <span>Stok Menipis</span>
+                            {activeFilterCard === 'low_stock' && <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />}
+                        </div>
+                        <div className="text-lg font-extrabold text-amber-500 mt-0.5 tabular-nums">{summary.low_stock ?? 0}</div>
+                    </button>
+
+                    <button
+                        type="button"
+                        data-quick-status="out_of_stock"
+                        data-card-active={activeFilterCard === 'out_of_stock' ? 'true' : 'false'}
+                        onClick={() => setActiveFilterCard((prev) => (prev === 'out_of_stock' ? null : 'out_of_stock'))}
+                        className={`quick-status-card text-left rounded-2xl border p-3.5 transition-all ${
+                            activeFilterCard === 'out_of_stock'
+                                ? 'border-rose-500 ring-2 ring-rose-500/25 bg-rose-50/40 dark:bg-rose-950/25'
+                                : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900'
+                        }`}
+                    >
+                        <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+                            <span>Stok Habis</span>
+                            {activeFilterCard === 'out_of_stock' && <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />}
+                        </div>
+                        <div className="text-lg font-extrabold text-rose-500 mt-0.5 tabular-nums">{summary.out_of_stock ?? 0}</div>
+                    </button>
                 </div>
             )}
 

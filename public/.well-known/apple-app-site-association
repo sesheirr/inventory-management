@@ -1,0 +1,17 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["DISKOMINFO.go.id.garutkab.inventaris"],
+        "components": [
+          { "/": "/s/*", "comment": "Short Deep Links" },
+          { "/": "/products/*", "comment": "Katalog & Detail Barang" },
+          { "/": "/scan-barcode*", "comment": "Fullscreen Barcode Scanner" },
+          { "/": "/dashboard*", "comment": "Dashboard Utama" },
+          { "/": "/mutations/*", "comment": "Mutasi Aset" }
+        ]
+      }
+    ]
+  }
+}

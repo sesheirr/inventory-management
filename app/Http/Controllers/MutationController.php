@@ -80,6 +80,12 @@ class MutationController extends Controller
         $mutations = $this->buildFilteredQuery($request)->get();
         $filters = $request->only(['search', 'date_from', 'date_to', 'category_id', 'room_id', 'product_id', 'type', 'status']);
 
+        ActivityLog::record(
+            'export',
+            'Mengekspor laporan riwayat mutasi barang ke format PDF ('.$mutations->count().' transaksi)',
+            Mutation::class
+        );
+
         return view('mutations.pdf', compact('mutations', 'filters'));
     }
 
@@ -223,11 +229,12 @@ class MutationController extends Controller
                 $this->applyStockMutation($product, $mutation);
                 $this->notifyLowStockIfNeeded($product);
 
-                ActivityLog::create([
-                    'user_id' => Auth::id(),
-                    'action' => 'created',
-                    'description' => "Mencatat & menyetujui mutasi ({$mutation->type}) sebanyak {$mutation->quantity} unit untuk {$product->name}",
-                ]);
+                ActivityLog::record(
+                    'created',
+                    "Mencatat & menyetujui mutasi ({$mutation->type}) sebanyak {$mutation->quantity} unit untuk {$product->name}",
+                    $mutation,
+                    $mutation->id
+                );
 
                 app(WebhookDispatcher::class)->broadcast(
                     'mutation.approved',
@@ -255,11 +262,12 @@ class MutationController extends Controller
                 Notification::send($admins, new MutationPending($mutation));
             }
 
-            ActivityLog::create([
-                'user_id' => Auth::id(),
-                'action' => 'created',
-                'description' => "Mengajukan permohonan mutasi ({$mutation->type}) sebanyak {$mutation->quantity} unit untuk {$product->name} (Menunggu Persetujuan)",
-            ]);
+            ActivityLog::record(
+                'created',
+                "Mengajukan permohonan mutasi ({$mutation->type}) sebanyak {$mutation->quantity} unit untuk {$product->name} (Menunggu Persetujuan)",
+                $mutation,
+                $mutation->id
+            );
 
             app(WebhookDispatcher::class)->broadcast(
                 'mutation.submitted',
@@ -311,11 +319,12 @@ class MutationController extends Controller
 
             $this->notifyLowStockIfNeeded($product);
 
-            ActivityLog::create([
-                'user_id' => Auth::id(),
-                'action' => 'updated',
-                'description' => "Menyetujui permohonan mutasi ({$mutation->type}) sebanyak {$mutation->quantity} unit untuk {$product->name}",
-            ]);
+            ActivityLog::record(
+                'updated',
+                "Menyetujui permohonan mutasi ({$mutation->type}) sebanyak {$mutation->quantity} unit untuk {$product->name}",
+                $mutation,
+                $mutation->id
+            );
 
             /** @var User|null $actor */
             $actor = Auth::user();
@@ -360,11 +369,12 @@ class MutationController extends Controller
                 $mutation->user->notify(new MutationStatusUpdated($mutation, 'rejected'));
             }
 
-            ActivityLog::create([
-                'user_id' => Auth::id(),
-                'action' => 'updated',
-                'description' => 'Menolak permohonan mutasi ('.$mutation->type.') untuk '.($mutation->product?->name ?? 'Barang'),
-            ]);
+            ActivityLog::record(
+                'updated',
+                'Menolak permohonan mutasi ('.$mutation->type.') untuk '.($mutation->product?->name ?? 'Barang'),
+                $mutation,
+                $mutation->id
+            );
 
             /** @var User|null $actor */
             $actor = Auth::user();
@@ -409,7 +419,17 @@ class MutationController extends Controller
                 $product->save();
             }
 
+            $mutationId = $mutation->id;
+            $mutationType = $mutation->type;
+            $productName = $product?->name ?? 'Barang';
             $mutation->delete();
+
+            ActivityLog::record(
+                'deleted',
+                "Menghapus data mutasi ({$mutationType}) untuk {$productName} dan mengembalikan stok",
+                Mutation::class,
+                $mutationId
+            );
 
             return redirect()->route('mutations.index')->with('success', 'Data mutasi berhasil dihapus dan perubahan stok telah dikembalikan.');
         });

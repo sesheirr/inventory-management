@@ -54,11 +54,36 @@ export interface StockHealthSummary {
     score: number;
 }
 
+export interface ShadcnLineSeriesConfig {
+    key: keyof MonthlyAnalyticPoint;
+    label: string;
+    color: string;
+    dashed?: boolean;
+}
+
+export const SHADCN_LINE_CHART_CONFIG: {
+    type: 'shadcn-line-chart';
+    series: Record<string, ShadcnLineSeriesConfig>;
+} = {
+    type: 'shadcn-line-chart',
+    series: {
+        total_units: { key: 'total_units', label: 'Total Volume Unit', color: '#2563eb' },
+        masuk_units: { key: 'masuk_units', label: 'Barang Masuk', color: '#10b981', dashed: true },
+        pindah_units: { key: 'pindah_units', label: 'Transfer Ruangan', color: '#6366f1', dashed: true },
+        tx_count: { key: 'tx_count', label: 'Frekuensi Mutasi', color: '#10b981' },
+    },
+};
+
 export interface DashboardIndexProps {
     metrics?: DashboardMetrics;
     monthlyAnalytics?: MonthlyAnalyticPoint[];
     mutationAnalytics?: MutationAnalyticsSummary;
     stockHealth?: StockHealthSummary;
+    chartJson?: {
+        type: 'shadcn-line-chart';
+        config: typeof SHADCN_LINE_CHART_CONFIG.series;
+        data: MonthlyAnalyticPoint[];
+    };
 }
 
 const DEFAULT_MONTHLY_SAMPLE: MonthlyAnalyticPoint[] = [
@@ -75,8 +100,18 @@ export default function DashboardIndex({
     monthlyAnalytics = DEFAULT_MONTHLY_SAMPLE,
     mutationAnalytics,
     stockHealth,
+    chartJson,
 }: DashboardIndexProps) {
-    const series = monthlyAnalytics.length > 0 ? monthlyAnalytics : DEFAULT_MONTHLY_SAMPLE;
+    const resolvedChartJson = useMemo(
+        () =>
+            chartJson ?? {
+                type: 'shadcn-line-chart' as const,
+                config: SHADCN_LINE_CHART_CONFIG.series,
+                data: monthlyAnalytics.length > 0 ? monthlyAnalytics : DEFAULT_MONTHLY_SAMPLE,
+            },
+        [chartJson, monthlyAnalytics],
+    );
+    const series = resolvedChartJson.data;
     const [chartMode, setChartMode] = useState<'units' | 'tx'>('units');
     const [activeIdx, setActiveIdx] = useState<number | null>(null);
 
@@ -88,6 +123,19 @@ export default function DashboardIndex({
     const usableW = svgW - padX * 2;
     const usableH = svgH - padTop - padBot;
     const baselineY = padTop + usableH;
+
+    const buildCatmullCurve = (pts: Array<{ x: number; y: number }>): string => {
+        if (pts.length === 0) return '';
+        let d = `M ${pts[0].x} ${pts[0].y}`;
+        for (let i = 0; i < pts.length - 1; i++) {
+            const curr = pts[i];
+            const next = pts[i + 1];
+            const cp1x = Number((curr.x + (next.x - curr.x) * 0.42).toFixed(1));
+            const cp2x = Number((next.x - (next.x - curr.x) * 0.42).toFixed(1));
+            d += ` C ${cp1x} ${curr.y}, ${cp2x} ${next.y}, ${next.x} ${next.y}`;
+        }
+        return d;
+    };
 
     const chartGeometry = useMemo(() => {
         const maxVal = Math.max(
@@ -101,27 +149,21 @@ export default function DashboardIndex({
             const ratio = val / maxVal;
             const x = Number((padX + idx * stepX).toFixed(1));
             const y = Number((padTop + usableH - ratio * usableH).toFixed(1));
-            return { x, y, val, item };
+            const masukY = Number((padTop + usableH - (item.masuk_units / maxVal) * usableH).toFixed(1));
+            const pindahY = Number((padTop + usableH - (item.pindah_units / maxVal) * usableH).toFixed(1));
+            return { x, y, masukY, pindahY, val, item };
         });
 
-        let linePath = '';
-        if (points.length > 0) {
-            linePath = `M ${points[0].x} ${points[0].y}`;
-            for (let i = 0; i < points.length - 1; i++) {
-                const curr = points[i];
-                const next = points[i + 1];
-                const cp1x = Number((curr.x + (next.x - curr.x) * 0.42).toFixed(1));
-                const cp2x = Number((next.x - (next.x - curr.x) * 0.42).toFixed(1));
-                linePath += ` C ${cp1x} ${curr.y}, ${cp2x} ${next.y}, ${next.x} ${next.y}`;
-            }
-        }
+        const linePath = buildCatmullCurve(points.map((p) => ({ x: p.x, y: p.y })));
+        const masukLinePath = buildCatmullCurve(points.map((p) => ({ x: p.x, y: p.masukY })));
+        const pindahLinePath = buildCatmullCurve(points.map((p) => ({ x: p.x, y: p.pindahY })));
 
         const areaPath =
             points.length > 0
                 ? `${linePath} L ${points[points.length - 1].x} ${baselineY} L ${points[0].x} ${baselineY} Z`
                 : '';
 
-        return { points, linePath, areaPath };
+        return { points, linePath, masukLinePath, pindahLinePath, areaPath };
     }, [series, chartMode, usableW, usableH, baselineY]);
 
     const activePoint = activeIdx !== null ? chartGeometry.points[activeIdx] : null;
@@ -181,7 +223,7 @@ export default function DashboardIndex({
                                 Analitik Pergerakan & Distribusi Aset
                             </h2>
                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                Tren volume mutasi barang & aktivitas katalog 6 bulan terakhir (arah kursor atau ketuk titik)
+                                Shadcn Line Chart multi-series 6 bulan terakhir (tanpa bar gabungan, konsumsi JSON deklaratif)
                             </p>
                         </div>
                         <div className="inline-flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700 self-start sm:self-auto">
@@ -211,6 +253,7 @@ export default function DashboardIndex({
                     </div>
 
                     <div
+                        data-shadcn-line-chart="true"
                         className="relative mt-4 w-full overflow-hidden rounded-2xl bg-slate-50/75 dark:bg-slate-950/60 border border-slate-200/70 dark:border-slate-800 p-3 sm:p-4 select-none"
                         onMouseLeave={() => setActiveIdx(null)}
                     >
@@ -250,11 +293,11 @@ export default function DashboardIndex({
                         <svg viewBox={`0 0 ${svgW} ${svgH}`} className="h-44 sm:h-52 w-full block">
                             <defs>
                                 <linearGradient id="dashPrimaryAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#2563eb" stopOpacity="0.38" />
+                                    <stop offset="0%" stopColor="#2563eb" stopOpacity="0.22" />
                                     <stop offset="100%" stopColor="#2563eb" stopOpacity="0.0" />
                                 </linearGradient>
                                 <linearGradient id="dashSecondaryAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.35" />
+                                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.20" />
                                     <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
                                 </linearGradient>
                             </defs>
@@ -275,11 +318,33 @@ export default function DashboardIndex({
                                 d={chartGeometry.areaPath}
                                 fill={chartMode === 'units' ? 'url(#dashPrimaryAreaGrad)' : 'url(#dashSecondaryAreaGrad)'}
                             />
+                            {chartMode === 'units' && (
+                                <>
+                                    <path
+                                        d={chartGeometry.masukLinePath}
+                                        fill="none"
+                                        stroke="#10b981"
+                                        strokeWidth="1.75"
+                                        strokeDasharray="4 4"
+                                        strokeLinecap="round"
+                                        opacity="0.8"
+                                    />
+                                    <path
+                                        d={chartGeometry.pindahLinePath}
+                                        fill="none"
+                                        stroke="#6366f1"
+                                        strokeWidth="1.75"
+                                        strokeDasharray="2 3"
+                                        strokeLinecap="round"
+                                        opacity="0.75"
+                                    />
+                                </>
+                            )}
                             <path
                                 d={chartGeometry.linePath}
                                 fill="none"
                                 stroke={chartMode === 'units' ? '#2563eb' : '#10b981'}
-                                strokeWidth="3"
+                                strokeWidth="2.75"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                             />

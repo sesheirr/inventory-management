@@ -20,6 +20,7 @@ use App\Models\Mutation;
 use App\Models\Product;
 use App\Models\Room;
 use App\Models\User;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
@@ -73,6 +74,11 @@ Route::get('/api/security-code/regenerate', [AuthController::class, 'refreshCapt
 Route::get('/s/{code}', [ShareController::class, 'resolve'])
     ->where('code', '[A-Za-z0-9\-]+')
     ->name('share.short');
+
+// Built-in Local Webhook Receiver Endpoint (Exempt from CSRF for HMAC-SHA256 Webhook Pings)
+Route::match(['get', 'post'], '/api/webhooks/receiver', [WebhookController::class, 'receive'])
+    ->withoutMiddleware([ValidateCsrfToken::class])
+    ->name('webhooks.receiver');
 
 // ==========================================
 // AUTH ROUTES (Guest / Belum Login)

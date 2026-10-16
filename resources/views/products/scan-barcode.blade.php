@@ -1,122 +1,164 @@
 @extends('layouts.app')
 
 @section('title', 'Scan Barcode Aset — Inventaris Diskominfo Garut')
+@section('page-title', 'Scan Barcode Fullscreen')
 @section('share_code', 'scan')
 
 @section('content')
-<div class="max-w-3xl mx-auto space-y-5" data-framer-page>
-    {{-- Page Header --}}
-    <div class="flex items-center justify-between gap-3">
-        <div>
-            <h1 class="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-                <i class="bi bi-qr-code-scan text-blue-600 dark:text-blue-400"></i>
-                <span>Scan Barcode</span>
-            </h1>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Pindai stiker barcode via kamera belakang HP atau scanner USB/Wireless
-            </p>
-        </div>
+<div id="bankingScannerFullscreenContainer"
+     data-scanner-fullscreen="true"
+     class="fixed inset-0 z-[120] bg-[#0b0a09] text-white flex flex-col justify-between overflow-y-auto select-none transition-all duration-300"
+     data-framer-page>
 
-        <a href="{{ route('products.index') }}" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-[#0f1b38] border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shrink-0">
-            <i class="bi bi-arrow-left"></i>
-            <span>Kembali</span>
-        </a>
-    </div>
+    {{-- Ambient Radial Grid & Banking HUD Glow --}}
+    <div class="pointer-events-none fixed inset-0 opacity-20"
+         style="background-image: radial-gradient(circle at 50% 35%, rgba(56, 189, 248, 0.22), transparent 65%), linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 100% 100%, 36px 36px, 36px 36px;"></div>
 
-    {{-- Smart Device & Camera Mode Banner --}}
-    <div id="desktopScannerNotice" class="hidden rounded-2xl bg-amber-50/90 dark:bg-amber-950/35 border border-amber-200 dark:border-amber-800/60 p-4 sm:p-5 shadow-xs">
-        <div class="flex items-start gap-3.5">
-            <div class="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg shrink-0 mt-0.5">
-                <i class="bi bi-usb-symbol"></i>
-            </div>
-            <div class="space-y-1.5 flex-1">
-                <div class="flex flex-wrap items-center gap-2">
-                    <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-amber-200/70 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300">
-                        Mode Desktop / Kamera Depan Terdeteksi
-                    </span>
-                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Siap Menerima Input Alat Scanner USB / Wireless
+    {{-- Top Banking-Style Scanner HUD Header --}}
+    <div class="relative z-20 flex items-center justify-between gap-3 px-4 sm:px-6 py-3.5 border-b border-white/10 bg-black/55 backdrop-blur-xl shrink-0">
+        <div class="flex items-center gap-3 min-w-0">
+            <a href="{{ route('products.index') }}"
+               class="w-10 h-10 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-white transition-all shrink-0"
+               title="Kembali ke Inventaris">
+                <i class="bi bi-arrow-left text-sm"></i>
+            </a>
+            <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                    <h1 class="text-sm sm:text-base font-extrabold tracking-wide uppercase truncate">
+                        Inventory Barcode Scanner
+                    </h1>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-sky-500/20 text-sky-300 border border-sky-400/30 shrink-0">
+                        <span id="cameraStatusDot" class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+                        <span id="cameraStatusLabel">Mendeteksi Kamera...</span>
                     </span>
                 </div>
-                <h2 id="desktopNoticeTitle" class="text-sm font-bold text-slate-900 dark:text-white">
-                    Pemindaian Kamera Hanya Aktif untuk Pengguna Mobile (Kamera Belakang)
-                </h2>
-                <p id="desktopNoticeDescription" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Kamera depan laptop/komputer tidak dapat digunakan untuk memindai barcode secara akurat. Bagi pengguna <strong>Desktop / Laptop</strong>, silakan gunakan <strong>Alat Scanner Barcode Tambahan (USB / Wireless HID)</strong>—cukup tembakkan laser scanner langsung pada stiker barang, atau ketik kode pada kolom pencarian di bawah.
+                <p class="text-[11px] text-white/60 truncate">
+                    Sistem Inventaris Diskominfo Kab. Garut • Fullscreen Optic &amp; USB/Wireless HID
                 </p>
             </div>
         </div>
+
+        <div class="flex items-center gap-2 shrink-0">
+            <button type="button"
+                    id="retryCameraDetectBtn"
+                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-sky-300 bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 transition-all cursor-pointer"
+                    title="Muat Ulang Kamera">
+                <i class="bi bi-arrow-clockwise"></i>
+                <span class="hidden sm:inline">Ulangi Kamera</span>
+            </button>
+
+            <button type="button"
+                    id="toggleNativeFullscreenBtn"
+                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/15 transition-all cursor-pointer"
+                    title="Layar Penuh Penuh (Fullscreen)">
+                <i id="nativeFullscreenIcon" class="bi bi-arrows-fullscreen"></i>
+                <span class="hidden sm:inline">Layar Penuh</span>
+            </button>
+
+            <button type="button"
+                    id="toggleDockedModeBtn"
+                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-amber-300 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/30 transition-all cursor-pointer"
+                    title="Beralih Mode Tampilan">
+                <i class="bi bi-layout-sidebar-inset"></i>
+                <span id="dockedModeBtnText" class="hidden sm:inline">Mode Ringkas</span>
+            </button>
+        </div>
     </div>
 
-    {{-- Main Scanner & Hardware Input Card --}}
-    <div class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-sm overflow-hidden" data-framer-card>
-        {{-- Mobile Camera Viewport Section --}}
-        <div id="mobileCameraSection" class="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 space-y-4">
-            <div class="flex items-center justify-between gap-2">
-                <div class="flex items-center gap-2">
-                    <span id="cameraStatusDot" class="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse"></span>
-                    <span id="cameraStatusLabel" class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                        Mendeteksi Perangkat & Kamera...
-                    </span>
+    {{-- Center Banking Scanner Viewport & Target Reticle --}}
+    <div id="mobileCameraSection" class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-4 sm:py-6 overflow-hidden">
+        {{-- Smart Device & Camera Mode Banner (Collapsible on Desktop) --}}
+        <div id="desktopScannerNotice" class="hidden w-full max-w-xl mb-4 rounded-2xl bg-amber-500/15 border border-amber-400/30 p-3.5 backdrop-blur-md">
+            <div class="flex items-start gap-3">
+                <div class="w-9 h-9 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center text-base shrink-0 mt-0.5">
+                    <i class="bi bi-usb-symbol"></i>
                 </div>
-                <button type="button"
-                        id="retryCameraDetectBtn"
-                        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">
-                    <i class="bi bi-arrow-clockwise"></i>
-                    <span>Ulangi</span>
-                </button>
-            </div>
-
-            {{-- Camera Viewport Box (Only shown on eligible Mobile/Tablet with rear camera) --}}
-            <div id="readerWrapper" class="relative w-full max-w-md mx-auto rounded-2xl overflow-hidden bg-slate-900 border-2 border-slate-200 dark:border-slate-700 aspect-square sm:aspect-video flex items-center justify-center">
-                <div id="reader" class="w-full h-full"></div>
-
-                {{-- Blocked / Front-Camera / Desktop Overlay inside viewport --}}
-                <div id="cameraBlockedOverlay" class="hidden absolute inset-0 bg-slate-900/95 backdrop-blur-md p-6 flex flex-col items-center justify-center text-center text-white space-y-3">
-                    <div class="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center text-2xl">
-                        <i class="bi bi-camera-video-off"></i>
+                <div class="space-y-1 flex-1 min-w-0">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase tracking-wider bg-amber-400/20 text-amber-200">
+                            Mode Desktop / Kamera Depan Terdeteksi
+                        </span>
+                        <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-300">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            USB / Wireless HID Aktif
+                        </span>
                     </div>
-                    <h3 id="blockedOverlayTitle" class="text-sm sm:text-base font-bold">
-                        Kamera Depan Laptop / Desktop Dinonaktifkan
-                    </h3>
-                    <p id="blockedOverlayDesc" class="text-xs text-slate-300 max-w-xs leading-relaxed">
-                        Pemindai kamera web hanya diizinkan pada perangkat Mobile/Tablet yang memiliki kamera belakang. Gunakan alat scanner fisik (USB/Wireless) atau input kode di bawah.
+                    <h2 id="desktopNoticeTitle" class="text-xs sm:text-sm font-bold text-white">
+                        Pemindaian Kamera Dioptimalkan untuk Kamera Belakang Mobile
+                    </h2>
+                    <p id="desktopNoticeDescription" class="text-[11px] text-white/75 leading-relaxed">
+                        Gunakan <strong>Alat Scanner Barcode USB / Wireless</strong> atau ketik kode aset pada panel bawah.
                     </p>
                 </div>
             </div>
         </div>
 
-        {{-- Manual & Hardware USB/Wireless Scanner Input Section --}}
-        <div class="p-4 sm:p-6 bg-slate-50/60 dark:bg-slate-900/30 space-y-3.5">
+        {{-- Banking-Style Optical Scanner Frame --}}
+        <div id="readerWrapper"
+             class="relative w-full max-w-md aspect-square sm:aspect-[4/3] rounded-[2rem] overflow-hidden bg-black/90 border-2 border-white/15 shadow-[0_0_70px_rgba(37,99,235,0.28)] flex items-center justify-center">
+            <div id="reader" class="w-full h-full object-cover"></div>
+
+            {{-- Banking Corner Targeting Brackets + Animated Laser Line --}}
+            <div class="pointer-events-none absolute inset-6 sm:inset-8 z-10">
+                <span class="absolute top-0 left-0 w-9 h-9 border-t-4 border-l-4 border-sky-400 rounded-tl-2xl shadow-[-4px_-4px_12px_rgba(56,189,248,0.4)]"></span>
+                <span class="absolute top-0 right-0 w-9 h-9 border-t-4 border-r-4 border-sky-400 rounded-tr-2xl shadow-[4px_-4px_12px_rgba(56,189,248,0.4)]"></span>
+                <span class="absolute bottom-0 left-0 w-9 h-9 border-b-4 border-l-4 border-sky-400 rounded-bl-2xl shadow-[-4px_4px_12px_rgba(56,189,248,0.4)]"></span>
+                <span class="absolute bottom-0 right-0 w-9 h-9 border-b-4 border-r-4 border-sky-400 rounded-br-2xl shadow-[4px_4px_12px_rgba(56,189,248,0.4)]"></span>
+                <div class="scanner-laser-line"></div>
+            </div>
+
+            {{-- Blocked / Front-Camera / Desktop Overlay inside viewport --}}
+            <div id="cameraBlockedOverlay" class="hidden absolute inset-0 z-20 bg-black/90 backdrop-blur-md p-6 flex flex-col items-center justify-center text-center text-white space-y-3">
+                <div class="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center justify-center text-2xl">
+                    <i class="bi bi-upc-scan"></i>
+                </div>
+                <h3 id="blockedOverlayTitle" class="text-sm sm:text-base font-extrabold">
+                    Siap Menerima Tembakan Laser Scanner USB / Input Kode
+                </h3>
+                <p id="blockedOverlayDesc" class="text-xs text-white/70 max-w-xs leading-relaxed">
+                    Kamera belakang mobile tidak terdeteksi pada perangkat ini. Tembakkan scanner fisik langsung atau ketik kode barang pada kolom bawah.
+                </p>
+            </div>
+        </div>
+
+        <div class="mt-3.5 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] font-semibold text-sky-300">
+            <i class="bi bi-bullseye"></i>
+            <span>Arahkan stiker barcode tepat di tengah kotak bidik otomatis</span>
+        </div>
+    </div>
+
+    {{-- Bottom Banking Glass Dock: Hardware HID + Manual Barcode Search --}}
+    <div class="relative z-20 px-4 sm:px-6 py-4 border-t border-white/10 bg-[#141210]/95 backdrop-blur-2xl shrink-0">
+        <div class="max-w-xl mx-auto space-y-3">
             <div class="flex items-center justify-between gap-2">
-                <label for="manualBarcodeInput" class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                    Input Scanner Fisik / Ketik Kode
+                <label for="manualBarcodeInput" class="block text-[11px] font-extrabold uppercase tracking-wider text-white/80">
+                    Input Scanner Fisik (USB/HID) atau Ketik Kode Barang
                 </label>
-                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/40 shrink-0">
-                    <i class="bi bi-keyboard"></i> Auto-Listen
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-400/30 shrink-0">
+                    <i class="bi bi-keyboard"></i>
+                    <span>Auto-Listen Aktif</span>
                 </span>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2.5">
                 <div class="relative flex-1">
-                    <i class="bi bi-upc-scan absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <i class="bi bi-upc-scan absolute left-3.5 top-1/2 -translate-y-1/2 text-sky-400"></i>
                     <input type="text"
                            id="manualBarcodeInput"
-                           placeholder="Contoh: BRG-000001"
+                           placeholder="Contoh: BRG-00001"
                            autofocus
-                           class="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm font-mono font-bold uppercase bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors">
+                           class="w-full pl-10 pr-4 py-3 rounded-2xl text-sm font-mono font-extrabold uppercase bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-sky-400/50 focus:border-sky-400 transition-all">
                 </div>
                 <button type="button"
                         id="manualSearchBtn"
-                        class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-500/20 active:scale-[0.98] transition-all cursor-pointer shrink-0">
+                        class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-extrabold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-600/30 active:scale-95 transition-all cursor-pointer shrink-0">
                     <i class="bi bi-search"></i>
-                    <span>Cari</span>
+                    <span>Cari Aset</span>
                 </button>
             </div>
 
             {{-- Dynamic Feedback Message --}}
-            <div id="scanMessage" class="hidden p-3.5 rounded-xl text-xs font-semibold"></div>
+            <div id="scanMessage" class="hidden p-3 rounded-xl text-xs font-bold"></div>
         </div>
     </div>
 </div>
@@ -124,6 +166,11 @@
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const fullscreenContainer = document.getElementById('bankingScannerFullscreenContainer');
+    const toggleDockedBtn = document.getElementById('toggleDockedModeBtn');
+    const dockedModeBtnText = document.getElementById('dockedModeBtnText');
+    const toggleNativeFullscreenBtn = document.getElementById('toggleNativeFullscreenBtn');
+    const nativeFullscreenIcon = document.getElementById('nativeFullscreenIcon');
     const messageEl = document.getElementById('scanMessage');
     const manualInput = document.getElementById('manualBarcodeInput');
     const manualBtn = document.getElementById('manualSearchBtn');
@@ -139,26 +186,51 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let isProcessing = false;
     let html5QrCode = null;
+    let isFullscreenHud = true;
+
+    // Toggle between Fullscreen Banking HUD overlay and Compact Docked Card mode
+    toggleDockedBtn?.addEventListener('click', function () {
+        if (!fullscreenContainer) return;
+        isFullscreenHud = !isFullscreenHud;
+        if (isFullscreenHud) {
+            fullscreenContainer.className = 'fixed inset-0 z-[120] bg-[#0b0a09] text-white flex flex-col justify-between overflow-y-auto select-none transition-all duration-300';
+            if (dockedModeBtnText) dockedModeBtnText.textContent = 'Mode Ringkas';
+        } else {
+            fullscreenContainer.className = 'relative z-10 max-w-3xl mx-auto rounded-3xl overflow-hidden border border-slate-800 bg-[#0b0a09] text-white flex flex-col justify-between shadow-2xl transition-all duration-300';
+            if (dockedModeBtnText) dockedModeBtnText.textContent = 'Mode Fullscreen';
+        }
+    });
+
+    // Native Browser Fullscreen API Toggle
+    toggleNativeFullscreenBtn?.addEventListener('click', function () {
+        if (!document.fullscreenElement) {
+            (fullscreenContainer || document.documentElement).requestFullscreen?.().catch(() => {});
+            if (nativeFullscreenIcon) nativeFullscreenIcon.className = 'bi bi-fullscreen-exit';
+        } else {
+            document.exitFullscreen?.().catch(() => {});
+            if (nativeFullscreenIcon) nativeFullscreenIcon.className = 'bi bi-arrows-fullscreen';
+        }
+    });
 
     function showMessage(text, type = 'info') {
         if (!messageEl) return;
         messageEl.classList.remove(
             'hidden',
-            'bg-blue-50', 'text-blue-700', 'border-blue-200', 'dark:bg-blue-950/40', 'dark:text-blue-300',
-            'bg-emerald-50', 'text-emerald-700', 'border-emerald-200', 'dark:bg-emerald-950/40', 'dark:text-emerald-300',
-            'bg-rose-50', 'text-rose-700', 'border-rose-200', 'dark:bg-rose-950/40', 'dark:text-rose-300',
-            'bg-amber-50', 'text-amber-700', 'border-amber-200', 'dark:bg-amber-950/40', 'dark:text-amber-300'
+            'bg-blue-500/20', 'text-sky-200', 'border-sky-400/40',
+            'bg-emerald-500/20', 'text-emerald-200', 'border-emerald-400/40',
+            'bg-rose-500/20', 'text-rose-200', 'border-rose-400/40',
+            'bg-amber-500/20', 'text-amber-200', 'border-amber-400/40'
         );
         messageEl.classList.add('border');
 
         if (type === 'success') {
-            messageEl.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-200', 'dark:bg-emerald-950/40', 'dark:text-emerald-300');
+            messageEl.classList.add('bg-emerald-500/20', 'text-emerald-200', 'border-emerald-400/40');
         } else if (type === 'danger') {
-            messageEl.classList.add('bg-rose-50', 'text-rose-700', 'border-rose-200', 'dark:bg-rose-950/40', 'dark:text-rose-300');
+            messageEl.classList.add('bg-rose-500/20', 'text-rose-200', 'border-rose-400/40');
         } else if (type === 'warning') {
-            messageEl.classList.add('bg-amber-50', 'text-amber-700', 'border-amber-200', 'dark:bg-amber-950/40', 'dark:text-amber-300');
+            messageEl.classList.add('bg-amber-500/20', 'text-amber-200', 'border-amber-400/40');
         } else {
-            messageEl.classList.add('bg-blue-50', 'text-blue-700', 'border-blue-200', 'dark:bg-blue-950/40', 'dark:text-blue-300');
+            messageEl.classList.add('bg-blue-500/20', 'text-sky-200', 'border-sky-400/40');
         }
 
         messageEl.textContent = text;
@@ -235,7 +307,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Smart Device & Front-Camera Detector
     function isMobileOrTabletUA() {
         const ua = navigator.userAgent || '';
         const isMobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet/i.test(ua);
@@ -261,10 +332,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (blockedOverlayDesc && reasonDesc) blockedOverlayDesc.textContent = reasonDesc.replace(/<[^>]*>?/gm, '');
 
         if (cameraStatusDot) {
-            cameraStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-500';
+            cameraStatusDot.className = 'w-2 h-2 rounded-full bg-amber-400';
         }
         if (cameraStatusLabel) {
-            cameraStatusLabel.textContent = 'Kamera Web Dinonaktifkan — Gunakan Alat Scanner Tambahan';
+            cameraStatusLabel.textContent = 'Mode Scanner USB / Input Kode';
         }
         manualInput?.focus();
     }
@@ -272,11 +343,10 @@ document.addEventListener('DOMContentLoaded', function () {
     async function initSmartScanner() {
         const isMobileDevice = isMobileOrTabletUA();
 
-        // 1. If opened on Desktop/Laptop, immediately inform user to use external scanner
         if (!isMobileDevice) {
             activateDesktopOrFrontCamLock(
-                'Perangkat Desktop / Laptop Terdeteksi — Gunakan Alat Scanner Tambahan',
-                'Fitur scan kamera hanya diperuntukkan bagi pengguna <strong>Mobile / Smartphone</strong>. Untuk pengguna Desktop/Laptop, harap gunakan <strong>Alat Scanner Barcode Tambahan (USB / Wireless)</strong> atau ketik kode barang pada kolom di bawah.'
+                'Mode Fullscreen Scanner — Gunakan Scanner Fisik atau Input Kode',
+                'Kamera optik otomatis aktif pada smartphone/tablet. Pada Desktop/Laptop, silakan tembakkan <strong>Scanner Barcode USB/Wireless</strong> atau ketik kode aset di bawah.'
             );
             return;
         }
@@ -296,7 +366,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // Smart check: if only 1 camera is present and its label indicates a front/laptop camera
             const rearCameras = cameras.filter(cam => {
                 const l = (cam.label || '').toLowerCase();
                 return l.includes('back') || l.includes('rear') || l.includes('belakang') || l.includes('environment');
@@ -306,23 +375,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (rearCameras.length === 0 && allAreFrontCameras) {
                 activateDesktopOrFrontCamLock(
-                    'Hanya Kamera Depan yang Terdeteksi — Pemindaian Kamera Tidak Didukung',
-                    'Sistem mendeteksi perangkat ini hanya memiliki <strong>Kamera Depan / Webcam</strong>. Pemindaian stiker barcode membutuhkan kamera belakang dengan autofokus atau <strong>Alat Scanner Barcode Tambahan</strong>.'
+                    'Hanya Kamera Depan yang Terdeteksi',
+                    'Pemindaian stiker barcode membutuhkan kamera belakang dengan autofokus atau <strong>Alat Scanner Barcode Tambahan</strong>.'
                 );
                 return;
             }
 
             desktopNotice?.classList.add('hidden');
             blockedOverlay?.classList.add('hidden');
-            if (cameraStatusDot) cameraStatusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
-            if (cameraStatusLabel) cameraStatusLabel.textContent = 'Kamera Belakang Mobile Aktif';
+            if (cameraStatusDot) cameraStatusDot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+            if (cameraStatusLabel) cameraStatusLabel.textContent = 'Kamera Optik Fullscreen Aktif';
 
             html5QrCode = new Html5Qrcode("reader");
             const selectedCamera = rearCameras.length > 0 ? rearCameras[0].id : { facingMode: "environment" };
 
             await html5QrCode.start(
                 selectedCamera,
-                { fps: 12, qrbox: { width: 250, height: 140 } },
+                { fps: 15, qrbox: { width: 260, height: 150 } },
                 (decodedText) => {
                     lookupBarcode(decodedText);
                 },
@@ -331,7 +400,7 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (err) {
             activateDesktopOrFrontCamLock(
                 'Kamera Belakang Tidak Tersedia / Izin Ditolak',
-                'Pastikan Anda membuka halaman ini melalui perangkat Mobile dan mengizinkan akses kamera belakang, atau gunakan alat scanner barcode tambahan pada komputer desktop.'
+                'Pastikan izin kamera diberikan pada perangkat Mobile, atau gunakan scanner USB/Wireless dan input manual di bawah.'
             );
         }
     }

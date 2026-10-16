@@ -2,8 +2,8 @@
  * SIM-Inventaris Diskominfo Kabupaten Garut — v2 Admin Observability & Telescope Studio (React 19 + Inertia v2)
  *
  * Strictly restricted to `admin` and `superadmin` roles (`middleware(['auth', 'admin'])`).
- * Features a 1-second (`1000ms`) realtime telemetry refresh loop polling `/observability/metrics`,
- * plus direct integration with official `laravel/telescope` (`/telescope`) and Admin Webhook Studio (`/webhooks`).
+ * Features a 1-second (`1000ms`) automatic heartbeat polling `/observability/metrics`,
+ * trace pagination (`page`, `per_page`, `search`, `status`), and Laravel Telescope integration.
  *
  * @author fwzann-abd <https://github.com/fwzann-abd>
  * @co-collaborator msayib <https://github.com/msayib>
@@ -11,7 +11,17 @@
 
 import React, { useEffect, useState } from 'react';
 import { AppLayout } from '../../../layouts/AppLayout';
-import { Activity, Cpu, Database, ExternalLink, Pause, Play, Webhook } from 'lucide-react';
+import {
+    Activity,
+    Cpu,
+    Database,
+    ExternalLink,
+    Pause,
+    Play,
+    Webhook,
+    ChevronLeft,
+    ChevronRight,
+} from 'lucide-react';
 
 export interface ObservabilityTraceEntry {
     timestamp?: string;
@@ -25,6 +35,15 @@ export interface ObservabilityTraceEntry {
     user_name?: string;
 }
 
+export interface ObservabilityPagination {
+    current_page: number;
+    per_page: number;
+    total: number;
+    last_page: number;
+    from: number;
+    to: number;
+}
+
 export interface ObservabilityIndexProps {
     summary?: {
         avg_duration_ms?: number;
@@ -35,6 +54,7 @@ export interface ObservabilityIndexProps {
         total_requests?: number;
         recent_requests?: ObservabilityTraceEntry[];
     };
+    pagination?: ObservabilityPagination;
     runtimeInfo?: {
         server_time?: string;
         db_ping_ms?: number;
@@ -44,10 +64,24 @@ export interface ObservabilityIndexProps {
 
 export default function AdminObservabilityIndex({
     summary: initialSummary,
+    pagination: initialPagination,
     runtimeInfo: initialRuntime,
     telescopeEnabled = true,
 }: ObservabilityIndexProps) {
     const [liveSummary, setLiveSummary] = useState(initialSummary ?? {});
+    const [pagination, setPagination] = useState<ObservabilityPagination>(
+        initialPagination ?? {
+            current_page: 1,
+            per_page: 10,
+            total: (initialSummary?.recent_requests ?? []).length,
+            last_page: 1,
+            from: 1,
+            to: (initialSummary?.recent_requests ?? []).length,
+        },
+    );
+    const [page, setPage] = useState<number>(initialPagination?.current_page ?? 1);
+    const [perPage, setPerPage] = useState<number>(initialPagination?.per_page ?? 10);
+    const [search, setSearch] = useState('');
     const [serverTime, setServerTime] = useState(initialRuntime?.server_time ?? 'LIVE');
     const [dbPingMs, setDbPingMs] = useState(initialRuntime?.db_ping_ms ?? 0);
     const [isLive, setIsLive] = useState(true);
@@ -58,7 +92,12 @@ export default function AdminObservabilityIndex({
         const timer = window.setInterval(async () => {
             if (document.visibilityState === 'hidden') return;
             try {
-                const res = await fetch('/observability/metrics', {
+                const params = new URLSearchParams({
+                    page: String(page),
+                    per_page: String(perPage),
+                    search,
+                });
+                const res = await fetch(`/observability/metrics?${params.toString()}`, {
                     headers: {
                         Accept: 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
@@ -74,26 +113,29 @@ export default function AdminObservabilityIndex({
                         recent_requests: data.entries ?? [],
                     });
                 }
+                if (data.pagination) {
+                    setPagination(data.pagination);
+                }
                 if (data.runtimeInfo) {
                     setServerTime(data.runtimeInfo.server_time ?? new Date().toLocaleTimeString('id-ID'));
                     setDbPingMs(data.runtimeInfo.db_ping_ms ?? 0);
                 }
             } catch {
-                // Non-blocking 1s poll
+                // Non-blocking 1000ms heartbeat poll
             }
         }, 1000);
 
         return () => window.clearInterval(timer);
-    }, [isLive]);
+    }, [isLive, page, perPage, search]);
 
     const recentRequests = liveSummary.recent_requests ?? [];
 
     return (
         <AppLayout
             title="Observability & Laravel Telescope Telemetry"
-            subtitle="Pemantauan realtime (1 detik) performa HTTP request, Server-Timing, konsumsi memori, dan integrasi resmi Laravel Telescope (Admin Only)."
+            subtitle="Pemantauan realtime otomatis setiap 1000ms (1 detik) untuk HTTP request, Server-Timing, konsumsi memori, dan paginasi trace (Admin Only)."
         >
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-6" data-heartbeat-interval="1000">
                 <div className="flex flex-wrap items-center gap-2">
                     <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 dark:bg-emerald-950/60 px-3.5 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
                         <span
@@ -101,7 +143,7 @@ export default function AdminObservabilityIndex({
                                 isLive ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
                             }`}
                         />
-                        <span>LIVE 1s STREAM • {serverTime}</span>
+                        <span>HEARTBEAT 1000ms • {serverTime}</span>
                     </div>
 
                     <button
@@ -110,7 +152,7 @@ export default function AdminObservabilityIndex({
                         className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-1 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer"
                     >
                         {isLive ? <Pause className="h-3.5 w-3.5 text-emerald-500" /> : <Play className="h-3.5 w-3.5 text-amber-500" />}
-                        <span>{isLive ? 'Live 1d: ON' : 'Live 1d: PAUSED'}</span>
+                        <span>{isLive ? 'Heartbeat 1000ms: ON' : 'Heartbeat 1000ms: PAUSED'}</span>
                     </button>
                 </div>
 
@@ -162,6 +204,85 @@ export default function AdminObservabilityIndex({
                         {liveSummary.total_requests ?? recentRequests.length}
                     </div>
                     <div className="text-xs text-slate-500">Trace Tercatat (DB Ping: {dbPingMs} ms)</div>
+                </div>
+            </div>
+
+            <div className="mt-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+                <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
+                            Log Jejak Request HTTP & SQL (Heartbeat 1000ms + Paginasi)
+                        </h3>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="search"
+                            value={search}
+                            onChange={(e) => {
+                                setSearch(e.target.value);
+                                setPage(1);
+                            }}
+                            placeholder="Filter path atau user..."
+                            className="px-3 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"
+                        />
+                        <select
+                            value={perPage}
+                            onChange={(e) => {
+                                setPerPage(Number(e.target.value));
+                                setPage(1);
+                            }}
+                            className="px-2.5 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 cursor-pointer"
+                        >
+                            {[5, 10, 20, 30, 50].map((n) => (
+                                <option key={n} value={n}>
+                                    {n}/hal
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                <div className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
+                    {recentRequests.map((entry, idx) => (
+                        <div key={`${entry.timestamp}-${idx}`} className="px-4 py-3 flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2 min-w-0">
+                                <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800">
+                                    {entry.method ?? 'GET'}
+                                </span>
+                                <span className="font-mono font-semibold text-slate-900 dark:text-white truncate">
+                                    {entry.path ?? '/'}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-3 font-mono text-[11px] shrink-0">
+                                <span>{entry.duration_ms ?? 0} ms</span>
+                                <span className="text-slate-400">{entry.query_count ?? 0} SQL</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
+                    <span>
+                        Menampilkan {pagination.from}–{pagination.to} dari {pagination.total} trace (Hal {pagination.current_page} / {pagination.last_page})
+                    </span>
+                    <div className="inline-flex items-center gap-1.5">
+                        <button
+                            type="button"
+                            disabled={page <= 1}
+                            onClick={() => setPage((p) => Math.max(1, p - 1))}
+                            className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 disabled:opacity-40 cursor-pointer"
+                        >
+                            <ChevronLeft className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                            type="button"
+                            disabled={page >= pagination.last_page}
+                            onClick={() => setPage((p) => Math.min(pagination.last_page, p + 1))}
+                            className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 disabled:opacity-40 cursor-pointer"
+                        >
+                            <ChevronRight className="h-3.5 w-3.5" />
+                        </button>
+                    </div>
                 </div>
             </div>
         </AppLayout>

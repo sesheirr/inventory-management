@@ -5,16 +5,25 @@
 @section('content')
 <div class="max-w-4xl mx-auto space-y-5" data-framer-page>
     {{-- Page Header --}}
-    <div class="flex items-center justify-between gap-3">
+    <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="min-w-0">
-            <h1 class="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">Pusat Notifikasi</h1>
+            <div class="flex items-center gap-2">
+                <h1 class="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">Pusat Notifikasi</h1>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Webhook Live • Realtime</span>
+                </span>
+            </div>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Pengingat stok, persetujuan mutasi & pembaruan sistem
+                Pengingat stok, persetujuan mutasi & pembaruan sistem secara langsung tanpa muat ulang
             </p>
         </div>
 
         <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <form action="{{ route('notifications.checkReminders') }}" method="POST" class="inline-flex m-0 shrink-0">
+            <form action="{{ route('notifications.checkReminders') }}"
+                  method="POST"
+                  data-ajax-notif-sync="true"
+                  class="inline-flex m-0 shrink-0">
                 @csrf
                 <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 border border-amber-200 dark:border-amber-800/50 transition-all cursor-pointer whitespace-nowrap shrink-0">
                     <i class="bi bi-arrow-repeat"></i>
@@ -22,16 +31,18 @@
                 </button>
             </form>
 
-            @if(($counts['unread'] ?? auth()->user()->unreadNotifications->count()) > 0)
-                <form action="{{ route('notifications.markAllAsRead') }}" method="POST" class="inline-flex m-0 shrink-0">
-                    @csrf
-                    @method('PATCH')
-                    <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800/50 transition-all cursor-pointer whitespace-nowrap shrink-0">
-                        <i class="bi bi-check2-all"></i>
-                        <span>Baca Semua</span>
-                    </button>
-                </form>
-            @endif
+            <form id="pageMarkAllReadForm"
+                  action="{{ route('notifications.markAllAsRead') }}"
+                  method="POST"
+                  data-ajax-notif-read-all="true"
+                  class="{{ ($counts['unread'] ?? auth()->user()->unreadNotifications->count()) > 0 ? 'inline-flex' : 'hidden' }} m-0 shrink-0">
+                @csrf
+                @method('PATCH')
+                <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800/50 transition-all cursor-pointer whitespace-nowrap shrink-0">
+                    <i class="bi bi-check2-all"></i>
+                    <span>Baca Semua</span>
+                </button>
+            </form>
         </div>
     </div>
 

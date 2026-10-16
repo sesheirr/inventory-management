@@ -285,11 +285,14 @@ fi
 
 rm -f public/hot 2>/dev/null || true
 
+WEBHOOK_PORT="${WEBHOOK_PORT:-8085}"
+
 echo ""
 echo -e "${COLOR_SUCCESS}${COLOR_BOLD}======================================================================${COLOR_RESET}"
-echo -e "${COLOR_SUCCESS}${COLOR_BOLD} ✅ Semua Siap! Menjalankan Server Lokal (Tanpa Docker)${COLOR_RESET}"
-echo -e "${COLOR_SUCCESS}${COLOR_BOLD} 👉 Aplikasi Web : http://127.0.0.1:${PORT}${COLOR_RESET}"
-echo -e "${COLOR_INFO}${COLOR_BOLD} ⚡ Vite HMR     : http://127.0.0.1:${VITE_PORT}${COLOR_RESET}"
+echo -e "${COLOR_SUCCESS}${COLOR_BOLD} ✅ Semua Siap! Menjalankan Server Lokal + Webhook (Tanpa Docker)${COLOR_RESET}"
+echo -e "${COLOR_SUCCESS}${COLOR_BOLD} 👉 Aplikasi Web   : http://127.0.0.1:${PORT}${COLOR_RESET}"
+echo -e "${COLOR_INFO}${COLOR_BOLD} ⚡ Vite HMR       : http://127.0.0.1:${VITE_PORT}${COLOR_RESET}"
+echo -e "${COLOR_INFO}${COLOR_BOLD} 🔔 Webhook Server : http://127.0.0.1:${WEBHOOK_PORT}/webhook${COLOR_RESET}"
 echo -e "${COLOR_WARNING}${COLOR_BOLD} 🌐 Ingin akses HTTPS jarak jauh? Buka terminal baru & ketik: make tunnel${COLOR_RESET}"
 echo -e "${COLOR_INFO} ⏹️  Tekan Ctrl+C untuk menghentikan semua server.${COLOR_RESET}"
 echo -e "${COLOR_SUCCESS}${COLOR_BOLD}======================================================================${COLOR_RESET}"
@@ -297,11 +300,11 @@ echo ""
 
 cleanup() {
     echo ""
-    echo -e "${COLOR_WARNING}🛑 Menghentikan server lokal...${COLOR_RESET}"
+    echo -e "${COLOR_WARNING}🛑 Menghentikan server lokal & webhook...${COLOR_RESET}"
     rm -f public/hot 2>/dev/null || true
-    kill "${LARAVEL_PID:-}" "${VITE_PID:-}" 2>/dev/null || true
-    wait "${LARAVEL_PID:-}" "${VITE_PID:-}" 2>/dev/null || true
-    echo -e "${COLOR_SUCCESS}✅ Server lokal berhenti dengan bersih.${COLOR_RESET}"
+    kill "${LARAVEL_PID:-}" "${VITE_PID:-}" "${WEBHOOK_PID:-}" 2>/dev/null || true
+    wait "${LARAVEL_PID:-}" "${VITE_PID:-}" "${WEBHOOK_PID:-}" 2>/dev/null || true
+    echo -e "${COLOR_SUCCESS}✅ Server lokal & webhook berhenti dengan bersih.${COLOR_RESET}"
     exit 0
 }
 trap cleanup SIGINT SIGTERM EXIT
@@ -311,6 +314,9 @@ LARAVEL_PID=$!
 
 ${FRONTEND_RUNNER} run dev &
 VITE_PID=$!
+
+php artisan inventory:webhook-server --host=0.0.0.0 --port="${WEBHOOK_PORT}" &
+WEBHOOK_PID=$!
 
 while kill -0 "$LARAVEL_PID" 2>/dev/null && kill -0 "$VITE_PID" 2>/dev/null; do
     sleep 1

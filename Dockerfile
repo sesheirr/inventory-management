@@ -60,6 +60,7 @@ RUN chmod +x /usr/local/bin/run-dev.sh
 # Expose ports:
 # 8000: Laravel HTTP Server
 # 5173: Vite Dev Server HMR
-EXPOSE 8000 5173
+# 8085: Webhook Broker & Realtime Queue Server
+EXPOSE 8000 5173 8085
 
 CMD ["/usr/local/bin/run-dev.sh"]
