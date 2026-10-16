@@ -15,8 +15,10 @@
 
 @layer base {
     :root {
-        --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
-        --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+        --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+        --ease-in-out-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+        --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+        --ease-spring: cubic-bezier(0.22, 1.18, 0.36, 1);
         --hand-cursor: pointer;
     }
 
@@ -80,12 +82,12 @@
 }
 
 /* ==========================================================================
-   60FPS HARDWARE-ACCELERATED MICRO-ANIMATIONS & ICON INTERACTIONS
+   60FPS HARDWARE-ACCELERATED SHADCN + FRAMER MOTION TRANSITIONS
    ========================================================================== */
 @keyframes fadeIn60 {
     from {
         opacity: 0;
-        transform: translate3d(0, 6px, 0) scale3d(0.985, 0.985, 1);
+        transform: translate3d(0, 6px, 0) scale3d(0.975, 0.975, 1);
     }
     to {
         opacity: 1;
@@ -104,6 +106,28 @@
     }
 }
 
+@keyframes viewMainFadeOut {
+    from {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+    }
+    to {
+        opacity: 0;
+        transform: translate3d(0, -4px, 0) scale3d(0.996, 0.996, 1);
+    }
+}
+
+@keyframes viewMainFadeIn {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 8px, 0) scale3d(0.995, 0.995, 1);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+    }
+}
+
 @keyframes skeletonSweep60 {
     0% {
         transform: translate3d(-100%, 0, 0);
@@ -115,10 +139,10 @@
 
 @keyframes bellWiggle60 {
     0%, 100% { transform: rotate(0deg); }
-    20% { transform: rotate(-14deg) scale3d(1.08, 1.08, 1); }
-    45% { transform: rotate(12deg) scale3d(1.08, 1.08, 1); }
-    70% { transform: rotate(-7deg); }
-    85% { transform: rotate(5deg); }
+    20% { transform: rotate(-12deg) scale3d(1.06, 1.06, 1); }
+    45% { transform: rotate(10deg) scale3d(1.06, 1.06, 1); }
+    70% { transform: rotate(-5deg); }
+    85% { transform: rotate(4deg); }
 }
 
 @keyframes pulseSubtle60 {
@@ -127,16 +151,19 @@
 }
 
 .animate-fade-in {
-    animation: fadeIn60 0.22s var(--ease-out-expo) forwards;
-    will-change: transform, opacity;
+    animation: fadeIn60 0.24s var(--ease-out-expo) both;
+}
+
+/* Prevent double-animation blink on modals & bottom sheets managed by WAAPI spring engine */
+.modal-container .sheet-dialog.animate-fade-in {
+    animation: none !important;
 }
 
 .animate-sheet-up {
-    animation: sheetSlideUp60 0.28s var(--ease-out-expo) forwards;
-    will-change: transform, opacity;
+    animation: sheetSlideUp60 0.32s var(--ease-drawer) both;
 }
 
-/* Global lightweight transitions on interactive elements */
+/* Global calibrated transitions on interactive elements (Shadcn 200ms expo feel) */
 a,
 button,
 input,
@@ -150,7 +177,7 @@ tbody tr,
 .ss-trigger,
 .ss-option {
     transition-property: transform, opacity, background-color, border-color, color, box-shadow;
-    transition-duration: 190ms;
+    transition-duration: 210ms;
     transition-timing-function: var(--ease-out-expo);
 }
 
@@ -158,18 +185,18 @@ tbody tr,
 @media (hover: hover) {
     a.inline-flex:hover,
     button.inline-flex:not(:disabled):hover {
-        transform: translate3d(0, -1.5px, 0);
+        transform: translate3d(0, -1px, 0);
     }
 
     .room-card-col:hover,
     .quick-status-card:hover {
-        transform: translate3d(0, -2.5px, 0);
-        box-shadow: 0 12px 26px -8px rgba(15, 23, 42, 0.09), 0 4px 10px -3px rgba(37, 99, 235, 0.06);
+        transform: translate3d(0, -2px, 0);
+        box-shadow: 0 12px 26px -8px rgba(15, 23, 42, 0.08), 0 4px 10px -3px rgba(37, 99, 235, 0.05);
     }
 
     .dark .room-card-col:hover,
     .dark .quick-status-card:hover {
-        box-shadow: 0 14px 30px -8px rgba(2, 6, 23, 0.55), 0 4px 12px -3px rgba(59, 130, 246, 0.14);
+        box-shadow: 0 14px 30px -8px rgba(2, 6, 23, 0.52), 0 4px 12px -3px rgba(59, 130, 246, 0.12);
     }
 
     tbody tr:hover {
@@ -181,7 +208,7 @@ tbody tr,
     }
 }
 
-/* Subtle 60fps press & touch feedback (Desktop + Mobile) */
+/* Subtle 60fps tactile press feedback (Desktop + Mobile) */
 button:not(:disabled):active,
 a.inline-flex:active,
 a.btn-press:active,
@@ -190,7 +217,8 @@ a.btn-press:active,
 [data-copy]:active,
 [data-share-code]:active,
 [data-barcode-modal]:active {
-    transform: scale3d(0.97, 0.97, 1) !important;
+    transform: scale3d(0.975, 0.975, 1) !important;
+    transition-duration: 110ms;
 }
 
 /* Animated Icons on Hover / Tap / Press */
@@ -200,19 +228,18 @@ button i.bi,
 a i.fas,
 button i.fas {
     display: inline-block;
-    transition: transform 210ms var(--ease-spring), color 160ms ease;
-    will-change: transform;
+    transition: transform 220ms var(--ease-out-expo), color 180ms ease;
 }
 
 a:hover i.bi:not(.no-icon-anim),
 button:not(:disabled):hover i.bi:not(.no-icon-anim),
 [role="button"]:hover i.bi:not(.no-icon-anim) {
-    transform: translate3d(0, -1px, 0) scale3d(1.14, 1.14, 1);
+    transform: translate3d(0, -0.5px, 0) scale3d(1.1, 1.1, 1);
 }
 
 a:active i.bi,
 button:not(:disabled):active i.bi {
-    transform: scale3d(0.88, 0.88, 1);
+    transform: scale3d(0.9, 0.9, 1);
 }
 
 #notificationBellBtn:hover i.bi-bell {
@@ -220,28 +247,74 @@ button:not(:disabled):active i.bi {
 }
 
 /* ==========================================================================
-   CROSS-DOCUMENT VIEW TRANSITIONS & INSTANT NAVIGATION BAR
+   CROSS-DOCUMENT VIEW TRANSITIONS & SHELL ISOLATION (ZERO BLINK)
    ========================================================================== */
 @media (prefers-reduced-motion: no-preference) {
     @view-transition {
         navigation: auto;
     }
+
+    /* Keep persistent app shell (Sidebar, Navbar, Mobile Dock) anchored without blinking */
+    html:not([data-theme-switching="1"]) #sidebarOffcanvas {
+        view-transition-name: app-sidebar;
+    }
+    html:not([data-theme-switching="1"]) #appTopNavbar {
+        view-transition-name: app-navbar;
+    }
+    html:not([data-theme-switching="1"]) #mobileBottomDock {
+        view-transition-name: app-mobile-dock;
+    }
+    html:not([data-theme-switching="1"]) #appGridBackdrop {
+        view-transition-name: app-grid-backdrop;
+    }
+    html:not([data-theme-switching="1"]) #appMainContent {
+        view-transition-name: app-main-content;
+    }
 }
 
 ::view-transition-old(root),
 ::view-transition-new(root) {
-    animation-duration: 145ms;
+    animation-duration: 210ms;
     animation-timing-function: var(--ease-out-expo);
 }
 
+::view-transition-old(app-sidebar),
+::view-transition-new(app-sidebar),
+::view-transition-old(app-navbar),
+::view-transition-new(app-navbar),
+::view-transition-old(app-mobile-dock),
+::view-transition-new(app-mobile-dock),
+::view-transition-old(app-grid-backdrop),
+::view-transition-new(app-grid-backdrop) {
+    animation-duration: 120ms;
+    animation-timing-function: var(--ease-out-expo);
+}
+
+::view-transition-old(app-main-content) {
+    animation: 150ms var(--ease-in-out-smooth) both viewMainFadeOut;
+}
+
+::view-transition-new(app-main-content) {
+    animation: 240ms var(--ease-out-expo) both viewMainFadeIn;
+}
+
+/* Fallback smooth theme transition only for browsers without startViewTransition */
 html.theme-transitioning,
-html.theme-transitioning *,
-html.theme-transitioning *::before,
-html.theme-transitioning *::after {
-    transition: background-color 260ms var(--ease-out-expo),
-                border-color 260ms var(--ease-out-expo),
-                color 220ms var(--ease-out-expo),
-                box-shadow 260ms var(--ease-out-expo) !important;
+html.theme-transitioning body,
+html.theme-transitioning header,
+html.theme-transitioning aside,
+html.theme-transitioning nav,
+html.theme-transitioning main,
+html.theme-transitioning div,
+html.theme-transitioning section,
+html.theme-transitioning table,
+html.theme-transitioning tr,
+html.theme-transitioning td,
+html.theme-transitioning th {
+    transition: background-color 240ms var(--ease-out-expo),
+                border-color 240ms var(--ease-out-expo),
+                color 200ms var(--ease-out-expo),
+                box-shadow 240ms var(--ease-out-expo) !important;
 }
 
 .top-nav-progress-bar {
@@ -256,12 +329,12 @@ html.theme-transitioning *::after {
     transform-origin: left center;
     transform: scaleX(0);
     opacity: 0;
-    transition: transform 280ms var(--ease-out-expo), opacity 180ms ease;
+    transition: transform 320ms var(--ease-out-expo), opacity 200ms ease;
 }
 
 .top-nav-progress-bar.is-active {
     opacity: 1;
-    transform: scaleX(0.72);
+    transform: scaleX(0.74);
 }
 
 .top-nav-progress-bar.is-finishing {
@@ -382,7 +455,7 @@ html.theme-transitioning *::after {
     }
     to {
         opacity: 0;
-        transform: translate3d(0, -6px, 0) scale3d(0.97, 0.97, 1);
+        transform: translate3d(0, -4px, 0) scale3d(0.97, 0.97, 1);
     }
 }
 
@@ -399,12 +472,12 @@ html.theme-transitioning *::after {
     box-shadow: 0 22px 44px -10px rgba(15, 23, 42, 0.24), 0 6px 16px -3px rgba(15, 23, 42, 0.1);
     overflow: hidden;
     transform-origin: top center;
-    animation: fadeIn60 0.18s var(--ease-out-expo) forwards;
+    animation: fadeIn60 0.21s var(--ease-out-expo) both;
 }
 
 .ss-dropdown.is-closing {
     pointer-events: none;
-    animation: ssDropdownOut60 0.15s var(--ease-out-expo) forwards;
+    animation: ssDropdownOut60 0.165s var(--ease-in-out-smooth) forwards;
 }
 
 .dark .ss-dropdown {
@@ -545,12 +618,12 @@ html.theme-transitioning *::after {
     border-radius: 1rem;
     padding: 0.75rem;
     box-shadow: 0 22px 44px -10px rgba(15, 23, 42, 0.24), 0 6px 16px -3px rgba(15, 23, 42, 0.1);
-    animation: fadeIn60 0.18s var(--ease-out-expo) forwards;
+    animation: fadeIn60 0.21s var(--ease-out-expo) both;
 }
 
 .cdp-popover.is-closing {
     pointer-events: none;
-    animation: ssDropdownOut60 0.15s var(--ease-out-expo) forwards;
+    animation: ssDropdownOut60 0.165s var(--ease-in-out-smooth) forwards;
 }
 
 .dark .cdp-popover {

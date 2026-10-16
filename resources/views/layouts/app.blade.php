@@ -57,18 +57,16 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-    {{-- Prevent Dark Mode Flash (Supports light / dark / system) --}}
+    {{-- Prevent Dark Mode Flash (Supports light / dark / system across unified theme keys) --}}
     <script>
         (function () {
             try {
-                const saved = localStorage.getItem('theme') || 'light';
+                const saved = localStorage.getItem('theme') || localStorage.getItem('color-theme') || 'light';
                 const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
                 const isDark = saved === 'dark' || (saved === 'system' && prefersDark);
-                if (isDark) {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                }
+                document.documentElement.classList.toggle('dark', isDark);
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+                document.documentElement.dataset.themeMode = saved;
             } catch (e) {}
         })();
     </script>
@@ -133,7 +131,8 @@
     </div>
 
     {{-- Native Mobile Bottom Navigation Dock (Visible on Mobile/Small Screens < lg) --}}
-    <nav aria-label="Navigasi Bawah Mobile"
+    <nav id="mobileBottomDock"
+         aria-label="Navigasi Bawah Mobile"
          class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 dark:bg-[#0f1b38]/95 backdrop-blur-xl border-t border-slate-200/80 dark:border-slate-800/90 px-2 py-1.5 shadow-[0_-8px_24px_-6px_rgba(15,23,42,0.08)]">
         <div class="grid grid-cols-5 items-center max-w-md mx-auto">
             <a href="{{ route('dashboard') }}"

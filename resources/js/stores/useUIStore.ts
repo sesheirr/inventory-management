@@ -28,6 +28,12 @@ interface UIState {
 
 export function applyThemeToDocument(theme: ThemeMode): void {
     if (typeof window === 'undefined') return;
+    try {
+        localStorage.setItem('theme', theme);
+        localStorage.setItem('color-theme', theme);
+    } catch {
+        // Ignore storage write errors in private browsing
+    }
     const prefersDark =
         window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     const isDark = theme === 'dark' || (theme === 'system' && prefersDark);
@@ -45,8 +51,27 @@ export const useUIStore = create<UIState>()(
             notificationSheetOpen: false,
             activeBottomSheetId: null,
             setTheme: (theme) => {
-                applyThemeToDocument(theme);
-                set({ theme });
+                const commit = () => {
+                    applyThemeToDocument(theme);
+                    set({ theme });
+                };
+
+                if (
+                    typeof document !== 'undefined' &&
+                    typeof (document as Document & { startViewTransition?: (cb: () => void) => { finished: Promise<void> } }).startViewTransition === 'function'
+                ) {
+                    document.documentElement.setAttribute('data-theme-switching', '1');
+                    const vt = (
+                        document as Document & {
+                            startViewTransition: (cb: () => void) => { finished: Promise<void> };
+                        }
+                    ).startViewTransition(commit);
+                    vt.finished.finally(() => {
+                        document.documentElement.removeAttribute('data-theme-switching');
+                    });
+                } else {
+                    commit();
+                }
             },
             toggleSidebar: () =>
                 set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),

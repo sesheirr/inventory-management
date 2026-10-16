@@ -31,10 +31,15 @@ export function ResponsiveModal({
     footer,
     maxWidthClass = 'max-w-lg',
 }: ResponsiveModalProps) {
-    const [isMobile, setIsMobile] = useState<boolean>(false);
+    const [isMobile, setIsMobile] = useState<boolean>(() => {
+        if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+            return window.matchMedia('(max-width: 639px)').matches;
+        }
+        return false;
+    });
 
     useEffect(() => {
-        if (typeof window === 'undefined') return;
+        if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
         const mq = window.matchMedia('(max-width: 639px)');
         const update = () => setIsMobile(mq.matches);
         update();
@@ -89,15 +94,24 @@ export function ResponsiveModal({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.18 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                         onClick={() => onOpenChange(false)}
                         className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs"
                     />
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.96, y: 8 }}
-                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                        initial={{ opacity: 0, scale: 0.96, y: 10 }}
+                        animate={{
+                            opacity: 1,
+                            scale: 1,
+                            y: 0,
+                            transition: { type: 'spring', stiffness: 420, damping: 32, mass: 0.85 },
+                        }}
+                        exit={{
+                            opacity: 0,
+                            scale: 0.965,
+                            y: 8,
+                            transition: { duration: 0.165, ease: [0.4, 0, 0.2, 1] },
+                        }}
                         className={`relative z-10 w-full ${maxWidthClass} rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl overflow-hidden`}
                     >
                         <div className="flex items-start justify-between gap-3 px-6 py-4 border-b border-slate-100 dark:border-slate-800">

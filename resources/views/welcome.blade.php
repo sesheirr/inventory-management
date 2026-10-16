@@ -10,7 +10,7 @@
 
     <script>
         (function() {
-            var theme = localStorage.getItem('color-theme') || 'system';
+            var theme = localStorage.getItem('theme') || localStorage.getItem('color-theme') || 'system';
             var isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
             if (isDark) {
                 document.documentElement.classList.add('dark');
@@ -19,6 +19,7 @@
                 document.documentElement.classList.remove('dark');
                 document.documentElement.setAttribute('data-theme', 'light');
             }
+            document.documentElement.dataset.themeMode = theme;
         })();
     </script>
 
@@ -28,7 +29,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-[#F8FAFC] dark:bg-[#090D16] text-slate-900 dark:text-slate-100 antialiased selection:bg-blue-600 selection:text-white transition-colors duration-300 overflow-x-hidden">
+<body class="bg-[#F8FAFC] dark:bg-[#090D16] text-slate-900 dark:text-slate-100 antialiased selection:bg-blue-600 selection:text-white overflow-x-hidden">
 
     <!-- Subtle Technical Grid Backdrop + Slow-Drifting Random Color-Morphing Ambient Orbs -->
     <div id="landingAmbientBackdrop" class="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
@@ -425,11 +426,24 @@
             var caret = document.getElementById('landingThemeCaret');
             if (!btn || !menu) return;
 
-            function applyTheme(mode) {
+            function toggleLandingMenu(forceOpen) {
+                var willOpen = typeof forceOpen === 'boolean' ? forceOpen : menu.classList.contains('hidden');
+                btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                if (caret) caret.style.transform = willOpen ? 'rotate(180deg)' : '';
+                if (typeof window.animateCollapsiblePanel === 'function') {
+                    window.animateCollapsiblePanel(menu, willOpen);
+                } else {
+                    menu.classList.toggle('hidden', !willOpen);
+                }
+            }
+
+            function commitLandingTheme(mode) {
+                localStorage.setItem('theme', mode);
                 localStorage.setItem('color-theme', mode);
                 var isDark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
                 document.documentElement.classList.toggle('dark', isDark);
                 document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+                document.documentElement.dataset.themeMode = mode;
 
                 var meta = {
                     light: { icon: 'bi-sun-fill text-amber-500', text: 'Terang' },
@@ -446,29 +460,38 @@
                 });
             }
 
-            applyTheme(localStorage.getItem('color-theme') || 'system');
+            function applyTheme(mode, animate) {
+                if (animate && typeof document.startViewTransition === 'function') {
+                    document.documentElement.setAttribute('data-theme-switching', '1');
+                    var vt = document.startViewTransition(function() {
+                        commitLandingTheme(mode);
+                    });
+                    vt.finished.finally(function() {
+                        document.documentElement.removeAttribute('data-theme-switching');
+                    });
+                } else {
+                    commitLandingTheme(mode);
+                }
+            }
+
+            applyTheme(localStorage.getItem('theme') || localStorage.getItem('color-theme') || 'system', false);
 
             btn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                var hidden = menu.classList.toggle('hidden');
-                btn.setAttribute('aria-expanded', hidden ? 'false' : 'true');
-                if (caret) caret.style.transform = hidden ? '' : 'rotate(180deg)';
+                toggleLandingMenu();
             });
 
             menu.querySelectorAll('[data-landing-theme]').forEach(function(opt) {
-                opt.addEventListener('click', function() {
-                    applyTheme(opt.getAttribute('data-landing-theme'));
-                    menu.classList.add('hidden');
-                    btn.setAttribute('aria-expanded', 'false');
-                    if (caret) caret.style.transform = '';
+                opt.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    applyTheme(opt.getAttribute('data-landing-theme'), true);
+                    toggleLandingMenu(false);
                 });
             });
 
             document.addEventListener('click', function() {
                 if (!menu.classList.contains('hidden')) {
-                    menu.classList.add('hidden');
-                    btn.setAttribute('aria-expanded', 'false');
-                    if (caret) caret.style.transform = '';
+                    toggleLandingMenu(false);
                 }
             });
         })();

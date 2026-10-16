@@ -73,5 +73,14 @@ class V2FoundationAndAttributionTest extends TestCase
 
         $appCss = (string) file_get_contents(base_path('resources/css/app.css'));
         $this->assertStringContainsString('--hand-cursor: pointer;', $appCss);
+        $this->assertStringContainsString('--ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);', $appCss);
+        $this->assertStringContainsString('view-transition-name: app-main-content;', $appCss);
+        $this->assertStringContainsString('view-transition-name: app-sidebar;', $appCss);
+        $this->assertStringContainsString('view-transition-name: app-navbar;', $appCss);
+        $this->assertStringContainsString('view-transition-name: app-mobile-dock;', $appCss);
+
+        $appJs = (string) file_get_contents(base_path('resources/js/app.js'));
+        $this->assertStringContainsString('function cancelElementAnimations(el)', $appJs);
+        $this->assertStringContainsString('data-theme-switching', $appJs);
     }
 }

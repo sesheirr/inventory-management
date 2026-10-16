@@ -51,9 +51,9 @@ export function AuthLayout({ title = 'Masuk Sistem Inventaris', children }: Auth
             </div>
 
             <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+                initial={{ opacity: 0, y: 8, scale: 0.99 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
                 className="mx-auto w-full max-w-md"
             >
                 <div className="mb-6 text-center">

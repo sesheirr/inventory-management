@@ -177,13 +177,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =========================================================================
-    // 2. ANIMATED DARK / LIGHT / SYSTEM THEME ENGINE
+    // 2. ANIMATED DARK / LIGHT / SYSTEM THEME ENGINE (ZERO-BLINK VIEW TRANSITION)
     // =========================================================================
     const systemDarkMedia = window.matchMedia('(prefers-color-scheme: dark)');
 
     function getThemePreference() {
         try {
-            const saved = localStorage.getItem('theme');
+            const saved = localStorage.getItem('theme') || localStorage.getItem('color-theme');
             if (saved === 'dark' || saved === 'light' || saved === 'system') {
                 return saved;
             }
@@ -241,24 +241,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const performUpdate = () => {
             htmlEl.classList.toggle('dark', isDark);
+            htmlEl.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            htmlEl.dataset.themeMode = pref;
             try {
                 localStorage.setItem('theme', pref);
+                localStorage.setItem('color-theme', pref);
             } catch (e) {}
             syncThemeUI(pref, isDark);
         };
 
         if (options.animate) {
-            htmlEl.classList.add('theme-transitioning');
             if (typeof document.startViewTransition === 'function') {
                 try {
-                    document.startViewTransition(() => performUpdate());
+                    htmlEl.setAttribute('data-theme-switching', '1');
+                    const vt = document.startViewTransition(() => performUpdate());
+                    vt.finished.finally(() => {
+                        htmlEl.removeAttribute('data-theme-switching');
+                    });
                 } catch (e) {
+                    htmlEl.removeAttribute('data-theme-switching');
                     performUpdate();
                 }
             } else {
+                htmlEl.classList.add('theme-transitioning');
                 performUpdate();
+                setTimeout(() => htmlEl.classList.remove('theme-transitioning'), 260);
             }
-            setTimeout(() => htmlEl.classList.remove('theme-transitioning'), 360);
         } else {
             performUpdate();
         }
@@ -276,7 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.applyTheme = applyTheme;
     window.getThemePreference = getThemePreference;
 
-    // Initial theme sync
+    // Initial theme sync without animation
     applyTheme(getThemePreference(), { animate: false, notify: false });
 
     // Listen to OS theme changes when preference is 'system'
@@ -495,6 +503,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        if (wrapper._ssCloseTimer) {
+            clearTimeout(wrapper._ssCloseTimer);
+            wrapper._ssCloseTimer = null;
+        }
+
         if (immediate) {
             dropdown.classList.remove('is-closing');
             dropdown.classList.add('hidden');
@@ -503,13 +516,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         dropdown.classList.add('is-closing');
-        setTimeout(() => {
+        wrapper._ssCloseTimer = setTimeout(() => {
+            wrapper._ssCloseTimer = null;
             if (!wrapper.classList.contains('is-open')) {
                 dropdown.classList.add('hidden');
                 dropdown.classList.remove('is-closing');
                 syncAncestorDropdownState();
             }
-        }, 145);
+        }, 165);
     }
 
     function initSearchableSelects(root = document) {
@@ -980,6 +994,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 wrapper.classList.remove('is-open');
                 trigger.setAttribute('aria-expanded', 'false');
 
+                if (wrapper._cdpCloseTimer) {
+                    clearTimeout(wrapper._cdpCloseTimer);
+                    wrapper._cdpCloseTimer = null;
+                }
+
                 if (immediate) {
                     popover.classList.remove('is-closing');
                     popover.classList.add('hidden');
@@ -988,13 +1007,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 popover.classList.add('is-closing');
-                setTimeout(() => {
+                wrapper._cdpCloseTimer = setTimeout(() => {
+                    wrapper._cdpCloseTimer = null;
                     if (!wrapper.classList.contains('is-open')) {
                         popover.classList.add('hidden');
                         popover.classList.remove('is-closing');
                         syncAncestorDropdownState();
                     }
-                }, 145);
+                }, 165);
             }
 
             wrapper._cdpClose = closePopover;
@@ -1021,45 +1041,109 @@ document.addEventListener('DOMContentLoaded', () => {
     // 6. NAVBAR DROPDOWNS, COLLAPSIBLES, MOBILE SHEETS & FRAMER MOTION PHYSICS
     // =========================================================================
     const isReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    const EASE_SHADCN_OUT = 'cubic-bezier(0.16, 1, 0.3, 1)';
+    const EASE_SHADCN_IN_OUT = 'cubic-bezier(0.4, 0, 0.2, 1)';
+    const EASE_VAUL_DRAWER = 'cubic-bezier(0.32, 0.72, 0, 1)';
+
+    function cancelElementAnimations(el) {
+        if (!el || typeof el.getAnimations !== 'function') return;
+        try {
+            el.getAnimations().forEach((anim) => anim.cancel());
+        } catch (e) {}
+    }
 
     function animateSpringElement(el, keyframes, options = {}) {
         if (!el || isReducedMotion || typeof el.animate !== 'function') return null;
+        if (options.cancelPrevious !== false) {
+            cancelElementAnimations(el);
+        }
+        const delay = options.delay || 0;
+        const fill = options.fill || (delay > 0 ? 'backwards' : 'none');
         try {
             return el.animate(keyframes, {
-                duration: options.duration || 420,
-                delay: options.delay || 0,
-                easing: options.easing || 'cubic-bezier(0.22, 1, 0.36, 1)',
-                fill: options.fill || 'none',
+                duration: options.duration || 260,
+                delay,
+                easing: options.easing || EASE_SHADCN_OUT,
+                fill,
             });
         } catch (e) {
             return null;
         }
     }
 
-    // Smooth Collapsible Panel Animator (Open & Close)
+    // Smooth Collapsible Panel Animator (Shadcn Accordion/Collapsible Height + Opacity)
     function animateCollapsiblePanel(panelEl, willShow) {
         if (!panelEl) return;
+        cancelElementAnimations(panelEl);
+
         if (isReducedMotion || typeof panelEl.animate !== 'function') {
             panelEl.classList.toggle('hidden', !willShow);
+            panelEl.style.overflow = '';
             return;
         }
 
+        const isFloatingMenu =
+            window.getComputedStyle(panelEl).position === 'absolute' ||
+            window.getComputedStyle(panelEl).position === 'fixed';
+
         if (willShow) {
             panelEl.classList.remove('hidden');
-            animateSpringElement(panelEl, [
-                { opacity: 0, transform: 'translate3d(0, -8px, 0) scaleY(0.96)' },
-                { opacity: 1, transform: 'translate3d(0, 0, 0) scaleY(1)' },
-            ], { duration: 240, fill: 'none' });
-        } else {
+            if (isFloatingMenu) {
+                animateSpringElement(panelEl, [
+                    { opacity: 0, transform: 'translate3d(0, -6px, 0) scale(0.96)' },
+                    { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
+                ], { duration: 210, easing: EASE_SHADCN_OUT, fill: 'none' });
+                return;
+            }
+
+            const targetHeight = panelEl.scrollHeight;
+            panelEl.style.overflow = 'hidden';
             const anim = animateSpringElement(panelEl, [
-                { opacity: 1, transform: 'translate3d(0, 0, 0) scaleY(1)' },
-                { opacity: 0, transform: 'translate3d(0, -6px, 0) scaleY(0.96)' },
-            ], { duration: 180, fill: 'none' });
+                { opacity: 0, height: '0px', transform: 'translate3d(0, -4px, 0)' },
+                { opacity: 1, height: `${Math.max(targetHeight, 1)}px`, transform: 'translate3d(0, 0, 0)' },
+            ], { duration: 250, easing: EASE_SHADCN_OUT, fill: 'none' });
 
             if (anim) {
-                anim.onfinish = () => panelEl.classList.add('hidden');
+                anim.onfinish = () => {
+                    panelEl.style.overflow = '';
+                };
+            } else {
+                panelEl.style.overflow = '';
+            }
+        } else {
+            if (isFloatingMenu) {
+                const anim = animateSpringElement(panelEl, [
+                    { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
+                    { opacity: 0, transform: 'translate3d(0, -4px, 0) scale(0.97)' },
+                ], { duration: 165, easing: EASE_SHADCN_IN_OUT, fill: 'forwards' });
+
+                if (anim) {
+                    anim.onfinish = () => {
+                        panelEl.classList.add('hidden');
+                        anim.cancel();
+                    };
+                } else {
+                    panelEl.classList.add('hidden');
+                }
+                return;
+            }
+
+            const currentHeight = panelEl.offsetHeight || panelEl.scrollHeight;
+            panelEl.style.overflow = 'hidden';
+            const anim = animateSpringElement(panelEl, [
+                { opacity: 1, height: `${currentHeight}px`, transform: 'translate3d(0, 0, 0)' },
+                { opacity: 0, height: '0px', transform: 'translate3d(0, -4px, 0)' },
+            ], { duration: 200, easing: EASE_SHADCN_IN_OUT, fill: 'forwards' });
+
+            if (anim) {
+                anim.onfinish = () => {
+                    panelEl.classList.add('hidden');
+                    panelEl.style.overflow = '';
+                    anim.cancel();
+                };
             } else {
                 panelEl.classList.add('hidden');
+                panelEl.style.overflow = '';
             }
         }
     }
@@ -1068,32 +1152,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function animatePopoverOrSheetOpen(panelEl, backdropEl = null) {
         if (!panelEl) return;
+        cancelElementAnimations(panelEl);
+        panelEl.style.transform = '';
         panelEl.classList.remove('hidden');
         const isMobile = window.innerWidth < 640;
 
         if (backdropEl && isMobile) {
+            cancelElementAnimations(backdropEl);
             backdropEl.classList.remove('hidden', 'opacity-0');
             backdropEl.style.opacity = '1';
             animateSpringElement(backdropEl, [
                 { opacity: 0 },
                 { opacity: 1 },
-            ], { duration: 220, fill: 'none' });
+            ], { duration: 240, easing: EASE_SHADCN_OUT, fill: 'none' });
         }
 
         if (isReducedMotion || typeof panelEl.animate !== 'function') return;
 
         if (isMobile) {
             animateSpringElement(panelEl, [
-                { opacity: 0, transform: 'translate3d(0, 44px, 0) scale(0.96)' },
-                { opacity: 1, transform: 'translate3d(0, -2px, 0) scale(1.004)', offset: 0.74 },
+                { opacity: 0, transform: 'translate3d(0, 40px, 0) scale(0.97)' },
                 { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
-            ], { duration: 320, fill: 'none' });
+            ], { duration: 310, easing: EASE_VAUL_DRAWER, fill: 'none' });
         } else {
             animateSpringElement(panelEl, [
-                { opacity: 0, transform: 'translate3d(0, -8px, 0) scale(0.96)' },
-                { opacity: 1, transform: 'translate3d(0, 1.5px, 0) scale(1.004)', offset: 0.72 },
+                { opacity: 0, transform: 'translate3d(0, -6px, 0) scale(0.96)' },
                 { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
-            ], { duration: 240, fill: 'none' });
+            ], { duration: 215, easing: EASE_SHADCN_OUT, fill: 'none' });
         }
     }
 
@@ -1105,11 +1190,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const bAnim = animateSpringElement(backdropEl, [
                 { opacity: 1 },
                 { opacity: 0 },
-            ], { duration: 180, fill: 'none' });
+            ], { duration: 190, easing: EASE_SHADCN_IN_OUT, fill: 'forwards' });
             if (bAnim) {
                 bAnim.onfinish = () => {
                     backdropEl.classList.add('hidden');
                     backdropEl.style.opacity = '';
+                    bAnim.cancel();
                 };
             } else {
                 backdropEl.classList.add('hidden');
@@ -1124,19 +1210,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const keyframes = isMobile
             ? [
-                { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
-                { opacity: 0, transform: 'translate3d(0, 36px, 0) scale(0.96)' },
+                { opacity: 1, transform: panelEl.style.transform || 'translate3d(0, 0, 0) scale(1)' },
+                { opacity: 0, transform: 'translate3d(0, 32px, 0) scale(0.97)' },
             ]
             : [
                 { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
-                { opacity: 0, transform: 'translate3d(0, -6px, 0) scale(0.96)' },
+                { opacity: 0, transform: 'translate3d(0, -4px, 0) scale(0.97)' },
             ];
 
-        const anim = animateSpringElement(panelEl, keyframes, { duration: 190, fill: 'none' });
+        const anim = animateSpringElement(panelEl, keyframes, {
+            duration: isMobile ? 220 : 165,
+            easing: isMobile ? EASE_VAUL_DRAWER : EASE_SHADCN_IN_OUT,
+            fill: 'forwards',
+        });
         if (anim) {
             anim.onfinish = () => {
                 panelEl.classList.add('hidden');
                 panelEl.style.transform = '';
+                anim.cancel();
             };
         } else {
             panelEl.classList.add('hidden');
@@ -1272,17 +1363,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Global Modal & Mobile Bottom Sheet Open/Close System with Spring Enter & Exit Physics
+    // Global Modal & Mobile Bottom Sheet Open/Close System with Shadcn + Vaul Physics
     function openModalById(modalId) {
         const modal = document.getElementById(modalId);
         if (!modal) return;
+        cancelElementAnimations(modal);
         delete modal.dataset.isClosing;
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         document.body.classList.add('overflow-hidden');
 
+        animateSpringElement(modal, [
+            { opacity: 0 },
+            { opacity: 1 },
+        ], { duration: 220, easing: EASE_SHADCN_OUT, fill: 'none' });
+
         const dialog = modal.querySelector('.sheet-dialog') || modal.firstElementChild;
         if (dialog) {
+            cancelElementAnimations(dialog);
             dialog.style.transform = '';
         }
 
@@ -1290,27 +1388,29 @@ document.addEventListener('DOMContentLoaded', () => {
             const isMobileSheet = window.innerWidth < 768 && modal.classList.contains('responsive-bottom-sheet');
             if (isMobileSheet) {
                 animateSpringElement(dialog, [
-                    { opacity: 0.7, transform: 'translate3d(0, 100%, 0)' },
-                    { opacity: 1, transform: 'translate3d(0, -3px, 0)', offset: 0.78 },
+                    { opacity: 0.85, transform: 'translate3d(0, 100%, 0)' },
                     { opacity: 1, transform: 'translate3d(0, 0, 0)' },
-                ], { duration: 340, fill: 'none' });
+                ], { duration: 330, easing: EASE_VAUL_DRAWER, fill: 'none' });
             } else {
                 animateSpringElement(dialog, [
-                    { opacity: 0, transform: 'translate3d(0, 16px, 0) scale(0.95)' },
-                    { opacity: 1, transform: 'translate3d(0, -2px, 0) scale(1.006)', offset: 0.72 },
+                    { opacity: 0, transform: 'translate3d(0, 12px, 0) scale(0.96)' },
                     { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
-                ], { duration: 300, fill: 'none' });
+                ], { duration: 260, easing: EASE_SHADCN_OUT, fill: 'none' });
             }
 
-            // Stagger inner tiles if opening #mobileAppMenuSheet
+            // Stagger inner tiles if opening #mobileAppMenuSheet with fill: 'backwards' so zero blink occurs
             if (modalId === 'mobileAppMenuSheet') {
                 const tiles = dialog.querySelectorAll('.grid a, .grid button');
                 tiles.forEach((tile, idx) => {
                     animateSpringElement(tile, [
-                        { opacity: 0, transform: 'translate3d(0, 12px, 0) scale(0.92)' },
-                        { opacity: 1, transform: 'translate3d(0, -1.5px, 0) scale(1.015)', offset: 0.74 },
+                        { opacity: 0, transform: 'translate3d(0, 8px, 0) scale(0.95)' },
                         { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
-                    ], { duration: 310, delay: Math.min(idx * 20, 160), fill: 'none' });
+                    ], {
+                        duration: 260,
+                        delay: Math.min(idx * 16, 120),
+                        easing: EASE_SHADCN_OUT,
+                        fill: 'backwards',
+                    });
                 });
             }
         }
@@ -1319,12 +1419,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function closeModalEl(modal, immediate = false) {
         if (!modal || modal.classList.contains('hidden')) return;
 
-        const finishClose = () => {
+        const finishClose = (modalAnim = null, dialogAnim = null) => {
             delete modal.dataset.isClosing;
             modal.classList.add('hidden');
             modal.classList.remove('flex');
             const dialog = modal.querySelector('.sheet-dialog') || modal.firstElementChild;
             if (dialog) dialog.style.transform = '';
+            if (modalAnim) {
+                try { modalAnim.cancel(); } catch (e) {}
+            }
+            if (dialogAnim) {
+                try { dialogAnim.cancel(); } catch (e) {}
+            }
             if (!document.querySelector('.modal-container.flex')) {
                 document.body.classList.remove('overflow-hidden');
             }
@@ -1341,29 +1447,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const dialog = modal.querySelector('.sheet-dialog') || modal.firstElementChild;
         const isMobileSheet = window.innerWidth < 768 && modal.classList.contains('responsive-bottom-sheet');
 
-        animateSpringElement(modal, [
+        const modalAnim = animateSpringElement(modal, [
             { opacity: 1 },
             { opacity: 0 },
-        ], { duration: 200, fill: 'none' });
+        ], { duration: isMobileSheet ? 225 : 190, easing: EASE_SHADCN_IN_OUT, fill: 'forwards' });
 
         if (dialog && typeof dialog.animate === 'function') {
             const keyframes = isMobileSheet
                 ? [
                     { opacity: 1, transform: dialog.style.transform || 'translate3d(0, 0, 0)' },
-                    { opacity: 0.4, transform: 'translate3d(0, 100%, 0)' },
+                    { opacity: 0.7, transform: 'translate3d(0, 100%, 0)' },
                 ]
                 : [
                     { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
-                    { opacity: 0, transform: 'translate3d(0, 12px, 0) scale(0.95)' },
+                    { opacity: 0, transform: 'translate3d(0, 8px, 0) scale(0.96)' },
                 ];
-            const anim = animateSpringElement(dialog, keyframes, { duration: 210, fill: 'none' });
-            if (anim) {
-                anim.onfinish = finishClose;
+            const dialogAnim = animateSpringElement(dialog, keyframes, {
+                duration: isMobileSheet ? 235 : 190,
+                easing: isMobileSheet ? EASE_VAUL_DRAWER : EASE_SHADCN_IN_OUT,
+                fill: 'forwards',
+            });
+            if (dialogAnim) {
+                dialogAnim.onfinish = () => finishClose(modalAnim, dialogAnim);
                 return;
             }
         }
 
-        setTimeout(finishClose, 190);
+        setTimeout(() => finishClose(modalAnim, null), 195);
     }
 
     window.openModalById = openModalById;
@@ -1386,6 +1496,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 startY = clientY;
                 currentY = 0;
                 dragging = true;
+                cancelElementAnimations(sheetTarget);
                 sheetTarget.style.transition = 'none';
             };
 
@@ -1399,16 +1510,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const onEnd = () => {
                 if (!dragging) return;
                 dragging = false;
-                sheetTarget.style.transition = '';
 
                 if (currentY > 68) {
+                    sheetTarget.style.transition = '';
                     const parentModal = sheetTarget.closest('.modal-container');
                     if (parentModal) {
                         closeModalEl(parentModal);
                     } else if (sheetTarget.id === 'notificationDropdownPanel') {
                         closeNotificationCenter();
                     }
+                } else if (currentY > 0) {
+                    sheetTarget.style.transition = `transform 260ms ${EASE_SHADCN_OUT}`;
+                    sheetTarget.style.transform = 'translate3d(0, 0, 0)';
+                    setTimeout(() => {
+                        sheetTarget.style.transition = '';
+                        sheetTarget.style.transform = '';
+                    }, 265);
                 } else {
+                    sheetTarget.style.transition = '';
                     sheetTarget.style.transform = '';
                 }
             };
@@ -1465,22 +1584,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // =========================================================================
-    // 6B. SNAPPY ENTRANCE & INSTANT PAGE PREFETCH / PROGRESS BAR ENGINE
+    // 6B. DYNAMIC AJAX FRAGMENT ENTRANCE & INSTANT PAGE PREFETCH ENGINE
     // =========================================================================
     function runFramerMotionEntrance(root = document) {
         if (isReducedMotion) return;
+        // Full-document navigation is already smoothly animated via CSS @view-transition
+        // on #appMainContent. Re-animating the entire document on DOMContentLoaded caused
+        // painted cards to snap backwards and blink. Only run on dynamic AJAX fragments.
+        if (root === document) return;
 
-        // Lightweight, ultra-responsive entrance (opacity 0.94 -> 1, 175ms max)
-        // Use fill: 'none' so finished animations never create a CSS stacking context.
         const framerCards = Array.from(root.querySelectorAll('[data-framer-card]')).slice(0, 12);
         framerCards.forEach((card, idx) => {
             animateSpringElement(card, [
-                { opacity: 0.94, transform: 'translate3d(0, 5px, 0)' },
+                { opacity: 0, transform: 'translate3d(0, 6px, 0)' },
                 { opacity: 1, transform: 'translate3d(0, 0, 0)' },
             ], {
-                duration: 175,
+                duration: 210,
                 delay: Math.min(idx * 14, 70),
-                fill: 'none',
+                easing: EASE_SHADCN_OUT,
+                fill: 'backwards',
             });
         });
 
@@ -1489,19 +1611,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const children = Array.from(container.children).filter((el) => el.offsetParent !== null || el.tagName === 'DIV' || el.tagName === 'A');
             children.slice(0, 16).forEach((child, idx) => {
                 animateSpringElement(child, [
-                    { opacity: 0.94, transform: 'translate3d(0, 4px, 0)' },
+                    { opacity: 0, transform: 'translate3d(0, 5px, 0)' },
                     { opacity: 1, transform: 'translate3d(0, 0, 0)' },
                 ], {
-                    duration: 165,
-                    delay: Math.min(idx * 10, 60),
-                    fill: 'none',
+                    duration: 200,
+                    delay: Math.min(idx * 12, 60),
+                    easing: EASE_SHADCN_OUT,
+                    fill: 'backwards',
                 });
             });
         });
     }
 
     window.runFramerMotionEntrance = runFramerMotionEntrance;
-    runFramerMotionEntrance(document);
 
     // Instant Same-Origin Link Prefetching & Top Progress Bar for Responsive Navigation
     function initFastPageNavigation() {

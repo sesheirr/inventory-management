@@ -17,16 +17,18 @@
     <script>
         (function () {
             function applyAuthTheme() {
-                const stored = localStorage.getItem('theme') || 'system';
+                const stored = localStorage.getItem('theme') || localStorage.getItem('color-theme') || 'system';
                 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                 const isDark = stored === 'dark' || (stored === 'system' && prefersDark);
                 document.documentElement.classList.toggle('dark', isDark);
+                document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
                 document.documentElement.dataset.themeMode = stored;
             }
             applyAuthTheme();
             window.__applyAuthTheme = applyAuthTheme;
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
-                if ((localStorage.getItem('theme') || 'system') === 'system') {
+                const stored = localStorage.getItem('theme') || localStorage.getItem('color-theme') || 'system';
+                if (stored === 'system') {
                     applyAuthTheme();
                 }
             });
@@ -36,7 +38,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/app.tsx'])
     @yield('extra-css')
 </head>
-<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased selection:bg-blue-600 selection:text-white min-h-[100dvh] transition-colors duration-300">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased selection:bg-blue-600 selection:text-white min-h-[100dvh]">
     {{-- Top-Right Pinned Collapsible Theme Switcher (Desktop & Mobile) --}}
     <div id="authThemeSwitcherRoot" class="fixed top-3.5 right-3.5 sm:top-5 sm:right-5 z-50">
         <div class="relative">
@@ -103,7 +105,7 @@
             };
 
             function syncThemeUI() {
-                const current = localStorage.getItem('theme') || 'system';
+                const current = localStorage.getItem('theme') || localStorage.getItem('color-theme') || 'system';
                 const meta = themeMeta[current] || themeMeta.system;
                 if (iconEl) iconEl.className = meta.icon;
                 if (labelEl) labelEl.textContent = meta.label;
@@ -142,10 +144,25 @@
                     e.stopPropagation();
                     const mode = btn.getAttribute('data-auth-theme-btn') || 'system';
                     localStorage.setItem('theme', mode);
-                    if (typeof window.__applyAuthTheme === 'function') {
-                        window.__applyAuthTheme();
+                    localStorage.setItem('color-theme', mode);
+
+                    const commit = function () {
+                        if (typeof window.__applyAuthTheme === 'function') {
+                            window.__applyAuthTheme();
+                        }
+                        syncThemeUI();
+                    };
+
+                    if (typeof document.startViewTransition === 'function') {
+                        document.documentElement.setAttribute('data-theme-switching', '1');
+                        const vt = document.startViewTransition(commit);
+                        vt.finished.finally(function () {
+                            document.documentElement.removeAttribute('data-theme-switching');
+                        });
+                    } else {
+                        commit();
                     }
-                    syncThemeUI();
+
                     toggleMenu(false);
                 });
             });
