@@ -106,7 +106,7 @@ export function AppLayout({ title = 'Dashboard Inventaris', subtitle, children }
             </div>
 
             <Toaster
-                position="top-center"
+                position={typeof window !== 'undefined' && window.innerWidth < 768 ? 'top-center' : 'bottom-right'}
                 richColors
                 closeButton
                 toastOptions={{

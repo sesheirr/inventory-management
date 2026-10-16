@@ -204,26 +204,26 @@
             </div>
 
             {{-- Live Trace Filter & Per-Page Controls --}}
-            <form action="{{ route('observability.index') }}" method="GET" id="obsFilterForm" class="flex flex-wrap items-center gap-2">
-                <div class="relative">
+            <form action="{{ route('observability.index') }}" method="GET" id="obsFilterForm" class="flex flex-wrap xl:flex-nowrap items-center gap-2">
+                <div class="relative w-full sm:w-52 shrink-0">
                     <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                     <input type="search" id="obsFilterSearch" name="search" value="{{ $obsFilters['search'] ?? '' }}" placeholder="Cari path atau user..."
-                           class="pl-8 pr-3 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none">
+                           class="w-full h-9 pl-8 pr-3 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-stone-900 border border-slate-200 dark:border-stone-700 text-slate-800 dark:text-stone-200 focus:outline-none">
                 </div>
-                <select id="obsFilterMethod" name="method" class="px-2.5 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer">
+                <select id="obsFilterMethod" name="method" class="h-9 px-2.5 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-stone-900 border border-slate-200 dark:border-stone-700 text-slate-700 dark:text-stone-200 cursor-pointer">
                     <option value="">Semua Metode</option>
                     @foreach(['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as $m)
                         <option value="{{ $m }}" @selected(($obsFilters['method'] ?? '') === $m)>{{ $m }}</option>
                     @endforeach
                 </select>
-                <select id="obsFilterStatus" name="status" class="px-2.5 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer">
+                <select id="obsFilterStatus" name="status" class="h-9 px-2.5 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-stone-900 border border-slate-200 dark:border-stone-700 text-slate-700 dark:text-stone-200 cursor-pointer">
                     <option value="">Semua Status</option>
                     <option value="2xx" @selected(($obsFilters['status'] ?? '') === '2xx')>2xx Success</option>
                     <option value="3xx" @selected(($obsFilters['status'] ?? '') === '3xx')>3xx Redirect</option>
                     <option value="4xx" @selected(($obsFilters['status'] ?? '') === '4xx')>4xx Client Err</option>
                     <option value="5xx" @selected(($obsFilters['status'] ?? '') === '5xx')>5xx Server Err</option>
                 </select>
-                <select id="obsFilterPerPage" name="per_page" class="px-2.5 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer">
+                <select id="obsFilterPerPage" name="per_page" class="h-9 px-2.5 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-stone-900 border border-slate-200 dark:border-stone-700 text-slate-700 dark:text-stone-200 cursor-pointer">
                     @foreach([5, 10, 20, 30, 50] as $pp)
                         <option value="{{ $pp }}" @selected((int) ($obsFilters['per_page'] ?? 10) === $pp)>{{ $pp }} / hal</option>
                     @endforeach
@@ -255,7 +255,8 @@
                                 : ($status >= 400
                                     ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300'
                                     : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300');
-                            $dur = (float) ($entry['duration_ms'] ?? 0);
+                            $dur = round((float) ($entry['duration_ms'] ?? 0), 2);
+                            $sqlMs = round((float) ($entry['sql_ms'] ?? 0), 2);
                             $durColor = $dur >= 500 ? 'text-rose-600 dark:text-rose-400 font-bold' : ($dur >= 200 ? 'text-amber-600 dark:text-amber-400 font-semibold' : 'text-slate-800 dark:text-slate-200');
                             $traceKey = ($entry['timestamp'] ?? '') . '|' . ($entry['method'] ?? '') . '|' . ($entry['path'] ?? '');
                         @endphp
@@ -270,9 +271,9 @@
                             <td class="py-3 px-3">
                                 <span class="px-2 py-0.5 rounded-md font-mono text-[11px] font-bold {{ $statusClass }}">{{ $status }}</span>
                             </td>
-                            <td class="py-3 px-3 font-mono {{ $durColor }} whitespace-nowrap">{{ $dur }} ms</td>
+                            <td class="py-3 px-3 font-mono {{ $durColor }} whitespace-nowrap">{{ number_format($dur, 2) }} ms</td>
                             <td class="py-3 px-3 font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                                {{ $entry['query_count'] ?? 0 }} q <span class="text-slate-400">({{ $entry['sql_ms'] ?? 0 }} ms)</span>
+                                {{ $entry['query_count'] ?? 0 }} q <span class="text-slate-400">({{ number_format($sqlMs, 2) }} ms)</span>
                             </td>
                             <td class="py-3 px-3 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">{{ $entry['memory_mb'] ?? 0 }} MB</td>
                             <td class="py-3 px-3 text-slate-700 dark:text-slate-300 whitespace-nowrap">{{ $entry['user_name'] ?? 'Guest' }}</td>
@@ -526,9 +527,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     <td class="py-3 px-3">
                         <span class="px-2 py-0.5 rounded-md font-mono text-[11px] font-bold ${statusClass}">${status}</span>
                     </td>
-                    <td class="py-3 px-3 font-mono ${durColor} whitespace-nowrap">${dur} ms</td>
+                    <td class="py-3 px-3 font-mono ${durColor} whitespace-nowrap">${Number(dur).toFixed(2)} ms</td>
                     <td class="py-3 px-3 font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                        ${Number(entry.query_count || 0)} q <span class="text-slate-400">(${Number(entry.sql_ms || 0)} ms)</span>
+                        ${Number(entry.query_count || 0)} q <span class="text-slate-400">(${Number(entry.sql_ms || 0).toFixed(2)} ms)</span>
                     </td>
                     <td class="py-3 px-3 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">${Number(entry.memory_mb || 0)} MB</td>
                     <td class="py-3 px-3 text-slate-700 dark:text-slate-300 whitespace-nowrap">${escapeHtml(entry.user_name || 'Guest')}</td>

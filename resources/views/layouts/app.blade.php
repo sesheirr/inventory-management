@@ -57,7 +57,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-    {{-- Prevent Dark Mode Flash (Supports light / dark / system across unified theme keys) --}}
+    {{-- Prevent Dark Mode & Sidebar Collapse Flash --}}
     <script>
         (function () {
             try {
@@ -67,6 +67,9 @@
                 document.documentElement.classList.toggle('dark', isDark);
                 document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
                 document.documentElement.dataset.themeMode = saved;
+                if (localStorage.getItem('sidebar_collapsed') === '1') {
+                    document.documentElement.setAttribute('data-sidebar-collapsed', 'true');
+                }
             } catch (e) {}
         })();
     </script>
@@ -74,7 +77,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/app.tsx'])
     @stack('styles')
 </head>
-<body class="min-h-screen flex bg-[#F8FAFC] dark:bg-[#12100e] text-slate-800 dark:text-[#f5f5f4] antialiased selection:bg-blue-600 selection:text-white relative"
+<body class="min-h-screen flex bg-[#F8FAFC] dark:bg-[#12100e] text-slate-800 dark:text-[#f5f5f4] antialiased selection:bg-blue-600 selection:text-white relative {{ request()->routeIs('products.scan') ? 'scanner-fullscreen-active' : '' }}"
       data-page-share-code="{{ $resolvedShareCode }}"
       data-page-share-title="{{ $resolvedPageTitle }} — Inventaris Diskominfo Garut"
       data-page-share-description="{{ $resolvedPageSubtitle }}"
@@ -87,13 +90,17 @@
         <div class="absolute bottom-0 left-10 w-[30rem] h-[30rem] rounded-full bg-cyan-500/5 dark:bg-orange-500/6 blur-3xl"></div>
     </div>
 
-    {{-- Desktop Left Sidebar Navigation --}}
-    @include('partials.sidebar')
+    {{-- Desktop Left Sidebar Navigation (Hidden in Fullscreen Barcode Scanner Mode) --}}
+    @if (!request()->routeIs('products.scan'))
+        @include('partials.sidebar')
+    @endif
 
     {{-- Main Content Area --}}
     <div class="relative z-10 flex-1 flex flex-col min-w-0 min-h-screen">
-        {{-- Top Navbar --}}
-        @include('partials.navbar', ['shareShortCode' => $resolvedShareCode])
+        {{-- Top Navbar (Hidden in Fullscreen Barcode Scanner Mode) --}}
+        @if (!request()->routeIs('products.scan'))
+            @include('partials.navbar', ['shareShortCode' => $resolvedShareCode])
+        @endif
 
         {{-- Server-side Flash Trigger for Sonner Toast --}}
         @if (session('success') || session('error') || session('status'))
@@ -119,60 +126,76 @@
             </script>
         @endif
 
+        {{-- Native iOS-Style Content-Pushing Pull-to-Refresh Reveal Slot (All Pages on Mobile/Touch) --}}
+        <div id="nativePtrSlot" class="native-ptr-slot" aria-live="polite">
+            <div id="nativePtrSpinner" class="native-ptr-spinner">
+                @for ($spoke = 0; $spoke < 8; $spoke++)
+                    <span class="native-ptr-spoke" style="transform: rotate({{ $spoke * 45 }}deg); opacity: {{ number_format(0.25 + ($spoke * 0.09), 2) }};"></span>
+                @endfor
+            </div>
+            <span id="nativePtrLabel" class="text-[11px] font-bold tracking-tight text-slate-500 dark:text-stone-400">
+                Tarik ke bawah untuk memuat ulang
+            </span>
+        </div>
+
         {{-- Page Body --}}
-        <main id="appMainContent" class="flex-1 px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 lg:pb-8 max-w-[1600px] w-full mx-auto">
+        <main id="appMainContent" class="flex-1 {{ request()->routeIs('products.scan') ? 'p-0 max-w-none' : 'px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 lg:pb-8 max-w-[1600px]' }} w-full mx-auto">
             @yield('content')
         </main>
 
         {{-- Footer (Desktop Only to keep Mobile Native App Feel Clean) --}}
-        <div class="hidden lg:block">
-            @include('partials.footer')
-        </div>
+        @if (!request()->routeIs('products.scan'))
+            <div class="hidden lg:block">
+                @include('partials.footer')
+            </div>
+        @endif
     </div>
 
-    {{-- Native Mobile Bottom Navigation Dock (Visible on Mobile/Small Screens < lg) --}}
-    <nav id="mobileBottomDock"
-         aria-label="Navigasi Bawah Mobile"
-         class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 dark:bg-[#1c1917]/95 backdrop-blur-xl border-t border-slate-200/80 dark:border-slate-800/90 px-2 py-1.5 shadow-[0_-8px_24px_-6px_rgba(15,23,42,0.08)]">
-        <div class="grid grid-cols-5 items-center max-w-md mx-auto">
-            <a href="{{ route('dashboard') }}"
-               class="flex flex-col items-center justify-center py-1 rounded-xl text-[10px] font-bold transition-colors {{ request()->routeIs('dashboard') ? 'text-blue-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400' }}">
-                <i class="bi {{ request()->routeIs('dashboard') ? 'bi-grid-fill' : 'bi-grid' }} text-base"></i>
-                <span class="mt-0.5">Beranda</span>
-            </a>
-
-            <a href="{{ route('products.index') }}"
-               class="flex flex-col items-center justify-center py-1 rounded-xl text-[10px] font-bold transition-colors {{ request()->routeIs('products.*') && !request()->routeIs('products.scan') ? 'text-blue-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400' }}">
-                <i class="bi {{ request()->routeIs('products.*') && !request()->routeIs('products.scan') ? 'bi-box-seam-fill' : 'bi-box-seam' }} text-base"></i>
-                <span class="mt-0.5">Barang</span>
-            </a>
-
-            <div class="flex items-center justify-center -mt-5">
-                <a href="{{ route('products.scan') }}"
-                   class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/35 border-4 border-white dark:border-[#12100e] flex items-center justify-center"
-                   title="Scan Barcode Fullscreen">
-                    <i class="bi bi-qr-code-scan text-lg"></i>
+    {{-- Native Mobile Bottom Navigation Dock (Hidden in Fullscreen Barcode Scanner Mode) --}}
+    @if (!request()->routeIs('products.scan'))
+        <nav id="mobileBottomDock"
+             aria-label="Navigasi Bawah Mobile"
+             class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 dark:bg-[#1c1917]/95 backdrop-blur-xl border-t border-slate-200/80 dark:border-stone-800/90 px-2 py-1.5 shadow-[0_-8px_24px_-6px_rgba(15,23,42,0.08)]">
+            <div class="grid grid-cols-5 items-center max-w-md mx-auto">
+                <a href="{{ route('dashboard') }}"
+                   class="flex flex-col items-center justify-center py-1 rounded-xl text-[10px] font-bold transition-colors {{ request()->routeIs('dashboard') ? 'text-blue-600 dark:text-amber-400' : 'text-slate-500 dark:text-stone-400' }}">
+                    <i class="bi {{ request()->routeIs('dashboard') ? 'bi-grid-fill' : 'bi-grid' }} text-base"></i>
+                    <span class="mt-0.5">Beranda</span>
                 </a>
+
+                <a href="{{ route('products.index') }}"
+                   class="flex flex-col items-center justify-center py-1 rounded-xl text-[10px] font-bold transition-colors {{ request()->routeIs('products.*') && !request()->routeIs('products.scan') ? 'text-blue-600 dark:text-amber-400' : 'text-slate-500 dark:text-stone-400' }}">
+                    <i class="bi {{ request()->routeIs('products.*') && !request()->routeIs('products.scan') ? 'bi-box-seam-fill' : 'bi-box-seam' }} text-base"></i>
+                    <span class="mt-0.5">Barang</span>
+                </a>
+
+                <div class="flex items-center justify-center -mt-5">
+                    <a href="{{ route('products.scan') }}"
+                       class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/35 border-4 border-white dark:border-[#12100e] flex items-center justify-center"
+                       title="Scan Barcode Fullscreen">
+                        <i class="bi bi-upc-scan text-lg"></i>
+                    </a>
+                </div>
+
+                <a href="{{ route('mutations.index') }}"
+                   class="flex flex-col items-center justify-center py-1 rounded-xl text-[10px] font-bold transition-colors {{ request()->routeIs('mutations.*') ? 'text-blue-600 dark:text-amber-400' : 'text-slate-500 dark:text-stone-400' }}">
+                    <i class="bi bi-arrow-left-right text-base"></i>
+                    <span class="mt-0.5">Mutasi</span>
+                </a>
+
+                <button type="button"
+                        id="mobileBottomMenuBtn"
+                        data-modal-target="mobileAppMenuSheet"
+                        data-draggable-menu-opener="true"
+                        aria-label="Buka atau tarik menu ke atas"
+                        class="relative flex flex-col items-center justify-center py-1 rounded-xl text-[10px] font-bold transition-colors touch-none select-none {{ request()->routeIs('rooms.*', 'categories.*', 'notifications.*', 'settings', 'profile', 'users.*', 'activity-logs.*') ? 'text-blue-600 dark:text-amber-400' : 'text-slate-500 dark:text-stone-400' }}">
+                    <span class="w-4 h-0.5 rounded-full bg-slate-300 dark:bg-stone-600 mb-0.5"></span>
+                    <i class="bi bi-grid-3x3-gap-fill text-base"></i>
+                    <span class="mt-0.5">Menu</span>
+                </button>
             </div>
-
-            <a href="{{ route('mutations.index') }}"
-               class="flex flex-col items-center justify-center py-1 rounded-xl text-[10px] font-bold transition-colors {{ request()->routeIs('mutations.*') ? 'text-blue-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400' }}">
-                <i class="bi bi-arrow-left-right text-base"></i>
-                <span class="mt-0.5">Mutasi</span>
-            </a>
-
-            <button type="button"
-                    id="mobileBottomMenuBtn"
-                    data-modal-target="mobileAppMenuSheet"
-                    data-draggable-menu-opener="true"
-                    aria-label="Buka atau tarik menu ke atas"
-                    class="relative flex flex-col items-center justify-center py-1 rounded-xl text-[10px] font-bold transition-colors touch-none select-none {{ request()->routeIs('rooms.*', 'categories.*', 'notifications.*', 'settings', 'profile', 'users.*', 'activity-logs.*') ? 'text-blue-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400' }}">
-                <span class="w-4 h-0.5 rounded-full bg-slate-300 dark:bg-slate-600 mb-0.5"></span>
-                <i class="bi bi-grid-3x3-gap-fill text-base"></i>
-                <span class="mt-0.5">Menu</span>
-            </button>
-        </div>
-    </nav>
+        </nav>
+    @endif
 
     {{-- =====================================================================
          NATIVE MOBILE APP MENU LAUNCHER BOTTOM SHEET (DRAGGABLE UP & DOWN)
@@ -192,25 +215,25 @@
     <div id="mobileAppMenuSheet"
          data-snap-state="compact"
          class="modal-container responsive-bottom-sheet fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-xs p-0 sm:p-4">
-        <div class="sheet-dialog bg-white dark:bg-[#1c1917] border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
+        <div id="mobileAppMenuDialog" class="sheet-dialog bg-white dark:bg-[#1c1917] border border-slate-200 dark:border-stone-800 rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
             {{-- Mobile Sheet Grab Handle (Drag Up to Expand / Drag Down to Collapse or Close) --}}
             <div class="sheet-grab-area pt-2.5 pb-1.5 cursor-pointer touch-none select-none flex flex-col items-center justify-center sm:hidden" data-sheet-drag-handle="true">
-                <div class="sheet-grab-handle w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600"></div>
-                <span id="mobileMenuSheetSnapHint" class="text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-1">Geser ke atas untuk layar penuh • ke bawah untuk tutup</span>
+                <div class="sheet-grab-handle w-12 h-1.5 rounded-full bg-slate-300 dark:bg-stone-600"></div>
+                <span id="mobileMenuSheetSnapHint" class="text-[9px] font-bold text-slate-400 dark:text-stone-500 mt-1">Geser ke atas untuk layar penuh • ke bawah untuk tutup</span>
             </div>
 
             {{-- Compact User Card --}}
-            <div class="px-5 pt-3 pb-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+            <div class="px-5 pt-3 pb-3.5 border-b border-slate-100 dark:border-stone-800 flex items-center justify-between gap-3">
                 <a href="{{ route('profile') }}" class="flex items-center gap-3 min-w-0">
                     <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-extrabold text-sm flex items-center justify-center shadow-sm shrink-0">
                         {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
                     </div>
                     <div class="min-w-0">
-                        <p class="text-xs font-extrabold text-slate-900 dark:text-white truncate">{{ auth()->user()->name }}</p>
+                        <p class="text-xs font-extrabold text-slate-900 dark:text-stone-100 truncate">{{ auth()->user()->name }}</p>
                         <p class="text-[11px] font-semibold text-blue-600 dark:text-amber-400 truncate">{{ auth()->user()->roleLabel() }}</p>
                     </div>
                 </a>
-                <button type="button" data-modal-close class="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">
+                <button type="button" data-modal-close class="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-stone-200 hover:bg-slate-100 dark:hover:bg-stone-800">
                     <i class="bi bi-x-lg text-xs"></i>
                 </button>
             </div>
@@ -218,10 +241,10 @@
             {{-- Native App Icon Grid --}}
             <div class="p-4 space-y-4">
                 <div>
-                    <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1 mb-2">Modul Inventaris</p>
+                    <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-stone-500 px-1 mb-2">Modul Inventaris</p>
                     <div class="grid grid-cols-3 gap-2.5">
                         <a href="{{ route('dashboard') }}"
-                           class="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border transition-all {{ request()->routeIs('dashboard') ? 'bg-blue-50/90 dark:bg-blue-950/50 border-blue-300 dark:border-blue-800 text-blue-600 dark:text-blue-400' : 'bg-slate-50/80 dark:bg-slate-800/50 border-slate-200/70 dark:border-slate-800 text-slate-700 dark:text-slate-200' }}">
+                           class="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border transition-all {{ request()->routeIs('dashboard') ? 'bg-blue-50/90 dark:bg-blue-950/50 border-blue-300 dark:border-blue-800 text-blue-600 dark:text-blue-400' : 'bg-slate-50/80 dark:bg-stone-800/50 border-slate-200/70 dark:border-stone-800 text-slate-700 dark:text-stone-200' }}">
                             <span class="w-9 h-9 rounded-xl bg-blue-600/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                                 <i class="bi bi-grid-fill text-base"></i>
                             </span>
@@ -229,7 +252,7 @@
                         </a>
 
                         <a href="{{ route('products.index') }}"
-                           class="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border transition-all {{ request()->routeIs('products.*') && !request()->routeIs('products.scan') ? 'bg-blue-50/90 dark:bg-blue-950/50 border-blue-300 dark:border-blue-800 text-blue-600 dark:text-blue-400' : 'bg-slate-50/80 dark:bg-slate-800/50 border-slate-200/70 dark:border-slate-800 text-slate-700 dark:text-slate-200' }}">
+                           class="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border transition-all {{ request()->routeIs('products.*') && !request()->routeIs('products.scan') ? 'bg-blue-50/90 dark:bg-blue-950/50 border-blue-300 dark:border-blue-800 text-blue-600 dark:text-blue-400' : 'bg-slate-50/80 dark:bg-stone-800/50 border-slate-200/70 dark:border-stone-800 text-slate-700 dark:text-stone-200' }}">
                             <span class="w-9 h-9 rounded-xl bg-indigo-600/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                                 <i class="bi bi-box-seam-fill text-base"></i>
                             </span>
@@ -237,7 +260,7 @@
                         </a>
 
                         <a href="{{ route('rooms.index') }}"
-                           class="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border transition-all {{ request()->routeIs('rooms.*') ? 'bg-blue-50/90 dark:bg-blue-950/50 border-blue-300 dark:border-blue-800 text-blue-600 dark:text-blue-400' : 'bg-slate-50/80 dark:bg-slate-800/50 border-slate-200/70 dark:border-slate-800 text-slate-700 dark:text-slate-200' }}">
+                           class="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border transition-all {{ request()->routeIs('rooms.*') ? 'bg-blue-50/90 dark:bg-blue-950/50 border-blue-300 dark:border-blue-800 text-blue-600 dark:text-blue-400' : 'bg-slate-50/80 dark:bg-stone-800/50 border-slate-200/70 dark:border-stone-800 text-slate-700 dark:text-stone-200' }}">
                             <span class="w-9 h-9 rounded-xl bg-emerald-600/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                                 <i class="bi bi-building text-base"></i>
                             </span>
@@ -245,7 +268,7 @@
                         </a>
 
                         <a href="{{ route('categories.index') }}"
-                           class="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border transition-all {{ request()->routeIs('categories.*') ? 'bg-blue-50/90 dark:bg-blue-950/50 border-blue-300 dark:border-blue-800 text-blue-600 dark:text-blue-400' : 'bg-slate-50/80 dark:bg-slate-800/50 border-slate-200/70 dark:border-slate-800 text-slate-700 dark:text-slate-200' }}">
+                           class="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border transition-all {{ request()->routeIs('categories.*') ? 'bg-blue-50/90 dark:bg-blue-950/50 border-blue-300 dark:border-blue-800 text-blue-600 dark:text-blue-400' : 'bg-slate-50/80 dark:bg-stone-800/50 border-slate-200/70 dark:border-stone-800 text-slate-700 dark:text-stone-200' }}">
                             <span class="w-9 h-9 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                                 <i class="bi bi-tags-fill text-base"></i>
                             </span>
@@ -253,7 +276,7 @@
                         </a>
 
                         <a href="{{ route('mutations.index') }}"
-                           class="relative flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border transition-all {{ request()->routeIs('mutations.*') ? 'bg-blue-50/90 dark:bg-blue-950/50 border-blue-300 dark:border-blue-800 text-blue-600 dark:text-blue-400' : 'bg-slate-50/80 dark:bg-slate-800/50 border-slate-200/70 dark:border-slate-800 text-slate-700 dark:text-slate-200' }}">
+                           class="relative flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border transition-all {{ request()->routeIs('mutations.*') ? 'bg-blue-50/90 dark:bg-blue-950/50 border-blue-300 dark:border-blue-800 text-blue-600 dark:text-blue-400' : 'bg-slate-50/80 dark:bg-stone-800/50 border-slate-200/70 dark:border-stone-800 text-slate-700 dark:text-slate-200' }}">
                             @if($mobileSheetPending > 0)
                                 <span class="absolute top-2 right-2 px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-amber-500 text-white">{{ $mobileSheetPending }}</span>
                             @endif
@@ -264,11 +287,11 @@
                         </a>
 
                         <a href="{{ route('products.scan') }}"
-                           class="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border transition-all {{ request()->routeIs('products.scan') ? 'bg-blue-50/90 dark:bg-blue-950/50 border-blue-300 dark:border-blue-800 text-blue-600 dark:text-blue-400' : 'bg-slate-50/80 dark:bg-slate-800/50 border-slate-200/70 dark:border-slate-800 text-slate-700 dark:text-slate-200' }}">
+                           class="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl border transition-all {{ request()->routeIs('products.scan') ? 'bg-blue-50/90 dark:bg-blue-950/50 border-blue-300 dark:border-blue-800 text-blue-600 dark:text-blue-400' : 'bg-slate-50/80 dark:bg-stone-800/50 border-slate-200/70 dark:border-stone-800 text-slate-700 dark:text-stone-200' }}">
                             <span class="w-9 h-9 rounded-xl bg-cyan-600/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
-                                <i class="bi bi-qr-code-scan text-base"></i>
+                                <i class="bi bi-upc-scan text-base"></i>
                             </span>
-                            <span class="text-[11px] font-bold">Scan</span>
+                            <span class="text-[11px] font-bold">Scan Barcode</span>
                         </a>
 
                         <a href="{{ route('notifications.index') }}"

@@ -94,17 +94,17 @@
         </div>
 
         <form action="{{ route('activity-logs.index') }}" method="GET" id="activityLogFilterForm" class="space-y-3">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2.5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 items-center">
                 {{-- Search --}}
-                <div class="relative sm:col-span-2">
+                <div class="relative sm:col-span-2 lg:col-span-4">
                     <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                     <input type="search" name="search" value="{{ $currentSearch }}" placeholder="Cari deskripsi, aksi, modul, atau nama pengguna..."
-                           class="w-full pl-9 pr-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40">
+                           class="w-full h-9 pl-9 pr-3 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-stone-900 border border-slate-200 dark:border-stone-700 text-slate-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-blue-500/40">
                 </div>
 
                 {{-- Action Filter --}}
-                <div>
-                    <select name="action" onchange="this.form.submit()" class="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer">
+                <div class="lg:col-span-2">
+                    <select name="action" onchange="this.form.submit()" class="w-full h-9 px-3 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-stone-900 border border-slate-200 dark:border-stone-700 text-slate-700 dark:text-stone-200 cursor-pointer">
                         <option value="">Semua Jenis Aksi</option>
                         <option value="created" @selected($currentAction === 'created')>Dibuat (Created)</option>
                         <option value="updated" @selected($currentAction === 'updated')>Diperbarui (Updated)</option>
@@ -120,8 +120,8 @@
                 </div>
 
                 {{-- Subject / Module Filter --}}
-                <div>
-                    <select name="subject_type" onchange="this.form.submit()" class="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer">
+                <div class="lg:col-span-2">
+                    <select name="subject_type" onchange="this.form.submit()" class="w-full h-9 px-3 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-stone-900 border border-slate-200 dark:border-stone-700 text-slate-700 dark:text-stone-200 cursor-pointer">
                         <option value="">Semua Modul</option>
                         <option value="Product" @selected($currentSubject === 'Product')>Barang (Product)</option>
                         <option value="Mutation" @selected($currentSubject === 'Mutation')>Mutasi (Mutation)</option>
@@ -133,8 +133,8 @@
                 </div>
 
                 {{-- Actor / User Filter --}}
-                <div>
-                    <select name="user_id" onchange="this.form.submit()" class="w-full px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer">
+                <div class="lg:col-span-2">
+                    <select name="user_id" onchange="this.form.submit()" class="w-full h-9 px-3 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-stone-900 border border-slate-200 dark:border-stone-700 text-slate-700 dark:text-stone-200 cursor-pointer">
                         <option value="">Semua Pengguna</option>
                         @foreach($users ?? [] as $u)
                             <option value="{{ $u->id }}" @selected((int) $currentUserId === (int) $u->id)>{{ $u->name }}</option>
@@ -143,12 +143,12 @@
                 </div>
 
                 {{-- Sort & Per Page --}}
-                <div class="flex items-center gap-1.5">
-                    <select name="sort_dir" onchange="this.form.submit()" class="flex-1 px-2.5 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer" title="Urutan Waktu">
+                <div class="lg:col-span-2 grid grid-cols-2 gap-1.5 items-center">
+                    <select name="sort_dir" onchange="this.form.submit()" class="w-full h-9 px-2.5 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-stone-900 border border-slate-200 dark:border-stone-700 text-slate-700 dark:text-stone-200 cursor-pointer" title="Urutan Waktu">
                         <option value="desc" @selected($currentSortDir === 'desc')>Terbaru</option>
                         <option value="asc" @selected($currentSortDir === 'asc')>Terlama</option>
                     </select>
-                    <select name="per_page" onchange="this.form.submit()" class="w-20 px-2 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer" title="Baris per Halaman">
+                    <select name="per_page" onchange="this.form.submit()" class="w-full h-9 px-2 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-stone-900 border border-slate-200 dark:border-stone-700 text-slate-700 dark:text-stone-200 cursor-pointer" title="Baris per Halaman">
                         @foreach([10, 20, 30, 50, 100] as $pp)
                             <option value="{{ $pp }}" @selected($currentPerPage === $pp)>{{ $pp }}/hal</option>
                         @endforeach
@@ -157,19 +157,19 @@
             </div>
 
             {{-- Second Row: Date Range & Sort By + Submit --}}
-            <div class="flex flex-wrap items-center justify-between gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+            <div class="flex flex-wrap items-center justify-between gap-2.5 pt-2.5 border-t border-slate-100 dark:border-stone-800/80">
                 <div class="flex flex-wrap items-center gap-2">
-                    <div class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                    <div class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-stone-400 mr-1">
                         <i class="bi bi-calendar3"></i>
                         <span>Rentang Tanggal:</span>
                     </div>
                     <input type="date" name="date_from" value="{{ $currentDateFrom }}" onchange="this.form.submit()"
-                           class="px-2.5 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200">
+                           class="h-9 px-2.5 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-stone-900 border border-slate-200 dark:border-stone-700 text-slate-700 dark:text-stone-200">
                     <span class="text-xs text-slate-400">s/d</span>
                     <input type="date" name="date_to" value="{{ $currentDateTo }}" onchange="this.form.submit()"
-                           class="px-2.5 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200">
+                           class="h-9 px-2.5 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-stone-900 border border-slate-200 dark:border-stone-700 text-slate-700 dark:text-stone-200">
 
-                    <select name="sort_by" onchange="this.form.submit()" class="px-2.5 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer">
+                    <select name="sort_by" onchange="this.form.submit()" class="h-9 px-2.5 py-1.5 rounded-xl text-xs bg-slate-50 dark:bg-stone-900 border border-slate-200 dark:border-stone-700 text-slate-700 dark:text-stone-200 cursor-pointer">
                         <option value="created_at" @selected($currentSortBy === 'created_at')>Urut: Waktu</option>
                         <option value="action" @selected($currentSortBy === 'action')>Urut: Jenis Aksi</option>
                         <option value="subject_type" @selected($currentSortBy === 'subject_type')>Urut: Modul</option>

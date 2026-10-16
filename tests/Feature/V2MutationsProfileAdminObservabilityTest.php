@@ -203,6 +203,11 @@ class V2MutationsProfileAdminObservabilityTest extends TestCase
         $this->assertStringContainsString('id="pwaPermCameraBadge"', $dashHtml);
         $this->assertStringContainsString('id="pwaPermLocationBadge"', $dashHtml);
         $this->assertStringContainsString('id="pwaPermDeeplinkBadge"', $dashHtml);
+        $this->assertStringContainsString('id="nativePtrSlot"', $dashHtml);
+        $this->assertStringContainsString('id="nativePtrSpinner"', $dashHtml);
+        $this->assertStringContainsString('id="desktopSidebarCollapseBtn"', $dashHtml);
+        $this->assertStringContainsString('id="sidebarBottomFooter"', $dashHtml);
+        $this->assertStringContainsString('dark:bg-[#161412]', $dashHtml);
         $this->assertStringContainsString('dark:bg-[#12100e]', $dashHtml);
 
         // 2. CSS Warm Dark Mode + Toast Fade In/Out + Uniform Page Enter/Exit + Pull-to-Refresh + Scanner HUD
@@ -212,12 +217,17 @@ class V2MutationsProfileAdminObservabilityTest extends TestCase
         $this->assertStringContainsString('toastFadeOut60', $appCss);
         $this->assertStringContainsString('pageEnterUniform60', $appCss);
         $this->assertStringContainsString('pageExitUniform60', $appCss);
-        $this->assertStringContainsString('.ptr-capsule', $appCss);
+        $this->assertStringContainsString('.native-ptr-slot', $appCss);
         $this->assertStringContainsString('.scanner-laser-line', $appCss);
 
-        // 3. Fullscreen Banking Barcode Scanner HUD + Reusable Media Uploader Thumbnail Grid
+        // 3. Fullscreen-Only 1D Linear Barcode Sticker Scanner Mode (No Topbar / No Bottom Dock) + Reusable Media Uploader
         $scanHtml = (string) $this->actingAs($admin)->get('/scan-barcode')->assertOk()->getContent();
         $this->assertStringContainsString('id="bankingScannerFullscreenContainer"', $scanHtml);
+        $this->assertStringContainsString('data-barcode-mode="linear-1d"', $scanHtml);
+        $this->assertStringContainsString('id="exitScannerModeBtn"', $scanHtml);
+        $this->assertStringContainsString('scanner-fullscreen-active', $scanHtml);
+        $this->assertStringNotContainsString('id="appTopNavbar"', $scanHtml);
+        $this->assertStringNotContainsString('id="mobileBottomDock"', $scanHtml);
 
         $createProductHtml = (string) $this->actingAs($admin)->get('/products/create')->assertOk()->getContent();
         $this->assertStringContainsString('data-reusable-media-uploader', $createProductHtml);

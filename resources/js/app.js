@@ -538,12 +538,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             select.dataset.ssEnhanced = '1';
 
+            const isFullWidth = select.classList.contains('w-full') || select.classList.contains('block');
+            const isFlex1 = select.classList.contains('flex-1');
+            const isCompact = select.classList.contains('text-xs') || select.classList.contains('py-1.5') || select.classList.contains('py-2') || select.classList.contains('h-9');
+
             // Hide original select visually while keeping it accessible for forms & tests
             select.classList.add('sr-only');
             select.tabIndex = -1;
 
             const wrapper = document.createElement('div');
-            wrapper.className = 'ss-wrapper';
+            wrapper.className = [
+                'ss-wrapper',
+                isFullWidth ? 'ss-full w-full' : '',
+                isFlex1 ? 'flex-1' : '',
+                isCompact ? 'ss-compact' : '',
+            ].filter(Boolean).join(' ');
             select.parentNode.insertBefore(wrapper, select);
             wrapper.appendChild(select);
 
@@ -758,12 +767,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             input.dataset.cdpEnhanced = '1';
 
+            const isFullWidth = input.classList.contains('w-full') || input.classList.contains('block');
+            const isFlex1 = input.classList.contains('flex-1');
+            const isCompact = input.classList.contains('text-xs') || input.classList.contains('py-1.5') || input.classList.contains('py-2') || input.classList.contains('h-9');
             const placeholder = input.getAttribute('placeholder') || 'Pilih tanggal...';
             input.classList.add('sr-only');
             input.tabIndex = -1;
 
             const wrapper = document.createElement('div');
-            wrapper.className = 'cdp-wrapper';
+            wrapper.className = [
+                'cdp-wrapper',
+                isFullWidth ? 'cdp-full w-full' : '',
+                isFlex1 ? 'flex-1' : '',
+                isCompact ? 'cdp-compact' : '',
+            ].filter(Boolean).join(' ');
             input.parentNode.insertBefore(wrapper, input);
             wrapper.appendChild(input);
 
@@ -1543,13 +1560,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const onMove = (clientY) => {
                 if (!dragging) return;
                 const rawDy = clientY - startY;
-                // Allow dragging BOTH upward (negative rawDy with rubber-band / expand) and downward (positive rawDy)
+                // When dragging upward (negative rawDy), expand maxHeight/paddingBottom while keeping
+                // translate3d(0, 0, 0) anchored flush to the bottom edge so the sheet never floats or cuts off!
                 if (rawDy < 0) {
                     currentDy = Math.max(-140, rawDy * 0.65);
+                    const extraHeightPx = Math.min(120, Math.round(Math.abs(rawDy) * 0.55));
+                    sheetTarget.style.transform = 'translate3d(0, 0, 0)';
+                    sheetTarget.style.maxHeight = `calc(88dvh + ${extraHeightPx}px)`;
                 } else {
                     currentDy = rawDy;
+                    sheetTarget.style.transform = `translate3d(0, ${Math.round(currentDy)}px, 0)`;
                 }
-                sheetTarget.style.transform = `translate3d(0, ${Math.round(currentDy)}px, 0)`;
             };
 
             const onEnd = () => {
@@ -1559,7 +1580,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const snapState = parentModal?.getAttribute('data-snap-state') || 'compact';
 
                 if (currentDy < -42 && parentModal) {
-                    // Dragged upward -> expand sheet to full height snap point
+                    // Dragged upward -> expand sheet to full height snap point flush with bottom
                     parentModal.setAttribute('data-snap-state', 'expanded');
                     sheetTarget.style.maxHeight = '92dvh';
                     sheetTarget.style.transition = `transform 280ms ${EASE_VAUL_DRAWER}, max-height 280ms ${EASE_VAUL_DRAWER}`;
@@ -1675,6 +1696,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     initBottomSheetDragHandles();
+
+    // Desktop Collapsible Compact Icon-Only Sidebar Toggle (#desktopSidebarCollapseBtn)
+    function initDesktopSidebarCollapse() {
+        const sidebarEl = document.getElementById('sidebarOffcanvas');
+        const collapseBtn = document.getElementById('desktopSidebarCollapseBtn');
+        if (!sidebarEl || !collapseBtn) return;
+
+        const applyCollapsedState = (collapsed) => {
+            if (collapsed) {
+                htmlEl.setAttribute('data-sidebar-collapsed', 'true');
+                sidebarEl.classList.add('is-collapsed');
+            } else {
+                htmlEl.removeAttribute('data-sidebar-collapsed');
+                sidebarEl.classList.remove('is-collapsed');
+            }
+            try {
+                localStorage.setItem('sidebar_collapsed', collapsed ? '1' : '0');
+            } catch (e) {}
+        };
+
+        try {
+            if (localStorage.getItem('sidebar_collapsed') === '1') {
+                applyCollapsedState(true);
+            }
+        } catch (e) {}
+
+        collapseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const isCurrentlyCollapsed = htmlEl.getAttribute('data-sidebar-collapsed') === 'true' || sidebarEl.classList.contains('is-collapsed');
+            applyCollapsedState(!isCurrentlyCollapsed);
+        });
+    }
+
+    initDesktopSidebarCollapse();
 
     document.addEventListener('click', (event) => {
         const openTrigger = event.target.closest('[data-modal-target]');
@@ -3237,45 +3292,43 @@ document.addEventListener('DOMContentLoaded', () => {
     initReusableMediaUploaders(document);
 
     // =========================================================================
-    // 12. MOBILE PULL-TO-REFRESH ON ANY PAGE (SWIPE DOWN AT TOP & RELEASE)
+    // =========================================================================
+    // 12. NATIVE CONTENT-PUSHING PULL-TO-REFRESH ON ANY PAGE (SWIPE DOWN & RELEASE)
     // =========================================================================
     function initMobilePullToRefresh() {
-        let capsule = document.getElementById('mobilePullToRefreshCapsule');
-        if (!capsule) {
-            capsule = document.createElement('div');
-            capsule.id = 'mobilePullToRefreshCapsule';
-            capsule.className = 'ptr-capsule';
-            capsule.innerHTML = `
-                <i id="ptrCapsuleIcon" class="bi bi-arrow-down-circle-fill text-blue-600 dark:text-blue-400 text-sm transition-transform duration-200"></i>
-                <span id="ptrCapsuleLabel">Tarik untuk memuat ulang</span>
-            `;
-            document.body.appendChild(capsule);
-        }
+        const ptrSlot = document.getElementById('nativePtrSlot');
+        const ptrSpinner = document.getElementById('nativePtrSpinner');
+        const ptrLabel = document.getElementById('nativePtrLabel');
+        const mainContent = document.getElementById('appMainContent');
+        if (!ptrSlot) return;
 
-        const iconEl = document.getElementById('ptrCapsuleIcon');
-        const labelEl = document.getElementById('ptrCapsuleLabel');
         let startY = 0;
         let startX = 0;
         let pullDistance = 0;
         let pulling = false;
-        const PULL_THRESHOLD = 72;
+        const PULL_THRESHOLD = 68;
 
         document.addEventListener('touchstart', (e) => {
             if (window.innerWidth >= 1024 || e.touches.length !== 1) return;
             if (window.scrollY > 2) return;
+            if (document.body.classList.contains('scanner-fullscreen-active')) return;
             if (document.querySelector('.modal-container.flex') || (notifDropdown && !notifDropdown.classList.contains('hidden'))) return;
 
             startY = e.touches[0].clientY;
             startX = e.touches[0].clientX;
             pullDistance = 0;
             pulling = true;
+            ptrSlot.style.transition = 'none';
+            if (mainContent) mainContent.style.transition = 'none';
         }, { passive: true });
 
         document.addEventListener('touchmove', (e) => {
             if (!pulling || e.touches.length !== 1) return;
             if (window.scrollY > 2) {
                 pulling = false;
-                capsule.classList.remove('is-visible');
+                ptrSlot.style.height = '0px';
+                ptrSlot.style.opacity = '0';
+                ptrSlot.classList.remove('is-active');
                 return;
             }
 
@@ -3286,18 +3339,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            pullDistance = Math.min(125, dy * 0.65);
-            if (pullDistance > 14) {
-                capsule.classList.add('is-visible');
-                const offsetPx = Math.min(34, Math.round(pullDistance * 0.35));
-                capsule.style.transform = `translate3d(-50%, ${offsetPx}px, 0)`;
+            pullDistance = Math.min(115, Math.round(dy * 0.58));
+            if (pullDistance > 10) {
+                ptrSlot.classList.add('is-active');
+                ptrSlot.style.height = `${pullDistance}px`;
+                ptrSlot.style.opacity = String(Math.min(1, pullDistance / 46));
 
                 const ready = pullDistance >= PULL_THRESHOLD;
-                if (labelEl) {
-                    labelEl.textContent = ready ? 'Lepaskan untuk memuat ulang...' : 'Tarik untuk memuat ulang...';
+                if (ptrLabel) {
+                    ptrLabel.textContent = ready
+                        ? 'Lepaskan untuk memuat ulang halaman...'
+                        : 'Tarik ke bawah untuk memuat ulang';
                 }
-                if (iconEl) {
-                    iconEl.style.transform = ready ? 'rotate(180deg)' : 'rotate(0deg)';
+                if (ptrSpinner && !ptrSpinner.classList.contains('is-spinning')) {
+                    ptrSpinner.style.transform = `rotate(${Math.round(pullDistance * 3.4)}deg)`;
                 }
             }
         }, { passive: true });
@@ -3306,16 +3361,29 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!pulling) return;
             pulling = false;
 
+            ptrSlot.style.transition = 'height 260ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease';
+
             if (pullDistance >= PULL_THRESHOLD) {
-                capsule.classList.add('is-visible', 'is-refreshing');
-                if (labelEl) labelEl.textContent = 'Memuat ulang halaman...';
-                if (iconEl) iconEl.className = 'bi bi-arrow-repeat text-blue-600 dark:text-blue-400 text-sm animate-spin';
+                ptrSlot.style.height = '62px';
+                ptrSlot.style.opacity = '1';
+                if (ptrSpinner) {
+                    ptrSpinner.style.transform = '';
+                    ptrSpinner.classList.add('is-spinning');
+                }
+                if (ptrLabel) {
+                    ptrLabel.textContent = 'Memuat ulang halaman...';
+                }
                 setTimeout(() => {
                     window.location.reload();
-                }, 220);
+                }, 240);
             } else {
-                capsule.classList.remove('is-visible', 'is-refreshing');
-                capsule.style.transform = '';
+                ptrSlot.style.height = '0px';
+                ptrSlot.style.opacity = '0';
+                ptrSlot.classList.remove('is-active');
+                if (ptrSpinner) {
+                    ptrSpinner.classList.remove('is-spinning');
+                    ptrSpinner.style.transform = '';
+                }
             }
             pullDistance = 0;
         };

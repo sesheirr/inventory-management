@@ -7,41 +7,52 @@
 @section('content')
 <div id="bankingScannerFullscreenContainer"
      data-scanner-fullscreen="true"
-     class="fixed inset-0 z-[120] bg-[#0b0a09] text-white flex flex-col justify-between overflow-y-auto select-none transition-all duration-300"
+     data-barcode-mode="linear-1d"
+     class="fixed inset-0 z-[120] bg-[#F8FAFC] dark:bg-[#12100e] text-slate-900 dark:text-[#f5f5f4] flex flex-col justify-between overflow-y-auto select-none transition-colors duration-300"
      data-framer-page>
 
-    {{-- Ambient Radial Grid & Banking HUD Glow --}}
-    <div class="pointer-events-none fixed inset-0 opacity-20"
-         style="background-image: radial-gradient(circle at 50% 35%, rgba(56, 189, 248, 0.22), transparent 65%), linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px); background-size: 100% 100%, 36px 36px, 36px 36px;"></div>
+    {{-- Ambient Technical Grid & Theme-Adaptive Glow --}}
+    <div class="pointer-events-none fixed inset-0 opacity-60 dark:opacity-30"
+         style="background-image: radial-gradient(circle at 50% 35%, rgba(44, 74, 118, 0.14), transparent 65%), linear-gradient(to right, rgba(148,163,184,0.12) 1px, transparent 1px), linear-gradient(to bottom, rgba(148,163,184,0.12) 1px, transparent 1px); background-size: 100% 100%, 36px 36px, 36px 36px;"></div>
 
-    {{-- Top Banking-Style Scanner HUD Header --}}
-    <div class="relative z-20 flex items-center justify-between gap-3 px-4 sm:px-6 py-3.5 border-b border-white/10 bg-black/55 backdrop-blur-xl shrink-0">
+    {{-- Full-Only Scanner Mode Header (No App Topbar / No Mobile Bottom Dock until Exit) --}}
+    <div class="relative z-20 flex items-center justify-between gap-3 px-4 sm:px-6 py-3.5 border-b border-slate-200/80 dark:border-stone-800 bg-white/90 dark:bg-[#1c1917]/90 backdrop-blur-xl shrink-0">
         <div class="flex items-center gap-3 min-w-0">
             <a href="{{ route('products.index') }}"
-               class="w-10 h-10 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 flex items-center justify-center text-white transition-all shrink-0"
-               title="Kembali ke Inventaris">
+               id="exitScannerModeBtn"
+               class="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200/80 dark:bg-stone-800 dark:hover:bg-stone-700 border border-slate-200/80 dark:border-stone-700 text-slate-800 dark:text-stone-100 text-xs font-extrabold transition-all shrink-0 cursor-pointer"
+               title="Keluar dari Mode Scan Barcode">
                 <i class="bi bi-arrow-left text-sm"></i>
+                <span>Keluar Mode Scan</span>
             </a>
             <div class="min-w-0">
                 <div class="flex items-center gap-2">
-                    <h1 class="text-sm sm:text-base font-extrabold tracking-wide uppercase truncate">
-                        Inventory Barcode Scanner
+                    <h1 class="text-sm sm:text-base font-extrabold tracking-wide uppercase truncate text-slate-900 dark:text-stone-100">
+                        1D Barcode Sticker Scanner
                     </h1>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-sky-500/20 text-sky-300 border border-sky-400/30 shrink-0">
-                        <span id="cameraStatusDot" class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-blue-500/10 dark:bg-amber-500/15 text-blue-700 dark:text-amber-300 border border-blue-500/20 dark:border-amber-500/30 shrink-0">
+                        <span id="cameraStatusDot" class="w-2 h-2 rounded-full bg-blue-500 dark:bg-amber-400 animate-pulse"></span>
                         <span id="cameraStatusLabel">Mendeteksi Kamera...</span>
                     </span>
                 </div>
-                <p class="text-[11px] text-white/60 truncate">
-                    Sistem Inventaris Diskominfo Kab. Garut • Fullscreen Optic &amp; USB/Wireless HID
+                <p class="text-[11px] text-slate-500 dark:text-stone-400 truncate">
+                    Pemindai Stiker Barcode Code-128 Barang Inventaris • Fullscreen Only Mode
                 </p>
             </div>
         </div>
 
         <div class="flex items-center gap-2 shrink-0">
             <button type="button"
+                    id="scannerThemeToggleBtn"
+                    onclick="window.applyTheme && window.applyTheme(document.documentElement.classList.contains('dark') ? 'light' : 'dark', { animate: true, notify: true })"
+                    class="w-9 h-9 rounded-xl flex items-center justify-center text-slate-600 dark:text-amber-400 bg-slate-100 dark:bg-stone-800 hover:bg-slate-200/70 dark:hover:bg-stone-700 border border-slate-200/80 dark:border-stone-700 transition-all cursor-pointer"
+                    title="Ganti Tema Terang / Gelap">
+                <i class="bi bi-circle-half text-xs"></i>
+            </button>
+
+            <button type="button"
                     id="retryCameraDetectBtn"
-                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-sky-300 bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 transition-all cursor-pointer"
+                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-blue-700 dark:text-amber-300 bg-blue-50 dark:bg-stone-800 hover:bg-blue-100 dark:hover:bg-stone-700 border border-blue-200/80 dark:border-stone-700 transition-all cursor-pointer"
                     title="Muat Ulang Kamera">
                 <i class="bi bi-arrow-clockwise"></i>
                 <span class="hidden sm:inline">Ulangi Kamera</span>
@@ -49,111 +60,146 @@
 
             <button type="button"
                     id="toggleNativeFullscreenBtn"
-                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-white/15 transition-all cursor-pointer"
-                    title="Layar Penuh Penuh (Fullscreen)">
+                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-stone-200 bg-slate-100 dark:bg-stone-800 hover:bg-slate-200/80 dark:hover:bg-stone-700 border border-slate-200/80 dark:border-stone-700 transition-all cursor-pointer"
+                    title="Layar Penuh Browser">
                 <i id="nativeFullscreenIcon" class="bi bi-arrows-fullscreen"></i>
                 <span class="hidden sm:inline">Layar Penuh</span>
-            </button>
-
-            <button type="button"
-                    id="toggleDockedModeBtn"
-                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-amber-300 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/30 transition-all cursor-pointer"
-                    title="Beralih Mode Tampilan">
-                <i class="bi bi-layout-sidebar-inset"></i>
-                <span id="dockedModeBtnText" class="hidden sm:inline">Mode Ringkas</span>
             </button>
         </div>
     </div>
 
-    {{-- Center Banking Scanner Viewport & Target Reticle --}}
+    {{-- Center 1D Linear Barcode Sticker Viewport & Target Reticle --}}
     <div id="mobileCameraSection" class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-4 sm:py-6 overflow-hidden">
         {{-- Smart Device & Camera Mode Banner (Collapsible on Desktop) --}}
-        <div id="desktopScannerNotice" class="hidden w-full max-w-xl mb-4 rounded-2xl bg-amber-500/15 border border-amber-400/30 p-3.5 backdrop-blur-md">
+        <div id="desktopScannerNotice" class="hidden w-full max-w-xl mb-4 rounded-2xl bg-amber-50 dark:bg-amber-950/35 border border-amber-300/80 dark:border-amber-700/50 p-3.5 shadow-xs">
             <div class="flex items-start gap-3">
-                <div class="w-9 h-9 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center text-base shrink-0 mt-0.5">
+                <div class="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-300 flex items-center justify-center text-base shrink-0 mt-0.5">
                     <i class="bi bi-usb-symbol"></i>
                 </div>
                 <div class="space-y-1 flex-1 min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
-                        <span class="px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase tracking-wider bg-amber-400/20 text-amber-200">
-                            Mode Desktop / Kamera Depan Terdeteksi
+                        <span class="px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase tracking-wider bg-amber-500/20 text-amber-800 dark:text-amber-200">
+                            Mode Desktop / Scanner Fisik USB HID
                         </span>
-                        <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-300">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                            USB / Wireless HID Aktif
+                        <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            Laser Scanner Aktif
                         </span>
                     </div>
-                    <h2 id="desktopNoticeTitle" class="text-xs sm:text-sm font-bold text-white">
-                        Pemindaian Kamera Dioptimalkan untuk Kamera Belakang Mobile
+                    <h2 id="desktopNoticeTitle" class="text-xs sm:text-sm font-bold text-slate-900 dark:text-stone-100">
+                        Pemindaian Kamera Dioptimalkan untuk Stiker Barcode Barang
                     </h2>
-                    <p id="desktopNoticeDescription" class="text-[11px] text-white/75 leading-relaxed">
-                        Gunakan <strong>Alat Scanner Barcode USB / Wireless</strong> atau ketik kode aset pada panel bawah.
+                    <p id="desktopNoticeDescription" class="text-[11px] text-slate-600 dark:text-stone-300 leading-relaxed">
+                        Gunakan <strong>Alat Scanner Barcode USB / Wireless</strong> untuk menembak stiker barcode barang, atau ketik kode aset pada panel bawah.
                     </p>
                 </div>
             </div>
         </div>
 
-        {{-- Banking-Style Optical Scanner Frame --}}
+        {{-- Wide 1D Linear Barcode Sticker Optical Frame (Matches Product Barcode Sticker Aspect Ratio) --}}
         <div id="readerWrapper"
-             class="relative w-full max-w-md aspect-square sm:aspect-[4/3] rounded-[2rem] overflow-hidden bg-black/90 border-2 border-white/15 shadow-[0_0_70px_rgba(37,99,235,0.28)] flex items-center justify-center">
+             class="relative w-full max-w-xl aspect-[16/9] sm:aspect-[16/7] rounded-[2rem] overflow-hidden bg-white dark:bg-[#1c1917] border-2 border-slate-300 dark:border-stone-700 shadow-2xl flex items-center justify-center">
             <div id="reader" class="w-full h-full object-cover"></div>
 
-            {{-- Banking Corner Targeting Brackets + Animated Laser Line --}}
-            <div class="pointer-events-none absolute inset-6 sm:inset-8 z-10">
-                <span class="absolute top-0 left-0 w-9 h-9 border-t-4 border-l-4 border-sky-400 rounded-tl-2xl shadow-[-4px_-4px_12px_rgba(56,189,248,0.4)]"></span>
-                <span class="absolute top-0 right-0 w-9 h-9 border-t-4 border-r-4 border-sky-400 rounded-tr-2xl shadow-[4px_-4px_12px_rgba(56,189,248,0.4)]"></span>
-                <span class="absolute bottom-0 left-0 w-9 h-9 border-b-4 border-l-4 border-sky-400 rounded-bl-2xl shadow-[-4px_4px_12px_rgba(56,189,248,0.4)]"></span>
-                <span class="absolute bottom-0 right-0 w-9 h-9 border-b-4 border-r-4 border-sky-400 rounded-br-2xl shadow-[4px_4px_12px_rgba(56,189,248,0.4)]"></span>
+            {{-- 1D Linear Barcode Sticker Targeting Brackets + Red Laser Sweep Line --}}
+            <div class="pointer-events-none absolute inset-5 sm:inset-7 z-10 flex flex-col items-center justify-between">
+                <span class="absolute top-0 left-0 w-9 h-7 border-t-4 border-l-4 border-blue-600 dark:border-amber-400 rounded-tl-xl"></span>
+                <span class="absolute top-0 right-0 w-9 h-7 border-t-4 border-r-4 border-blue-600 dark:border-amber-400 rounded-tr-xl"></span>
+                <span class="absolute bottom-0 left-0 w-9 h-7 border-b-4 border-l-4 border-blue-600 dark:border-amber-400 rounded-bl-xl"></span>
+                <span class="absolute bottom-0 right-0 w-9 h-7 border-b-4 border-r-4 border-blue-600 dark:border-amber-400 rounded-br-xl"></span>
+
+                {{-- Translucent 1D Code-128 Sticker Guide Overlay --}}
+                <div class="my-auto flex flex-col items-center justify-center px-4 py-2 rounded-xl border border-dashed border-slate-400/50 dark:border-stone-600/70 bg-white/40 dark:bg-stone-900/40 backdrop-blur-[1px]">
+                    <span class="text-[9px] font-extrabold uppercase tracking-widest text-slate-600 dark:text-stone-300 mb-1">
+                        STIKER BARCODE INVENTARIS (CODE-128)
+                    </span>
+                    <svg class="w-48 sm:w-60 h-10 text-slate-800/35 dark:text-stone-200/35" viewBox="0 0 240 42" fill="currentColor" aria-hidden="true">
+                        <rect x="4" y="2" width="4" height="38" />
+                        <rect x="11" y="2" width="2" height="38" />
+                        <rect x="16" y="2" width="6" height="38" />
+                        <rect x="26" y="2" width="2" height="38" />
+                        <rect x="31" y="2" width="4" height="38" />
+                        <rect x="39" y="2" width="8" height="38" />
+                        <rect x="51" y="2" width="2" height="38" />
+                        <rect x="56" y="2" width="4" height="38" />
+                        <rect x="64" y="2" width="6" height="38" />
+                        <rect x="74" y="2" width="2" height="38" />
+                        <rect x="80" y="2" width="4" height="38" />
+                        <rect x="88" y="2" width="2" height="38" />
+                        <rect x="94" y="2" width="8" height="38" />
+                        <rect x="106" y="2" width="2" height="38" />
+                        <rect x="112" y="2" width="4" height="38" />
+                        <rect x="120" y="2" width="6" height="38" />
+                        <rect x="130" y="2" width="2" height="38" />
+                        <rect x="136" y="2" width="4" height="38" />
+                        <rect x="144" y="2" width="8" height="38" />
+                        <rect x="156" y="2" width="2" height="38" />
+                        <rect x="162" y="2" width="4" height="38" />
+                        <rect x="170" y="2" width="6" height="38" />
+                        <rect x="180" y="2" width="2" height="38" />
+                        <rect x="186" y="2" width="4" height="38" />
+                        <rect x="194" y="2" width="2" height="38" />
+                        <rect x="200" y="2" width="6" height="38" />
+                        <rect x="210" y="2" width="4" height="38" />
+                        <rect x="218" y="2" width="2" height="38" />
+                        <rect x="224" y="2" width="6" height="38" />
+                        <rect x="233" y="2" width="3" height="38" />
+                    </svg>
+                    <span class="font-mono text-[10px] font-black tracking-widest text-slate-600 dark:text-stone-300 mt-0.5">
+                        BRG-00001
+                    </span>
+                </div>
+
                 <div class="scanner-laser-line"></div>
             </div>
 
             {{-- Blocked / Front-Camera / Desktop Overlay inside viewport --}}
-            <div id="cameraBlockedOverlay" class="hidden absolute inset-0 z-20 bg-black/90 backdrop-blur-md p-6 flex flex-col items-center justify-center text-center text-white space-y-3">
-                <div class="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center justify-center text-2xl">
+            <div id="cameraBlockedOverlay" class="hidden absolute inset-0 z-20 bg-white/95 dark:bg-[#1c1917]/95 backdrop-blur-md p-6 flex flex-col items-center justify-center text-center text-slate-900 dark:text-stone-100 space-y-2.5">
+                <div class="w-13 h-13 rounded-2xl bg-blue-500/10 dark:bg-amber-500/15 text-blue-600 dark:text-amber-300 border border-blue-500/20 dark:border-amber-400/30 flex items-center justify-center text-2xl">
                     <i class="bi bi-upc-scan"></i>
                 </div>
                 <h3 id="blockedOverlayTitle" class="text-sm sm:text-base font-extrabold">
-                    Siap Menerima Tembakan Laser Scanner USB / Input Kode
+                    Siap Menerima Tembakan Laser Scanner Barcode (Code-128)
                 </h3>
-                <p id="blockedOverlayDesc" class="text-xs text-white/70 max-w-xs leading-relaxed">
-                    Kamera belakang mobile tidak terdeteksi pada perangkat ini. Tembakkan scanner fisik langsung atau ketik kode barang pada kolom bawah.
+                <p id="blockedOverlayDesc" class="text-xs text-slate-500 dark:text-stone-400 max-w-sm leading-relaxed">
+                    Arahkan scanner fisik USB/Wireless ke stiker garis barcode barang (contoh: <span class="font-mono font-bold">BRG-00001</span>) atau ketik pada kolom di bawah.
                 </p>
             </div>
         </div>
 
-        <div class="mt-3.5 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] font-semibold text-sky-300">
-            <i class="bi bi-bullseye"></i>
-            <span>Arahkan stiker barcode tepat di tengah kotak bidik otomatis</span>
+        <div class="mt-3.5 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white dark:bg-[#1c1917] border border-slate-200/80 dark:border-stone-800 text-[11px] font-bold text-slate-700 dark:text-stone-300 shadow-2xs">
+            <i class="bi bi-upc-scan text-blue-600 dark:text-amber-400"></i>
+            <span>Sejajarkan garis horizontal stiker barcode barang dengan laser pemindai</span>
         </div>
     </div>
 
-    {{-- Bottom Banking Glass Dock: Hardware HID + Manual Barcode Search --}}
-    <div class="relative z-20 px-4 sm:px-6 py-4 border-t border-white/10 bg-[#141210]/95 backdrop-blur-2xl shrink-0">
+    {{-- Bottom Scanner Dock: Hardware HID + Manual Barcode Search --}}
+    <div class="relative z-20 px-4 sm:px-6 py-4 border-t border-slate-200/80 dark:border-stone-800 bg-white/95 dark:bg-[#1c1917]/95 backdrop-blur-2xl shrink-0">
         <div class="max-w-xl mx-auto space-y-3">
             <div class="flex items-center justify-between gap-2">
-                <label for="manualBarcodeInput" class="block text-[11px] font-extrabold uppercase tracking-wider text-white/80">
-                    Input Scanner Fisik (USB/HID) atau Ketik Kode Barang
+                <label for="manualBarcodeInput" class="block text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-stone-300">
+                    Input Stiker Barcode (USB/HID) atau Ketik Kode Barang
                 </label>
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-400/30 shrink-0">
-                    <i class="bi bi-keyboard"></i>
-                    <span>Auto-Listen Aktif</span>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 shrink-0">
+                    <i class="bi bi-upc"></i>
+                    <span>Code-128 Auto-Listen</span>
                 </span>
             </div>
 
             <div class="flex items-center gap-2.5">
                 <div class="relative flex-1">
-                    <i class="bi bi-upc-scan absolute left-3.5 top-1/2 -translate-y-1/2 text-sky-400"></i>
+                    <i class="bi bi-upc-scan absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-600 dark:text-amber-400"></i>
                     <input type="text"
                            id="manualBarcodeInput"
                            placeholder="Contoh: BRG-00001"
                            autofocus
-                           class="w-full pl-10 pr-4 py-3 rounded-2xl text-sm font-mono font-extrabold uppercase bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-sky-400/50 focus:border-sky-400 transition-all">
+                           class="w-full pl-10 pr-4 py-3 rounded-2xl text-sm font-mono font-extrabold uppercase bg-slate-50 dark:bg-[#12100e] border border-slate-300 dark:border-stone-700 text-slate-900 dark:text-stone-100 placeholder-slate-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all">
                 </div>
                 <button type="button"
                         id="manualSearchBtn"
-                        class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-extrabold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-600/30 active:scale-95 transition-all cursor-pointer shrink-0">
+                        class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-extrabold text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-600/20 active:scale-95 transition-all cursor-pointer shrink-0">
                     <i class="bi bi-search"></i>
-                    <span>Cari Aset</span>
+                    <span>Cari Barang</span>
                 </button>
             </div>
 
@@ -166,9 +212,8 @@
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    document.body.classList.add('scanner-fullscreen-active');
     const fullscreenContainer = document.getElementById('bankingScannerFullscreenContainer');
-    const toggleDockedBtn = document.getElementById('toggleDockedModeBtn');
-    const dockedModeBtnText = document.getElementById('dockedModeBtnText');
     const toggleNativeFullscreenBtn = document.getElementById('toggleNativeFullscreenBtn');
     const nativeFullscreenIcon = document.getElementById('nativeFullscreenIcon');
     const messageEl = document.getElementById('scanMessage');
@@ -186,20 +231,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let isProcessing = false;
     let html5QrCode = null;
-    let isFullscreenHud = true;
-
-    // Toggle between Fullscreen Banking HUD overlay and Compact Docked Card mode
-    toggleDockedBtn?.addEventListener('click', function () {
-        if (!fullscreenContainer) return;
-        isFullscreenHud = !isFullscreenHud;
-        if (isFullscreenHud) {
-            fullscreenContainer.className = 'fixed inset-0 z-[120] bg-[#0b0a09] text-white flex flex-col justify-between overflow-y-auto select-none transition-all duration-300';
-            if (dockedModeBtnText) dockedModeBtnText.textContent = 'Mode Ringkas';
-        } else {
-            fullscreenContainer.className = 'relative z-10 max-w-3xl mx-auto rounded-3xl overflow-hidden border border-slate-800 bg-[#0b0a09] text-white flex flex-col justify-between shadow-2xl transition-all duration-300';
-            if (dockedModeBtnText) dockedModeBtnText.textContent = 'Mode Fullscreen';
-        }
-    });
 
     // Native Browser Fullscreen API Toggle
     toggleNativeFullscreenBtn?.addEventListener('click', function () {
@@ -216,21 +247,21 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!messageEl) return;
         messageEl.classList.remove(
             'hidden',
-            'bg-blue-500/20', 'text-sky-200', 'border-sky-400/40',
-            'bg-emerald-500/20', 'text-emerald-200', 'border-emerald-400/40',
-            'bg-rose-500/20', 'text-rose-200', 'border-rose-400/40',
-            'bg-amber-500/20', 'text-amber-200', 'border-amber-400/40'
+            'bg-blue-500/15', 'text-blue-700', 'dark:text-blue-200', 'border-blue-400/40',
+            'bg-emerald-500/15', 'text-emerald-700', 'dark:text-emerald-200', 'border-emerald-400/40',
+            'bg-rose-500/15', 'text-rose-700', 'dark:text-rose-200', 'border-rose-400/40',
+            'bg-amber-500/15', 'text-amber-700', 'dark:text-amber-200', 'border-amber-400/40'
         );
         messageEl.classList.add('border');
 
         if (type === 'success') {
-            messageEl.classList.add('bg-emerald-500/20', 'text-emerald-200', 'border-emerald-400/40');
+            messageEl.classList.add('bg-emerald-500/15', 'text-emerald-700', 'dark:text-emerald-200', 'border-emerald-400/40');
         } else if (type === 'danger') {
-            messageEl.classList.add('bg-rose-500/20', 'text-rose-200', 'border-rose-400/40');
+            messageEl.classList.add('bg-rose-500/15', 'text-rose-700', 'dark:text-rose-200', 'border-rose-400/40');
         } else if (type === 'warning') {
-            messageEl.classList.add('bg-amber-500/20', 'text-amber-200', 'border-amber-400/40');
+            messageEl.classList.add('bg-amber-500/15', 'text-amber-700', 'dark:text-amber-200', 'border-amber-400/40');
         } else {
-            messageEl.classList.add('bg-blue-500/20', 'text-sky-200', 'border-sky-400/40');
+            messageEl.classList.add('bg-blue-500/15', 'text-blue-700', 'dark:text-blue-200', 'border-blue-400/40');
         }
 
         messageEl.textContent = text;
@@ -391,7 +422,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             await html5QrCode.start(
                 selectedCamera,
-                { fps: 15, qrbox: { width: 260, height: 150 } },
+                { fps: 15, qrbox: { width: 300, height: 110 } },
                 (decodedText) => {
                     lookupBarcode(decodedText);
                 },
