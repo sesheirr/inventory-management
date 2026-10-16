@@ -55,8 +55,14 @@ export default function NotificationsIndex({ notifications = [] }: Notifications
                                     </div>
                                 </div>
                                 {!n.read_at && (
-                                    <span className="rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-300 border border-blue-500/25 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold">
-                                        Baru
+                                    <span
+                                        data-notif-unread-pill
+                                        data-notif-red-dot
+                                        title="Belum dibaca"
+                                        aria-label="Belum dibaca"
+                                        className="inline-flex items-center justify-center shrink-0 mt-1"
+                                    >
+                                        <span className="h-2.5 w-2.5 rounded-full bg-rose-500 ring-4 ring-rose-500/20 animate-pulse" />
                                     </span>
                                 )}
                             </div>

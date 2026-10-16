@@ -98,7 +98,7 @@
                 <h3 data-live-metric="total_products" class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight tabular-nums">{{ number_format($totalProducts) }}</h3>
                 <p class="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">Total Barang</p>
                 <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1 truncate">
-                    <span data-live-metric="total_units">{{ number_format($totalUnits) }}</span> unit • Rp {{ number_format($totalAssetValue, 0, ',', '.') }}
+                    <span data-live-metric="total_units">{{ number_format($totalUnits) }}</span> total unit fisik terdaftar
                 </p>
             </div>
         </a>
@@ -178,27 +178,27 @@
         $mutData = $mutationAnalytics ?? ['approved_count' => 0, 'pending_count' => $pendingMutationsCount, 'rejected_count' => 0, 'approval_rate' => 100, 'masuk_units' => 0, 'pindah_units' => 0, 'keluar_units' => 0];
         $totalFlowUnits = max(1, $mutData['masuk_units'] + $mutData['pindah_units'] + $mutData['keluar_units']);
     @endphp
-    <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 sm:gap-6" data-framer-stagger>
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 sm:gap-6 items-stretch" data-framer-stagger>
         {{-- Left (8 Cols): Semi-Gradient Movement & Activity Area/Bar Chart --}}
         <div class="xl:col-span-8 bg-white dark:bg-[#0f1b38] rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-4 sm:p-6 flex flex-col justify-between overflow-hidden relative">
             {{-- Subtle Semi-Gradient Ambient Glow --}}
             <div class="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent blur-2xl pointer-events-none"></div>
 
             <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800/80">
-                <div>
+                <div class="min-w-0">
                     <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"></span>
-                        <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight">
+                        <span class="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 shrink-0"></span>
+                        <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white tracking-tight truncate">
                             Analitik Pergerakan & Distribusi Aset
                         </h3>
                     </div>
                     <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Tren volume mutasi barang & aktivitas katalog 6 bulan terakhir
+                        Tren volume mutasi barang & aktivitas katalog 6 bulan terakhir (arah kursor atau ketuk titik untuk rincian)
                     </p>
                 </div>
 
                 {{-- Metric Mode Switcher --}}
-                <div class="inline-flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 self-start sm:self-auto">
+                <div class="inline-flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 self-start sm:self-auto shrink-0">
                     <button type="button"
                             data-chart-mode-btn="units"
                             class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-2xs">
@@ -216,8 +216,8 @@
             <div class="relative z-10 grid grid-cols-3 gap-2.5 sm:gap-4 my-4">
                 <div class="p-2.5 sm:p-3.5 rounded-xl bg-gradient-to-br from-emerald-500/12 via-emerald-500/5 to-transparent border border-emerald-500/20">
                     <div class="flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
-                        <span>Stok Masuk</span>
-                        <i class="bi bi-box-arrow-in-down"></i>
+                        <span class="truncate">Stok Masuk</span>
+                        <i class="bi bi-box-arrow-in-down shrink-0"></i>
                     </div>
                     <div class="text-sm sm:text-lg font-extrabold text-slate-900 dark:text-white mt-1 tabular-nums">
                         {{ number_format($mutData['masuk_units']) }} <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">unit</span>
@@ -226,8 +226,8 @@
 
                 <div class="p-2.5 sm:p-3.5 rounded-xl bg-gradient-to-br from-blue-500/12 via-indigo-500/5 to-transparent border border-blue-500/20">
                     <div class="flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-blue-700 dark:text-blue-300">
-                        <span>Transfer Ruang</span>
-                        <i class="bi bi-arrow-left-right"></i>
+                        <span class="truncate">Transfer Ruang</span>
+                        <i class="bi bi-arrow-left-right shrink-0"></i>
                     </div>
                     <div class="text-sm sm:text-lg font-extrabold text-slate-900 dark:text-white mt-1 tabular-nums">
                         {{ number_format($mutData['pindah_units']) }} <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">unit</span>
@@ -236,8 +236,8 @@
 
                 <div class="p-2.5 sm:p-3.5 rounded-xl bg-gradient-to-br from-amber-500/12 via-rose-500/5 to-transparent border border-amber-500/20">
                     <div class="flex items-center justify-between text-[10px] sm:text-[11px] font-bold text-amber-700 dark:text-amber-300">
-                        <span>Stok Keluar</span>
-                        <i class="bi bi-box-arrow-up-right"></i>
+                        <span class="truncate">Stok Keluar</span>
+                        <i class="bi bi-box-arrow-up-right shrink-0"></i>
                     </div>
                     <div class="text-sm sm:text-lg font-extrabold text-slate-900 dark:text-white mt-1 tabular-nums">
                         {{ number_format($mutData['keluar_units']) }} <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">unit</span>
@@ -245,13 +245,13 @@
                 </div>
             </div>
 
-            {{-- Semi-Gradient SVG Area + Interactive Bar Columns --}}
+            {{-- Semi-Gradient SVG Area + Interactive Bar Columns + Floating Hover/Tap Tooltip --}}
             @php
-                $svgW = 600;
-                $svgH = 170;
-                $padX = 36;
-                $padTop = 22;
-                $padBot = 28;
+                $svgW = 640;
+                $svgH = 200;
+                $padX = 48;
+                $padTop = 34;
+                $padBot = 36;
                 $usableW = $svgW - ($padX * 2);
                 $usableH = $svgH - $padTop - $padBot;
                 $countPts = max(1, $analyticsSeries->count());
@@ -262,7 +262,7 @@
                 foreach ($analyticsSeries as $idx => $item) {
                     $x = round($padX + ($idx * $stepX), 1);
                     $uRatio = $maxChartUnits > 0 ? ($item['total_units'] / $maxChartUnits) : 0;
-                    $tRatio = $maxChartTx > 0 ? (($item['tx_count'] + $item['new_products']) / max(1, $maxChartTx + (int) $analyticsSeries->max('new_products'))) : 0;
+                    $tRatio = $maxChartTx > 0 ? ($item['tx_count'] / $maxChartTx) : 0;
                     $yU = round($padTop + $usableH - ($uRatio * $usableH), 1);
                     $yT = round($padTop + $usableH - ($tRatio * $usableH), 1);
                     $unitPts[] = [$x, $yU];
@@ -275,8 +275,9 @@
                     for ($i = 0; $i < count($pts) - 1; $i++) {
                         $curr = $pts[$i];
                         $next = $pts[$i + 1];
-                        $midX = round(($curr[0] + $next[0]) / 2, 1);
-                        $d .= " C {$midX} {$curr[1]}, {$midX} {$next[1]}, {$next[0]} {$next[1]}";
+                        $cp1x = round($curr[0] + ($next[0] - $curr[0]) * 0.42, 1);
+                        $cp2x = round($next[0] - ($next[0] - $curr[0]) * 0.42, 1);
+                        $d .= " C {$cp1x} {$curr[1]}, {$cp2x} {$next[1]}, {$next[0]} {$next[1]}";
                     }
                     return $d;
                 };
@@ -294,17 +295,40 @@
             @endphp
 
             <div class="relative z-10 mt-1">
-                <div class="relative w-full overflow-hidden rounded-2xl bg-slate-50/70 dark:bg-slate-900/55 border border-slate-200/60 dark:border-slate-800/80 p-3 sm:p-4">
-                    <svg viewBox="0 0 {{ $svgW }} {{ $svgH }}" class="w-full h-36 sm:h-44 overflow-visible" role="img" aria-label="Grafik Pergerakan Inventaris 6 Bulan Terakhir">
+                <div id="dashChartContainer" class="relative w-full overflow-hidden rounded-2xl bg-slate-50/75 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800/80 p-3 sm:p-4 select-none">
+                    {{-- Floating Interactive Hover/Tap Glass Tooltip --}}
+                    <div id="dashChartTooltip"
+                         class="pointer-events-none opacity-0 scale-95 transition-all duration-200 ease-out absolute z-20 top-2.5 left-3 sm:left-4 max-w-[270px] sm:max-w-xs rounded-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-blue-200/80 dark:border-blue-500/30 shadow-lg shadow-blue-950/10 px-3 py-2 text-[11px]">
+                        <div class="flex items-center justify-between gap-3">
+                            <span id="dashTooltipMonth" class="font-extrabold text-slate-900 dark:text-white"></span>
+                            <span id="dashTooltipSummaryBadge" class="px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 font-extrabold tabular-nums"></span>
+                        </div>
+                        <div class="mt-1.5 grid grid-cols-3 gap-2 pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+                            <div>
+                                <span class="text-slate-400 block">Masuk</span>
+                                <strong id="dashTooltipMasuk" class="text-emerald-600 dark:text-emerald-400 tabular-nums">0</strong>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 block">Transfer</span>
+                                <strong id="dashTooltipPindah" class="text-blue-600 dark:text-blue-400 tabular-nums">0</strong>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 block">Keluar</span>
+                                <strong id="dashTooltipKeluar" class="text-amber-600 dark:text-amber-400 tabular-nums">0</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <svg id="dashAnalyticsSvg" viewBox="0 0 {{ $svgW }} {{ $svgH }}" class="w-full h-44 sm:h-52 block" role="img" aria-label="Grafik Pergerakan Inventaris 6 Bulan Terakhir">
                         <defs>
                             <linearGradient id="dashPrimaryAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.42" />
-                                <stop offset="55%" stop-color="#6366f1" stop-opacity="0.14" />
+                                <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.38" />
+                                <stop offset="60%" stop-color="#6366f1" stop-opacity="0.12" />
                                 <stop offset="100%" stop-color="#6366f1" stop-opacity="0.0" />
                             </linearGradient>
                             <linearGradient id="dashSecondaryAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="#10b981" stop-opacity="0.38" />
-                                <stop offset="60%" stop-color="#14b8a6" stop-opacity="0.12" />
+                                <stop offset="0%" stop-color="#10b981" stop-opacity="0.36" />
+                                <stop offset="65%" stop-color="#14b8a6" stop-opacity="0.11" />
                                 <stop offset="100%" stop-color="#14b8a6" stop-opacity="0.0" />
                             </linearGradient>
                             <linearGradient id="dashLineStrokeGrad" x1="0" y1="0" x2="1" y2="0">
@@ -313,8 +337,12 @@
                                 <stop offset="100%" stop-color="#06b6d4" />
                             </linearGradient>
                             <linearGradient id="dashBarFillGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.28" />
-                                <stop offset="100%" stop-color="#6366f1" stop-opacity="0.04" />
+                                <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.24" />
+                                <stop offset="100%" stop-color="#6366f1" stop-opacity="0.03" />
+                            </linearGradient>
+                            <linearGradient id="dashBarActiveGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#2563eb" stop-opacity="0.45" />
+                                <stop offset="100%" stop-color="#4f46e5" stop-opacity="0.08" />
                             </linearGradient>
                         </defs>
 
@@ -324,45 +352,63 @@
                             <line x1="{{ $padX }}" y1="{{ $gy }}" x2="{{ $svgW - $padX }}" y2="{{ $gy }}" stroke="currentColor" class="text-slate-200/80 dark:text-slate-800" stroke-dasharray="4 4" stroke-width="1" />
                         @endforeach
 
+                        {{-- Interactive Vertical Crosshair Line --}}
+                        <line id="dashChartCrosshair"
+                              x1="{{ end($unitPts)[0] ?? $padX }}"
+                              y1="{{ $padTop - 8 }}"
+                              x2="{{ end($unitPts)[0] ?? $padX }}"
+                              y2="{{ $baselineY }}"
+                              stroke="#3b82f6"
+                              stroke-width="1.5"
+                              stroke-dasharray="3 3"
+                              class="opacity-0 transition-all duration-200 pointer-events-none" />
+
                         {{-- Semi-Gradient Vertical Bars per Month --}}
                         @foreach($unitPts as $idx => $pt)
                             @php
-                                $barH = max(6, $baselineY - $pt[1]);
+                                $barH = max(8, $baselineY - $pt[1]);
                                 $barY = $baselineY - $barH;
                             @endphp
-                            <rect x="{{ $pt[0] - 14 }}" y="{{ $barY }}" width="28" height="{{ $barH }}" rx="6" fill="url(#dashBarFillGrad)" />
+                            <rect data-chart-bar-index="{{ $idx }}"
+                                  x="{{ $pt[0] - 16 }}"
+                                  y="{{ $barY }}"
+                                  width="32"
+                                  height="{{ $barH }}"
+                                  rx="7"
+                                  fill="url(#dashBarFillGrad)"
+                                  class="transition-all duration-300" />
                         @endforeach
 
                         {{-- Primary Mode (Units) Area & Smooth Curve --}}
-                        <g id="dashChartUnitsLayer">
+                        <g id="dashChartUnitsLayer" class="transition-opacity duration-300">
                             @if($unitAreaPath)
                                 <path d="{{ $unitAreaPath }}" fill="url(#dashPrimaryAreaGrad)" />
-                                <path d="{{ $unitLinePath }}" fill="none" stroke="url(#dashLineStrokeGrad)" stroke-width="3" stroke-linecap="round" />
+                                <path d="{{ $unitLinePath }}" fill="none" stroke="url(#dashLineStrokeGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
                             @endif
                             @foreach($unitPts as $idx => $pt)
                                 @php $mItem = $analyticsSeries[$idx]; @endphp
-                                <g class="cursor-pointer group" data-chart-point-index="{{ $idx }}">
-                                    <circle cx="{{ $pt[0] }}" cy="{{ $pt[1] }}" r="10" fill="transparent" />
-                                    <circle cx="{{ $pt[0] }}" cy="{{ $pt[1] }}" r="4.5" class="fill-white dark:fill-slate-900 stroke-blue-600 dark:stroke-blue-400" stroke-width="2.5" />
-                                    <text x="{{ $pt[0] }}" y="{{ $pt[1] - 10 }}" text-anchor="middle" class="fill-slate-700 dark:fill-slate-200 text-[10px] font-extrabold tabular-nums">
+                                <g class="cursor-pointer" data-chart-point-index="{{ $idx }}">
+                                    <circle data-chart-ring-unit="{{ $idx }}" cx="{{ $pt[0] }}" cy="{{ $pt[1] }}" r="11" class="fill-blue-500/0 transition-all duration-200" />
+                                    <circle cx="{{ $pt[0] }}" cy="{{ $pt[1] }}" r="5" class="fill-white dark:fill-slate-900 stroke-blue-600 dark:stroke-blue-400 transition-transform duration-200" stroke-width="2.75" />
+                                    <text x="{{ $pt[0] }}" y="{{ max(16, $pt[1] - 11) }}" text-anchor="middle" class="fill-slate-700 dark:fill-slate-200 text-[10px] font-extrabold tabular-nums pointer-events-none">
                                         {{ $mItem['total_units'] }}
                                     </text>
                                 </g>
                             @endforeach
                         </g>
 
-                        {{-- Secondary Mode (Transactions + New Catalog) Area & Smooth Curve --}}
-                        <g id="dashChartTxLayer" class="hidden">
+                        {{-- Secondary Mode (Transactions) Area & Smooth Curve --}}
+                        <g id="dashChartTxLayer" class="hidden transition-opacity duration-300">
                             @if($txAreaPath)
                                 <path d="{{ $txAreaPath }}" fill="url(#dashSecondaryAreaGrad)" />
-                                <path d="{{ $txLinePath }}" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" />
+                                <path d="{{ $txLinePath }}" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
                             @endif
                             @foreach($txPts as $idx => $pt)
                                 @php $mItem = $analyticsSeries[$idx]; @endphp
-                                <g class="cursor-pointer group" data-chart-point-index="{{ $idx }}">
-                                    <circle cx="{{ $pt[0] }}" cy="{{ $pt[1] }}" r="10" fill="transparent" />
-                                    <circle cx="{{ $pt[0] }}" cy="{{ $pt[1] }}" r="4.5" class="fill-white dark:fill-slate-900 stroke-emerald-500" stroke-width="2.5" />
-                                    <text x="{{ $pt[0] }}" y="{{ $pt[1] - 10 }}" text-anchor="middle" class="fill-emerald-700 dark:fill-emerald-300 text-[10px] font-extrabold tabular-nums">
+                                <g class="cursor-pointer" data-chart-point-index="{{ $idx }}">
+                                    <circle data-chart-ring-tx="{{ $idx }}" cx="{{ $pt[0] }}" cy="{{ $pt[1] }}" r="11" class="fill-emerald-500/0 transition-all duration-200" />
+                                    <circle cx="{{ $pt[0] }}" cy="{{ $pt[1] }}" r="5" class="fill-white dark:fill-slate-900 stroke-emerald-500 transition-transform duration-200" stroke-width="2.75" />
+                                    <text x="{{ $pt[0] }}" y="{{ max(16, $pt[1] - 11) }}" text-anchor="middle" class="fill-emerald-700 dark:fill-emerald-300 text-[10px] font-extrabold tabular-nums pointer-events-none">
                                         {{ $mItem['tx_count'] }} tx
                                     </text>
                                 </g>
@@ -372,23 +418,39 @@
                         {{-- Month Labels along X-Axis --}}
                         @foreach($unitPts as $idx => $pt)
                             @php $mItem = $analyticsSeries[$idx]; @endphp
-                            <text x="{{ $pt[0] }}" y="{{ $svgH - 6 }}" text-anchor="middle" class="fill-slate-500 dark:fill-slate-400 text-[10px] font-bold">
+                            <text data-chart-xlabel-index="{{ $idx }}" x="{{ $pt[0] }}" y="{{ $svgH - 10 }}" text-anchor="middle" class="fill-slate-500 dark:fill-slate-400 text-[10px] font-bold transition-colors duration-200 pointer-events-none">
                                 {{ $mItem['label'] }}
                             </text>
+                        @endforeach
+
+                        {{-- Full-Column Invisible Hit Targets for Smooth Hover & Mobile Tap --}}
+                        @foreach($unitPts as $idx => $pt)
+                            @php
+                                $hitW = $countPts > 1 ? round($usableW / ($countPts - 1), 1) : 80;
+                                $hitX = round($pt[0] - ($hitW / 2), 1);
+                            @endphp
+                            <rect x="{{ max(0, $hitX) }}"
+                                  y="0"
+                                  width="{{ $hitW }}"
+                                  height="{{ $svgH }}"
+                                  fill="transparent"
+                                  class="cursor-pointer"
+                                  data-chart-point-index="{{ $idx }}"
+                                  data-chart-pt-x="{{ $pt[0] }}" />
                         @endforeach
                     </svg>
 
                     {{-- Interactive Month Breakdown Pill Strip --}}
                     <div class="mt-3 pt-2.5 border-t border-slate-200/60 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px]">
-                        <div class="flex items-center gap-2 text-slate-600 dark:text-slate-300 font-semibold">
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold" id="dashActiveMonthLabel">
+                        <div class="flex flex-wrap items-center gap-2 text-slate-600 dark:text-slate-300 font-semibold min-w-0">
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold shrink-0" id="dashActiveMonthLabel">
                                 6 Bulan Terakhir
                             </span>
-                            <span id="dashActiveMonthDetail" class="text-slate-500 dark:text-slate-400 tabular-nums">
+                            <span id="dashActiveMonthDetail" class="text-slate-500 dark:text-slate-400 tabular-nums truncate">
                                 {{ number_format($totalSixMonthUnits) }} unit berpindah dalam {{ number_format($totalSixMonthTx) }} transaksi mutasi
                             </span>
                         </div>
-                        <a href="{{ route('mutations.index') }}" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1">
+                        <a href="{{ route('mutations.index') }}" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 shrink-0">
                             <span>Riwayat Mutasi</span>
                             <i class="bi bi-arrow-right text-[10px]"></i>
                         </a>
@@ -402,15 +464,15 @@
             <div class="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-gradient-to-tr from-emerald-500/10 via-blue-500/5 to-transparent blur-2xl pointer-events-none"></div>
 
             <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
+                <div class="flex items-center justify-between gap-2 mb-4">
+                    <div class="min-w-0">
                         <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                            <i class="bi bi-shield-check text-emerald-500"></i>
-                            <span>Kesehatan Stok & Mutasi</span>
+                            <i class="bi bi-shield-check text-emerald-500 shrink-0"></i>
+                            <span class="truncate">Kesehatan Stok & Mutasi</span>
                         </h3>
                         <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Indeks ketersediaan & rasio persetujuan</p>
                     </div>
-                    <span class="px-2.5 py-1 rounded-xl text-xs font-extrabold bg-gradient-to-r from-emerald-500/15 to-teal-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 tabular-nums">
+                    <span class="px-2.5 py-1 rounded-xl text-xs font-extrabold bg-gradient-to-r from-emerald-500/15 to-teal-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 tabular-nums shrink-0">
                         {{ $healthData['score'] }}% Sehat
                     </span>
                 </div>
@@ -484,8 +546,8 @@
             </div>
 
             <div class="relative z-10 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
-                <span>Total Nilai Aset Tercatat</span>
-                <span class="font-extrabold text-slate-900 dark:text-white tabular-nums">Rp {{ number_format($totalAssetValue, 0, ',', '.') }}</span>
+                <span>Total Volume Unit & Mutasi</span>
+                <span class="font-extrabold text-slate-900 dark:text-white tabular-nums">{{ number_format($totalUnits) }} Unit • {{ number_format($totalMutations) }} Mutasi</span>
             </div>
         </div>
     </div>
@@ -739,6 +801,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const activeLabelEl = document.getElementById('dashActiveMonthLabel');
     const activeDetailEl = document.getElementById('dashActiveMonthDetail');
     const chartPoints = document.querySelectorAll('[data-chart-point-index]');
+    const chartBars = document.querySelectorAll('[data-chart-bar-index]');
+    const chartXLabels = document.querySelectorAll('[data-chart-xlabel-index]');
+    const unitRings = document.querySelectorAll('[data-chart-ring-unit]');
+    const txRings = document.querySelectorAll('[data-chart-ring-tx]');
+    const crosshairEl = document.getElementById('dashChartCrosshair');
+    const chartContainer = document.getElementById('dashChartContainer');
+    const tooltipEl = document.getElementById('dashChartTooltip');
+    const tooltipMonthEl = document.getElementById('dashTooltipMonth');
+    const tooltipSummaryEl = document.getElementById('dashTooltipSummaryBadge');
+    const tooltipMasukEl = document.getElementById('dashTooltipMasuk');
+    const tooltipPindahEl = document.getElementById('dashTooltipPindah');
+    const tooltipKeluarEl = document.getElementById('dashTooltipKeluar');
 
     modeBtns.forEach(btn => {
         btn.addEventListener('click', function () {
@@ -762,25 +836,87 @@ document.addEventListener('DOMContentLoaded', function () {
                 showLayer.classList.remove('hidden');
                 showLayer.animate?.(
                     [
-                        { opacity: 0, transform: 'translateY(4px)' },
+                        { opacity: 0, transform: 'translateY(6px)' },
                         { opacity: 1, transform: 'translateY(0)' }
                     ],
-                    { duration: 220, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }
+                    { duration: 280, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }
                 );
             }
         });
     });
 
+    const highlightIndex = (idx) => {
+        const item = analyticsData[idx];
+        if (!item) return;
+
+        if (activeLabelEl && activeDetailEl) {
+            activeLabelEl.textContent = item.full_label;
+            activeDetailEl.textContent = `Masuk: ${item.masuk_units} • Transfer: ${item.pindah_units} • Keluar: ${item.keluar_units} unit (${item.tx_count} mutasi)`;
+        }
+
+        if (tooltipEl && tooltipMonthEl && tooltipSummaryEl && tooltipMasukEl && tooltipPindahEl && tooltipKeluarEl) {
+            tooltipMonthEl.textContent = item.full_label;
+            tooltipSummaryEl.textContent = `${item.total_units} Unit • ${item.tx_count} Mutasi`;
+            tooltipMasukEl.textContent = `${item.masuk_units} unit`;
+            tooltipPindahEl.textContent = `${item.pindah_units} unit`;
+            tooltipKeluarEl.textContent = `${item.keluar_units} unit`;
+            tooltipEl.classList.remove('opacity-0', 'scale-95');
+            tooltipEl.classList.add('opacity-100', 'scale-100');
+        }
+
+        chartBars.forEach((bar, bIdx) => {
+            bar.setAttribute('fill', bIdx === idx ? 'url(#dashBarActiveGrad)' : 'url(#dashBarFillGrad)');
+        });
+
+        chartXLabels.forEach((lbl, lIdx) => {
+            lbl.classList.toggle('fill-blue-600', lIdx === idx);
+            lbl.classList.toggle('dark:fill-blue-400', lIdx === idx);
+            lbl.classList.toggle('fill-slate-500', lIdx !== idx);
+            lbl.classList.toggle('dark:fill-slate-400', lIdx !== idx);
+        });
+
+        unitRings.forEach((ring, rIdx) => {
+            ring.setAttribute('class', rIdx === idx
+                ? 'fill-blue-500/20 transition-all duration-200'
+                : 'fill-blue-500/0 transition-all duration-200');
+        });
+
+        txRings.forEach((ring, rIdx) => {
+            ring.setAttribute('class', rIdx === idx
+                ? 'fill-emerald-500/20 transition-all duration-200'
+                : 'fill-emerald-500/0 transition-all duration-200');
+        });
+
+        const ptTarget = document.querySelector(`[data-chart-point-index="${idx}"][data-chart-pt-x]`);
+        const ptX = ptTarget?.getAttribute('data-chart-pt-x');
+        if (crosshairEl && ptX) {
+            crosshairEl.setAttribute('x1', ptX);
+            crosshairEl.setAttribute('x2', ptX);
+            crosshairEl.classList.remove('opacity-0');
+            crosshairEl.classList.add('opacity-100');
+        }
+    };
+
     chartPoints.forEach(pt => {
         const showPointDetail = () => {
             const idx = parseInt(pt.getAttribute('data-chart-point-index') || '0', 10);
-            const item = analyticsData[idx];
-            if (!item || !activeLabelEl || !activeDetailEl) return;
-            activeLabelEl.textContent = item.full_label;
-            activeDetailEl.textContent = `Masuk: ${item.masuk_units} • Transfer: ${item.pindah_units} • Keluar: ${item.keluar_units} unit (${item.tx_count} mutasi, +${item.new_products} SKU baru)`;
+            highlightIndex(idx);
         };
         pt.addEventListener('mouseenter', showPointDetail);
         pt.addEventListener('click', showPointDetail);
+        pt.addEventListener('touchstart', showPointDetail, { passive: true });
+    });
+
+    chartContainer?.addEventListener('mouseleave', () => {
+        if (tooltipEl) {
+            tooltipEl.classList.add('opacity-0', 'scale-95');
+            tooltipEl.classList.remove('opacity-100', 'scale-100');
+        }
+        if (crosshairEl) {
+            crosshairEl.classList.add('opacity-0');
+            crosshairEl.classList.remove('opacity-100');
+        }
+        chartBars.forEach(bar => bar.setAttribute('fill', 'url(#dashBarFillGrad)'));
     });
 });
 </script>

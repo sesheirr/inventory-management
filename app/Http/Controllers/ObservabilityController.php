@@ -9,6 +9,7 @@ use App\Models\Mutation;
 use App\Models\Product;
 use App\Models\Room;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -19,6 +20,62 @@ use Throwable;
 class ObservabilityController extends Controller
 {
     public function index(Request $request)
+    {
+        $payload = $this->collectTelemetryPayload();
+
+        if ($request->wantsJson() || $request->boolean('json')) {
+            return response()->json([
+                'ok' => true,
+                'refresh_interval_ms' => 1000,
+                ...$payload,
+            ]);
+        }
+
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Admin/Observability/Index', [
+                'summary' => [
+                    'avg_duration_ms' => $payload['summary']['avg_duration_ms'],
+                    'p95_duration_ms' => $payload['summary']['p95_duration_ms'],
+                    'avg_queries' => $payload['summary']['avg_queries'],
+                    'slow_queries_total' => $payload['summary']['slow_queries_total'],
+                    'peak_memory_mb' => $payload['summary']['peak_memory_mb'],
+                    'total_requests' => $payload['summary']['total_requests'],
+                    'recent_requests' => $payload['entries'],
+                ],
+                'tableStats' => $payload['tableStats'],
+                'runtimeInfo' => $payload['runtimeInfo'],
+                'telescopeEnabled' => true,
+            ]);
+        }
+
+        return view('observability.index', $payload);
+    }
+
+    /**
+     * 1-Second Realtime Telemetry Stream Endpoint (`GET /observability/metrics`).
+     */
+    public function metrics(): JsonResponse
+    {
+        return response()->json([
+            'ok' => true,
+            'refresh_interval_ms' => 1000,
+            ...$this->collectTelemetryPayload(),
+        ]);
+    }
+
+    public function clear(): RedirectResponse
+    {
+        Cache::forget(RequestObservabilityMiddleware::CACHE_KEY);
+
+        return redirect()
+            ->route('observability.index')
+            ->with('success', 'Rekaman telemetri & observability berhasil dibersihkan.');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function collectTelemetryPayload(): array
     {
         $entries = Cache::get(RequestObservabilityMiddleware::CACHE_KEY, []);
         if (! is_array($entries)) {
@@ -35,7 +92,6 @@ class ObservabilityController extends Controller
         $avgQueries = $totalRequests > 0 ? round(array_sum($queryCounts) / $totalRequests, 1) : 0.0;
         $peakMemoryMb = $totalRequests > 0 ? round(max($memories), 2) : round(memory_get_peak_usage(true) / 1048576, 2);
 
-        // Calculate P95 latency
         $p95DurationMs = 0.0;
         if ($totalRequests > 0) {
             $sorted = $durations;
@@ -44,7 +100,6 @@ class ObservabilityController extends Controller
             $p95DurationMs = round($sorted[$idx], 2);
         }
 
-        // Database ping & row counts
         $dbPingMs = 0.0;
         $dbConnected = false;
         try {
@@ -73,6 +128,7 @@ class ObservabilityController extends Controller
             'cache_driver' => config('cache.default'),
             'db_connected' => $dbConnected,
             'db_ping_ms' => $dbPingMs,
+            'server_time' => now()->format('H:i:s'),
         ];
 
         $summary = [
@@ -84,33 +140,12 @@ class ObservabilityController extends Controller
             'peak_memory_mb' => $peakMemoryMb,
         ];
 
-        if ($request->header('X-Inertia') || $request->boolean('v2')) {
-            return Inertia::render('Admin/Observability/Index', [
-                'summary' => [
-                    'avg_response_ms' => $avgDurationMs,
-                    'p95_response_ms' => $p95DurationMs,
-                    'db_queries_avg' => $avgQueries,
-                    'memory_peak_mb' => $peakMemoryMb,
-                    'recent_requests' => $entries,
-                ],
-                'telescopeEnabled' => true,
-            ]);
-        }
-
-        return view('observability.index', [
+        return [
             'entries' => $entries,
             'summary' => $summary,
             'tableStats' => $tableStats,
             'runtimeInfo' => $runtimeInfo,
-        ]);
-    }
-
-    public function clear(): RedirectResponse
-    {
-        Cache::forget(RequestObservabilityMiddleware::CACHE_KEY);
-
-        return redirect()
-            ->route('observability.index')
-            ->with('success', 'Rekaman telemetri & observability berhasil dibersihkan.');
+            'max_entries' => RequestObservabilityMiddleware::MAX_ENTRIES,
+        ];
     }
 }

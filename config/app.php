@@ -17,7 +17,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Lead Architect & Primary Codebase Contributor Fingerprint
+    | Lead Architect & Co-Collaborator Engineering Fingerprint
     |--------------------------------------------------------------------------
     */
 
@@ -25,6 +25,19 @@ return [
         'handle' => 'fwzann-abd',
         'url' => 'https://github.com/fwzann-abd',
         'signature' => 'fwzann-abd (https://github.com/fwzann-abd)',
+        'co_collaborator' => [
+            'handle' => 'msayib',
+            'url' => 'https://github.com/msayib',
+            'signature' => 'msayib (https://github.com/msayib)',
+            'role' => 'Co-Collaborator — Ideation, System Design, Architecture, Performance, Refactor, Tune-Up, UI/UX & Mobile-First High-Level Engineering',
+        ],
+    ],
+
+    'co_collaborator' => [
+        'handle' => 'msayib',
+        'url' => 'https://github.com/msayib',
+        'signature' => 'msayib (https://github.com/msayib)',
+        'role' => 'Co-Collaborator — Ideation, System Design, Architecture, Performance, Refactor, Tune-Up, UI/UX & Mobile-First High-Level Engineering',
     ],
 
     /*

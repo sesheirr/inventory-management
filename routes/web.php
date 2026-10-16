@@ -139,6 +139,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // Log Aktivitas, Observability / Telescope, & Webhook Studio (Admin & Super Admin Only)
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     Route::get('/observability', [ObservabilityController::class, 'index'])->name('observability.index');
+    Route::get('/observability/metrics', [ObservabilityController::class, 'metrics'])->name('observability.metrics');
     Route::post('/observability/clear', [ObservabilityController::class, 'clear'])->name('observability.clear');
 
     Route::get('/webhooks', [WebhookController::class, 'index'])->name('webhooks.index');
@@ -173,8 +174,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/uploads/tmp', [MediaUploadController::class, 'storeTemporary'])->name('uploads.tmp.store');
     Route::delete('/uploads/tmp', [MediaUploadController::class, 'destroyTemporary'])->name('uploads.tmp.destroy');
 
-    // Semi-Realtime Live State Sync API
+    // Semi-Realtime Live State Sync & Webhook Notification Stream API
     Route::get('/api/live-state', [LiveStateController::class, 'index'])->name('live.state');
+    Route::get('/api/webhooks/stream', [LiveStateController::class, 'webhookStream'])->name('webhooks.stream');
 
     // Dashboard & Settings
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

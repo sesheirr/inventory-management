@@ -3,13 +3,18 @@
     "name": "laravel/laravel",
     "type": "project",
     "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework", "inventory", "diskominfo-garut", "fwzann-abd"],
+    "keywords": ["laravel", "framework", "inventory", "diskominfo-garut", "fwzann-abd", "msayib"],
     "license": "MIT",
     "authors": [
         {
             "name": "fwzann-abd",
             "homepage": "https://github.com/fwzann-abd",
             "role": "Lead Architect & Principal Contributor"
+        },
+        {
+            "name": "msayib",
+            "homepage": "https://github.com/msayib",
+            "role": "Co-Collaborator — Ideation, System Design, Architecture, Performance, Refactor, Tune-Up, UI/UX & Mobile-First High-Level Engineering"
         }
     ],
     "require": {

@@ -85,14 +85,15 @@
                 </span>
             </button>
 
-            {{-- Mobile Backdrop for Notification Sheet --}}
+            {{-- Mobile Backdrop for Notification Sheet (Portaled to body on mobile to escape header backdrop-filter) --}}
             <div id="notificationSheetBackdrop"
-                 class="hidden sm:hidden fixed inset-0 bg-slate-900/45 backdrop-blur-xs z-[65] transition-opacity duration-200 opacity-0"></div>
+                 class="hidden sm:hidden fixed inset-0 bg-slate-900/55 backdrop-blur-xs z-[105] transition-opacity duration-200"></div>
 
             {{-- Notification Panel: Mobile Floating Bottom Sheet / Desktop Animated Dropdown --}}
             <div id="notificationDropdownPanel"
                  data-animated-sheet="true"
-                 class="hidden fixed inset-x-3 bottom-[4.75rem] sm:bottom-auto sm:inset-x-auto sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:w-96 max-h-[75vh] sm:max-h-[32rem] flex flex-col rounded-3xl sm:rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/90 dark:border-slate-800 shadow-2xl z-[70] overflow-hidden">
+                 data-webhook-listener="active"
+                 class="hidden fixed inset-x-3 bottom-4 sm:bottom-auto sm:inset-x-auto sm:absolute sm:right-0 sm:top-full sm:mt-2 sm:w-96 max-h-[80dvh] sm:max-h-[32rem] flex flex-col rounded-3xl sm:rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/90 dark:border-slate-800 shadow-2xl z-[110] overflow-hidden">
                 {{-- Mobile Grab Handle --}}
                 <div class="sheet-grab-handle sm:hidden shrink-0"></div>
 
@@ -104,7 +105,13 @@
                                 <i class="bi bi-bell-fill text-xs"></i>
                             </span>
                             <div class="min-w-0">
-                                <p class="text-xs font-extrabold text-slate-900 dark:text-white leading-tight">Notifikasi</p>
+                                <div class="flex items-center gap-1.5">
+                                    <p class="text-xs font-extrabold text-slate-900 dark:text-white leading-tight">Notifikasi</p>
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" title="Terhubung ke Webhook Event Stream">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                        <span>Webhook Live</span>
+                                    </span>
+                                </div>
                                 <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">Klik item untuk menuju detail</p>
                             </div>
                         </div>
@@ -186,8 +193,8 @@
                                     <div class="flex items-center justify-between gap-2">
                                         <p class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{{ $notifTitle }}</p>
                                         @if($isNotifUnread)
-                                            <span data-notif-unread-pill class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-blue-500/15 dark:bg-blue-400/15 text-blue-600 dark:text-blue-300 border border-blue-500/25 dark:border-blue-400/25 backdrop-blur-xs shrink-0">
-                                                Baru
+                                            <span data-notif-unread-pill data-notif-red-dot class="inline-flex items-center justify-center shrink-0" title="Belum dibaca" aria-label="Belum dibaca">
+                                                <span class="w-2.5 h-2.5 rounded-full bg-rose-500 ring-4 ring-rose-500/20 animate-pulse"></span>
                                             </span>
                                         @endif
                                     </div>

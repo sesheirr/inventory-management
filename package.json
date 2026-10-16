@@ -6,6 +6,18 @@
         "name": "fwzann-abd",
         "url": "https://github.com/fwzann-abd"
     },
+    "contributors": [
+        {
+            "name": "fwzann-abd",
+            "url": "https://github.com/fwzann-abd",
+            "role": "Lead Architect & Principal Contributor"
+        },
+        {
+            "name": "msayib",
+            "url": "https://github.com/msayib",
+            "role": "Co-Collaborator — Ideation, System Design, Architecture, Performance, Refactor, Tune-Up, UI/UX & Mobile-First High-Level Engineering"
+        }
+    ],
     "scripts": {
         "build": "vite build",
         "dev": "vite",

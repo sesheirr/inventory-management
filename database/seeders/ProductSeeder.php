@@ -454,51 +454,225 @@ class ProductSeeder extends Seeder
             $seededProducts[$item['kode_barang']] = $product;
         }
 
-        // 4. Seed Sample Mutations & Activity Logs (only when empty to stay idempotent)
-        if (Mutation::count() === 0) {
+        // 4. Seed 6-Month Historical Sample Mutations & Activity Logs (idempotent for 6-month analytics chart)
+        if (Mutation::count() < 12) {
             $adminUser = User::whereIn('role', ['superadmin', 'admin'])->first();
             $operatorUser = User::where('role', 'user')->first() ?? $adminUser;
 
-            if ($adminUser && isset($seededProducts['DKI-GRT-2026-004'], $seededProducts['DKI-GRT-2026-006'], $seededProducts['DKI-GRT-2026-010'])) {
-                Mutation::create([
-                    'product_id' => $seededProducts['DKI-GRT-2026-004']->id,
-                    'from_room_id' => $rooms['Gudang Aset & Logistik TIK']->id,
-                    'to_room_id' => $rooms['Garut Command Center (GCC)']->id,
-                    'user_id' => $adminUser->id,
-                    'type' => 'pindah_ruang',
-                    'quantity' => 2,
-                    'mutation_date' => now()->subDays(5)->toDateString(),
-                    'status' => 'approved',
-                    'approved_by' => $adminUser->id,
-                    'approved_at' => now()->subDays(5),
-                    'note' => 'Penambahan 2 titik Access Point WiFi 6 untuk area rapat Garut Command Center.',
-                ]);
+            if ($adminUser && ! empty($seededProducts)) {
+                $historicalMutations = [
+                    // 5 Months Ago
+                    [
+                        'kode' => 'DKI-GRT-2026-001',
+                        'from_room' => null,
+                        'to_room' => 'Ruang Server & NOC (Data Center Lt. 2)',
+                        'user_id' => $adminUser->id,
+                        'type' => 'masuk',
+                        'quantity' => 4,
+                        'date' => now()->subMonths(5)->startOfMonth()->addDays(4),
+                        'status' => 'approved',
+                        'note' => 'Penerimaan awal unit Core Router MikroTik CCR2116 untuk revitalisasi NOC Diskominfo.',
+                    ],
+                    [
+                        'kode' => 'DKI-GRT-2026-022',
+                        'from_room' => 'Gudang Aset & Logistik TIK',
+                        'to_room' => 'Ruang Bidang Aplikasi Informatika (Aptika)',
+                        'user_id' => $adminUser->id,
+                        'type' => 'pindah_ruang',
+                        'quantity' => 8,
+                        'date' => now()->subMonths(5)->startOfMonth()->addDays(14),
+                        'status' => 'approved',
+                        'note' => 'Distribusi kursi kerja ergonomis untuk tim teknis pengembangan aplikasi SPBE.',
+                    ],
+                    // 4 Months Ago
+                    [
+                        'kode' => 'DKI-GRT-2026-002',
+                        'from_room' => null,
+                        'to_room' => 'Ruang Server & NOC (Data Center Lt. 2)',
+                        'user_id' => $adminUser->id,
+                        'type' => 'masuk',
+                        'quantity' => 6,
+                        'date' => now()->subMonths(4)->startOfMonth()->addDays(6),
+                        'status' => 'approved',
+                        'note' => 'Pengadaan Switch Manageable Cisco Catalyst PoE+ distribusi lantai 1 dan lantai 2.',
+                    ],
+                    [
+                        'kode' => 'DKI-GRT-2026-015',
+                        'from_room' => 'Gudang Aset & Logistik TIK',
+                        'to_room' => 'Ruang Sekretariat & Umum',
+                        'user_id' => $operatorUser->id,
+                        'type' => 'pindah_ruang',
+                        'quantity' => 3,
+                        'date' => now()->subMonths(4)->startOfMonth()->addDays(18),
+                        'status' => 'approved',
+                        'note' => 'Penempatan printer multifungsi untuk layanan persuratan dan kepegawaian.',
+                    ],
+                    [
+                        'kode' => 'DKI-GRT-2026-005',
+                        'from_room' => 'Gudang Aset & Logistik TIK',
+                        'to_room' => null,
+                        'user_id' => $adminUser->id,
+                        'type' => 'keluar',
+                        'quantity' => 2,
+                        'date' => now()->subMonths(4)->startOfMonth()->addDays(23),
+                        'status' => 'approved',
+                        'note' => 'Pemakaian modul SFP+ 10G untuk penggantian perangkat uplink titik FO Kecamatan Tarogong.',
+                    ],
+                    // 3 Months Ago
+                    [
+                        'kode' => 'DKI-GRT-2026-008',
+                        'from_room' => null,
+                        'to_room' => 'Ruang Sekretariat & Umum',
+                        'user_id' => $adminUser->id,
+                        'type' => 'masuk',
+                        'quantity' => 7,
+                        'date' => now()->subMonths(3)->startOfMonth()->addDays(5),
+                        'status' => 'approved',
+                        'note' => 'Serah terima PC All-in-One operasional administrasi Srikandi & tata naskah dinas.',
+                    ],
+                    [
+                        'kode' => 'DKI-GRT-2026-020',
+                        'from_room' => 'Gudang Aset & Logistik TIK',
+                        'to_room' => 'Ruang Bidang Statistik & Persandian',
+                        'user_id' => $adminUser->id,
+                        'type' => 'pindah_ruang',
+                        'quantity' => 5,
+                        'date' => now()->subMonths(3)->startOfMonth()->addDays(16),
+                        'status' => 'approved',
+                        'note' => 'Alokasi HT Digital Terenkripsi AES-256 untuk tim pengamanan informasi daerah.',
+                    ],
+                    // 2 Months Ago
+                    [
+                        'kode' => 'DKI-GRT-2026-004',
+                        'from_room' => null,
+                        'to_room' => 'Gudang Aset & Logistik TIK',
+                        'user_id' => $adminUser->id,
+                        'type' => 'masuk',
+                        'quantity' => 10,
+                        'date' => now()->subMonths(2)->startOfMonth()->addDays(7),
+                        'status' => 'approved',
+                        'note' => 'Penambahan stok Access Point UniFi U6-LR WiFi 6 untuk perluasan jaringan publik.',
+                    ],
+                    [
+                        'kode' => 'DKI-GRT-2026-013',
+                        'from_room' => 'Gudang Aset & Logistik TIK',
+                        'to_room' => 'Garut Command Center (GCC)',
+                        'user_id' => $adminUser->id,
+                        'type' => 'pindah_ruang',
+                        'quantity' => 2,
+                        'date' => now()->subMonths(2)->startOfMonth()->addDays(19),
+                        'status' => 'approved',
+                        'note' => 'Instalasi kamera PTZ konferensi video Logitech Rally Plus di ruang utama GCC.',
+                    ],
+                    [
+                        'kode' => 'DKI-GRT-2026-024',
+                        'from_room' => 'Gudang Aset & Logistik TIK',
+                        'to_room' => null,
+                        'user_id' => $operatorUser->id,
+                        'type' => 'keluar',
+                        'quantity' => 3,
+                        'date' => now()->subMonths(2)->startOfMonth()->addDays(25),
+                        'status' => 'approved',
+                        'note' => 'Penggunaan patch cord fiber optik LC-LC untuk interkoneksi rak server cluster baru.',
+                    ],
+                    // 1 Month Ago
+                    [
+                        'kode' => 'DKI-GRT-2026-009',
+                        'from_room' => null,
+                        'to_room' => 'Ruang Bidang Statistik & Persandian',
+                        'user_id' => $adminUser->id,
+                        'type' => 'masuk',
+                        'quantity' => 4,
+                        'date' => now()->subMonths(1)->startOfMonth()->addDays(8),
+                        'status' => 'approved',
+                        'note' => 'Penambahan workstation analitik geospasial dan pengolahan Satu Data Indonesia.',
+                    ],
+                    [
+                        'kode' => 'DKI-GRT-2026-012',
+                        'from_room' => 'Ruang Bidang Informasi & Komunikasi Publik (IKP)',
+                        'to_room' => 'Studio Podcast & Media Center Diskominfo',
+                        'user_id' => $operatorUser->id,
+                        'type' => 'pindah_ruang',
+                        'quantity' => 2,
+                        'date' => now()->subMonths(1)->startOfMonth()->addDays(17),
+                        'status' => 'approved',
+                        'note' => 'Penataan ulang perangkat konsol audio Rodecaster Pro II di Studio Podcast.',
+                    ],
+                    [
+                        'kode' => 'DKI-GRT-2026-005',
+                        'from_room' => 'Gudang Aset & Logistik TIK',
+                        'to_room' => null,
+                        'user_id' => $adminUser->id,
+                        'type' => 'keluar',
+                        'quantity' => 2,
+                        'date' => now()->subMonths(1)->startOfMonth()->addDays(24),
+                        'status' => 'approved',
+                        'note' => 'Distribusi modul transceiver optik cadangan untuk pemeliharaan jaringan OPD.',
+                    ],
+                    // Current Month
+                    [
+                        'kode' => 'DKI-GRT-2026-004',
+                        'from_room' => 'Gudang Aset & Logistik TIK',
+                        'to_room' => 'Garut Command Center (GCC)',
+                        'user_id' => $adminUser->id,
+                        'type' => 'pindah_ruang',
+                        'quantity' => 2,
+                        'date' => now()->subDays(min(5, max(1, now()->day - 1))),
+                        'status' => 'approved',
+                        'note' => 'Penambahan 2 titik Access Point WiFi 6 untuk area rapat Garut Command Center.',
+                    ],
+                    [
+                        'kode' => 'DKI-GRT-2026-006',
+                        'from_room' => null,
+                        'to_room' => 'Ruang Bidang Aplikasi Informatika (Aptika)',
+                        'user_id' => $adminUser->id,
+                        'type' => 'masuk',
+                        'quantity' => 4,
+                        'date' => now()->subDays(min(3, max(1, now()->day - 1))),
+                        'status' => 'approved',
+                        'note' => 'Serah terima pengadaan Laptop Kerja Tim Pengembang SPBE.',
+                    ],
+                    [
+                        'kode' => 'DKI-GRT-2026-010',
+                        'from_room' => 'Ruang Bidang Informasi & Komunikasi Publik (IKP)',
+                        'to_room' => 'Studio Podcast & Media Center Diskominfo',
+                        'user_id' => $operatorUser->id,
+                        'type' => 'pindah_ruang',
+                        'quantity' => 1,
+                        'date' => now(),
+                        'status' => 'pending',
+                        'note' => 'Permohonan peminjaman 1 unit Kamera Sony A7 IV untuk rekaman podcast mingguan di Studio Media Center.',
+                    ],
+                ];
 
-                Mutation::create([
-                    'product_id' => $seededProducts['DKI-GRT-2026-006']->id,
-                    'from_room_id' => null,
-                    'to_room_id' => $rooms['Ruang Bidang Aplikasi Informatika (Aptika)']->id,
-                    'user_id' => $adminUser->id,
-                    'type' => 'masuk',
-                    'quantity' => 4,
-                    'mutation_date' => now()->subDays(3)->toDateString(),
-                    'status' => 'approved',
-                    'approved_by' => $adminUser->id,
-                    'approved_at' => now()->subDays(3),
-                    'note' => 'Serah terima pengadaan Laptop Kerja Tim Pengembang SPBE.',
-                ]);
+                foreach ($historicalMutations as $mItem) {
+                    $prod = $seededProducts[$mItem['kode']] ?? null;
+                    if (! $prod) {
+                        continue;
+                    }
 
-                Mutation::create([
-                    'product_id' => $seededProducts['DKI-GRT-2026-010']->id,
-                    'from_room_id' => $rooms['Ruang Bidang Informasi & Komunikasi Publik (IKP)']->id,
-                    'to_room_id' => $rooms['Studio Podcast & Media Center Diskominfo']->id,
-                    'user_id' => $operatorUser->id,
-                    'type' => 'pindah_ruang',
-                    'quantity' => 1,
-                    'mutation_date' => now()->toDateString(),
-                    'status' => 'pending',
-                    'note' => 'Permohonan peminjaman 1 unit Kamera Sony A7 IV untuk rekaman podcast mingguan di Studio Media Center.',
-                ]);
+                    $fromRoomId = $mItem['from_room'] ? ($rooms[$mItem['from_room']]->id ?? null) : null;
+                    $toRoomId = $mItem['to_room'] ? ($rooms[$mItem['to_room']]->id ?? null) : null;
+                    $mutDate = $mItem['date'];
+
+                    Mutation::firstOrCreate(
+                        [
+                            'product_id' => $prod->id,
+                            'type' => $mItem['type'],
+                            'note' => $mItem['note'],
+                        ],
+                        [
+                            'from_room_id' => $fromRoomId,
+                            'to_room_id' => $toRoomId,
+                            'user_id' => $mItem['user_id'],
+                            'quantity' => $mItem['quantity'],
+                            'mutation_date' => $mutDate->toDateString(),
+                            'status' => $mItem['status'],
+                            'approved_by' => $mItem['status'] === 'approved' ? $adminUser->id : null,
+                            'approved_at' => $mItem['status'] === 'approved' ? $mutDate : null,
+                        ]
+                    );
+                }
             }
         }
 

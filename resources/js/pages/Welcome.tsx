@@ -2,9 +2,10 @@
  * SIM-Inventaris Diskominfo Kabupaten Garut — Public Civic Landing Page (v2 React 19)
  *
  * @author fwzann-abd <https://github.com/fwzann-abd>
+ * @co-collaborator msayib <https://github.com/msayib>
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { ShieldCheck, QrCode, ArrowRightLeft, Building2, ArrowRight } from 'lucide-react';
 
@@ -17,9 +18,57 @@ export default function Welcome({
     appName = 'SIM-Inventaris TIK — Diskominfo Kabupaten Garut',
     authenticated = false,
 }: WelcomeProps) {
+    const [orbShift, setOrbShift] = useState({ x1: 0, y1: 0, hue1: 0, x2: 0, y2: 0, hue2: 0 });
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setOrbShift({
+                x1: Math.round((Math.random() - 0.5) * 220),
+                y1: Math.round((Math.random() - 0.5) * 160),
+                hue1: Math.round((Math.random() - 0.5) * 110),
+                x2: Math.round((Math.random() - 0.5) * 200),
+                y2: Math.round((Math.random() - 0.5) * 160),
+                hue2: Math.round((Math.random() - 0.5) * 110),
+            });
+        }, 9000);
+        return () => clearInterval(timer);
+    }, []);
+
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-            <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#090D16] text-slate-900 dark:text-slate-100 relative overflow-hidden">
+            {/* Subtle Technical Grid Backdrop + Slow-Drifting Random Color-Morphing Ambient Orbs */}
+            <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
+                <div
+                    className="absolute inset-0 opacity-[0.035] dark:opacity-[0.055]"
+                    style={{
+                        backgroundImage:
+                            'linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)',
+                        backgroundSize: '40px 40px',
+                    }}
+                />
+                <div
+                    data-ambient-orb="a"
+                    className="landing-ambient-orb-a absolute -top-40 right-1/5 w-[38rem] h-[38rem] rounded-full bg-blue-600/10 dark:bg-blue-500/14 blur-3xl"
+                    style={{
+                        transform: `translate3d(${orbShift.x1}px, ${orbShift.y1}px, 0)`,
+                        filter: `blur(72px) hue-rotate(${orbShift.hue1}deg)`,
+                    }}
+                />
+                <div
+                    data-ambient-orb="b"
+                    className="landing-ambient-orb-b absolute bottom-0 left-8 w-[32rem] h-[32rem] rounded-full bg-cyan-500/8 dark:bg-sky-500/12 blur-3xl"
+                    style={{
+                        transform: `translate3d(${orbShift.x2}px, ${orbShift.y2}px, 0)`,
+                        filter: `blur(68px) hue-rotate(${orbShift.hue2}deg)`,
+                    }}
+                />
+                <div
+                    data-ambient-orb="c"
+                    className="landing-ambient-orb-c absolute top-1/3 left-1/2 -translate-x-1/2 w-[30rem] h-[30rem] rounded-full bg-indigo-500/7 dark:bg-violet-500/10 blur-3xl"
+                />
+            </div>
+
+            <div className="relative z-10 mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
                 <motion.div
                     initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}

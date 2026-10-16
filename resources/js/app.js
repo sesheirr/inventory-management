@@ -1072,7 +1072,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const isMobile = window.innerWidth < 640;
 
         if (backdropEl && isMobile) {
-            backdropEl.classList.remove('hidden');
+            backdropEl.classList.remove('hidden', 'opacity-0');
+            backdropEl.style.opacity = '1';
             animateSpringElement(backdropEl, [
                 { opacity: 0 },
                 { opacity: 1 },
@@ -1106,9 +1107,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 { opacity: 0 },
             ], { duration: 180, fill: 'none' });
             if (bAnim) {
-                bAnim.onfinish = () => backdropEl.classList.add('hidden');
+                bAnim.onfinish = () => {
+                    backdropEl.classList.add('hidden');
+                    backdropEl.style.opacity = '';
+                };
             } else {
                 backdropEl.classList.add('hidden');
+                backdropEl.style.opacity = '';
             }
         }
 
@@ -1141,10 +1146,39 @@ document.addEventListener('DOMContentLoaded', () => {
     // Profile & Notification Bell Dropdowns / Mobile Sheets
     const userMenuBtn = document.getElementById('userMenuButton');
     const userMenuDropdown = document.getElementById('userMenuDropdown');
+    const notifDropdownRoot = document.getElementById('notificationDropdownRoot');
     const notifBellBtn = document.getElementById('notificationBellBtn');
     const notifDropdown = document.getElementById('notificationDropdownPanel');
     const notifBackdrop = document.getElementById('notificationSheetBackdrop');
     const closeNotifSheetBtn = document.getElementById('closeNotificationSheetBtn');
+
+    // Escape <header>'s backdrop-filter containing block on mobile (< 640px)
+    function syncNotificationPanelMount() {
+        if (!notifDropdown || !notifDropdownRoot) return;
+        const isMobile = window.innerWidth < 640;
+        if (isMobile) {
+            if (notifBackdrop && notifBackdrop.parentElement !== document.body) {
+                document.body.appendChild(notifBackdrop);
+            }
+            if (notifDropdown.parentElement !== document.body) {
+                document.body.appendChild(notifDropdown);
+            }
+        } else {
+            if (notifBackdrop && notifBackdrop.parentElement !== notifDropdownRoot) {
+                notifBackdrop.classList.add('hidden');
+                notifDropdownRoot.appendChild(notifBackdrop);
+            }
+            if (notifDropdown.parentElement !== notifDropdownRoot) {
+                notifDropdownRoot.appendChild(notifDropdown);
+            }
+        }
+    }
+
+    window.addEventListener('resize', () => {
+        if (notifDropdown && !notifDropdown.classList.contains('hidden')) {
+            syncNotificationPanelMount();
+        }
+    });
 
     function closeNotificationCenter() {
         notifBellBtn?.setAttribute('aria-expanded', 'false');
@@ -1156,6 +1190,7 @@ document.addEventListener('DOMContentLoaded', () => {
             userMenuBtn?.setAttribute('aria-expanded', 'false');
             animatePopoverOrSheetClose(userMenuDropdown);
         }
+        syncNotificationPanelMount();
         notifBellBtn?.setAttribute('aria-expanded', 'true');
         animatePopoverOrSheetOpen(notifDropdown, notifBackdrop);
     }
@@ -1558,9 +1593,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (item.dataset.swipeBound === '1') return;
             item.dataset.swipeBound = '1';
 
-            const contentEl = item.querySelector('.swipe-item-content');
-            const bgRead = item.querySelector('.swipe-bg-read');
-            const bgDelete = item.querySelector('.swipe-bg-delete');
+            const contentEl = item.querySelector('.swipe-item-content') || item.querySelector('.notif-swipe-card');
+            const bgRead = item.querySelector('.swipe-bg-read') || item.querySelector('.notif-swipe-bg-left');
+            const bgDelete = item.querySelector('.swipe-bg-delete') || item.querySelector('.notif-swipe-bg-right');
             if (!contentEl) return;
 
             let startX = 0;
@@ -1622,14 +1657,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!swiping) return;
                 swiping = false;
 
-                const readUrl = item.getAttribute('data-read-url');
+                const readUrl = item.getAttribute('data-read-url') || item.getAttribute('data-mark-read-url');
                 const deleteUrl = item.getAttribute('data-delete-url');
 
                 if (dx > 68 && readUrl) {
                     resetPosition();
                     try {
                         const res = await fetch(readUrl, {
-                            method: 'POST',
+                            method: 'PATCH',
                             headers: {
                                 'X-CSRF-TOKEN': getCsrfToken(),
                                 'Accept': 'application/json',
@@ -1639,8 +1674,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (res.ok) {
                             const data = await res.json();
                             item.setAttribute('data-unread', '0');
-                            item.querySelectorAll('.notif-new-badge').forEach((b) => b.remove());
-                            contentEl.classList.remove('bg-blue-50/40', 'dark:bg-blue-950/20', 'bg-blue-50/25', 'dark:bg-blue-950/15');
+                            item.setAttribute('data-is-unread', '0');
+                            item.querySelectorAll('.notif-new-badge, [data-notif-unread-pill], [data-notif-red-dot]').forEach((b) => b.remove());
+                            contentEl.classList.remove('bg-blue-50/40', 'dark:bg-blue-950/20', 'bg-blue-50/25', 'dark:bg-blue-950/15', 'bg-blue-50/35', 'dark:bg-blue-950/25');
                             if (typeof data.unread_count === 'number') {
                                 updateUnreadBadgeCount(data.unread_count);
                             }
@@ -2515,14 +2551,142 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Semi-Realtime Polling & BroadcastChannel Sync
+    // Webhook-Driven Realtime Notification Listener & BroadcastChannel Sync
     const liveChannel = typeof BroadcastChannel !== 'undefined'
         ? new BroadcastChannel('diskominfo_inventory_live')
         : null;
 
     let currentLiveVersion = null;
+    let currentWebhookCursor = null;
     let knownNotificationIds = new Set();
     let isFirstPoll = true;
+
+    function escapeHtmlText(str) {
+        return String(str || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function renderNavbarNotificationItems(items) {
+        const listEl = document.getElementById('navbarNotificationList');
+        if (!listEl || !Array.isArray(items)) return;
+
+        if (items.length === 0) {
+            listEl.innerHTML = `
+                <div class="px-4 py-8 text-center">
+                    <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto mb-2">
+                        <i class="bi bi-bell-slash text-base"></i>
+                    </div>
+                    <p class="text-xs font-semibold text-slate-600 dark:text-slate-300">Belum ada notifikasi</p>
+                </div>
+            `;
+            return;
+        }
+
+        const colorMap = {
+            approved: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-500/15 dark:text-emerald-400',
+            approval: 'text-amber-600 bg-amber-50 dark:bg-amber-500/15 dark:text-amber-400',
+            low_stock: 'text-amber-600 bg-amber-50 dark:bg-amber-500/15 dark:text-amber-400',
+            rejected: 'text-rose-600 bg-rose-50 dark:bg-rose-500/15 dark:text-rose-400',
+            out_of_stock: 'text-rose-600 bg-rose-50 dark:bg-rose-500/15 dark:text-rose-400',
+            info: 'text-blue-600 bg-blue-50 dark:bg-blue-500/15 dark:text-blue-400',
+        };
+
+        listEl.innerHTML = items.map((n) => {
+            const isUnread = n.is_unread !== false;
+            const lvlColor = colorMap[n.category] || colorMap.info;
+            const iconClass = escapeHtmlText(n.icon || 'bi-bell-fill');
+            const redDotHtml = isUnread
+                ? `<span data-notif-unread-pill data-notif-red-dot class="inline-flex items-center justify-center shrink-0" title="Belum dibaca" aria-label="Belum dibaca">
+                       <span class="w-2.5 h-2.5 rounded-full bg-rose-500 ring-4 ring-rose-500/20 animate-pulse"></span>
+                   </span>`
+                : '';
+
+            return `
+                <div class="notif-swipe-row relative overflow-hidden select-none"
+                     data-swipe-notification="${escapeHtmlText(n.id)}"
+                     data-is-unread="${isUnread ? '1' : '0'}"
+                     data-mark-read-url="${escapeHtmlText(n.mark_read_url)}"
+                     data-delete-url="${escapeHtmlText(n.delete_url)}">
+                    <div class="notif-swipe-bg-left absolute inset-y-0 left-0 w-1/2 bg-emerald-500/90 text-white flex items-center justify-start pl-4 gap-1.5 text-[11px] font-bold opacity-0 pointer-events-none transition-opacity">
+                        <i class="bi bi-check2-all text-sm"></i>
+                        <span>Dibaca</span>
+                    </div>
+                    <div class="notif-swipe-bg-right absolute inset-y-0 right-0 w-1/2 bg-rose-600/90 text-white flex items-center justify-end pr-4 gap-1.5 text-[11px] font-bold opacity-0 pointer-events-none transition-opacity">
+                        <span>Hapus</span>
+                        <i class="bi bi-trash3-fill text-xs"></i>
+                    </div>
+                    <a href="${escapeHtmlText(n.go_url)}"
+                       class="notif-swipe-card relative z-10 flex items-start gap-3 px-4 py-3 bg-white dark:bg-[#0f1b38] hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors group ${isUnread ? 'bg-blue-50/40 dark:bg-blue-950/25' : ''}">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${lvlColor} group-hover:scale-105 transition-transform">
+                            <i class="bi ${iconClass} text-xs"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center justify-between gap-2">
+                                <p class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${escapeHtmlText(n.title)}</p>
+                                ${redDotHtml}
+                            </div>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5 leading-snug">${escapeHtmlText(n.message)}</p>
+                            <p class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mt-1 flex items-center gap-1.5">
+                                <i class="bi bi-clock text-[9px]"></i>
+                                <span>${escapeHtmlText(n.created_at_human || 'Baru saja')}</span>
+                            </p>
+                        </div>
+                    </a>
+                </div>
+            `;
+        }).join('');
+
+        initNotificationSwipe(listEl);
+    }
+
+    function applyWebhookNotifications(notifications, webhookStream = null, fromBroadcast = false) {
+        if (!notifications) return;
+
+        const unreadCount = Number(notifications.unread_count || 0);
+        updateUnreadBadgeCount(unreadCount);
+
+        const latestList = notifications.latest || [];
+        let hasNewArrival = false;
+
+        latestList.forEach((n) => {
+            if (!isFirstPoll && !knownNotificationIds.has(n.id)) {
+                hasNewArrival = true;
+                window.toast?.info(n.title, {
+                    description: n.message,
+                    duration: 6000,
+                    action: {
+                        label: 'Lihat Detail',
+                        href: n.go_url,
+                    },
+                });
+
+                if ('Notification' in window && Notification.permission === 'granted' && !fromBroadcast && 'serviceWorker' in navigator) {
+                    navigator.serviceWorker.ready.then((reg) => {
+                        reg.showNotification(n.title, {
+                            body: n.message,
+                            icon: '/images/logo-diskominfo.png',
+                            data: { url: n.go_url },
+                        }).catch(() => {});
+                    });
+                }
+            }
+            knownNotificationIds.add(n.id);
+        });
+
+        const newCursor = webhookStream?.cursor || null;
+        if (hasNewArrival || (newCursor && newCursor !== currentWebhookCursor)) {
+            renderNavbarNotificationItems(latestList);
+            if (newCursor) {
+                currentWebhookCursor = newCursor;
+                window.dispatchEvent(new CustomEvent('diskominfo:webhook-event', {
+                    detail: webhookStream,
+                }));
+            }
+        }
+    }
 
     function applyLiveStatePayload(payload, fromBroadcast = false) {
         if (!payload || !payload.ok) return;
@@ -2567,35 +2731,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 3. Update Navbar Unread Notification Badge & Preview List
+        // 3. Update Navbar Unread Notification Badge & Webhook-Driven Preview List
         if (payload.notifications) {
-            const unreadCount = Number(payload.notifications.unread_count || 0);
-            updateUnreadBadgeCount(unreadCount);
-
-            const latestList = payload.notifications.latest || [];
-            latestList.forEach((n) => {
-                if (!isFirstPoll && !knownNotificationIds.has(n.id)) {
-                    window.toast?.info(n.title, {
-                        description: n.message,
-                        duration: 6000,
-                        action: {
-                            label: 'Lihat Detail',
-                            href: n.go_url,
-                        },
-                    });
-
-                    if ('Notification' in window && Notification.permission === 'granted' && !fromBroadcast && 'serviceWorker' in navigator) {
-                        navigator.serviceWorker.ready.then((reg) => {
-                            reg.showNotification(n.title, {
-                                body: n.message,
-                                icon: '/images/logo-diskominfo.png',
-                                data: { url: n.go_url },
-                            }).catch(() => {});
-                        });
-                    }
-                }
-                knownNotificationIds.add(n.id);
-            });
+            applyWebhookNotifications(payload.notifications, payload.webhook_stream || null, fromBroadcast);
         }
 
         // 4. Detect Data Manipulation by Another User
@@ -2638,12 +2776,32 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {}
     }
 
+    async function listenWebhookNotificationStream() {
+        if (document.visibilityState === 'hidden') return;
+        if (!document.getElementById('navbarUnreadBadge')) return;
+        try {
+            const res = await fetch('/api/webhooks/stream', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            if (data && data.ok && data.notifications) {
+                applyWebhookNotifications(data.notifications, data, false);
+                isFirstPoll = false;
+            }
+        } catch (e) {}
+    }
+
     liveChannel?.addEventListener('message', (event) => {
         if (event.data) {
             applyLiveStatePayload(event.data, true);
         }
     });
 
-    setTimeout(pollLiveState, 1200);
-    setInterval(pollLiveState, 8500);
+    setTimeout(pollLiveState, 900);
+    setInterval(pollLiveState, 8000);
+    setInterval(listenWebhookNotificationStream, 3000);
 });

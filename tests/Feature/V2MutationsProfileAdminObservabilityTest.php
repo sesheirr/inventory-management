@@ -14,6 +14,7 @@ use App\Models\Product;
 use App\Models\Room;
 use App\Models\User;
 use App\Models\WebhookEndpoint;
+use Database\Seeders\ProductSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -138,5 +139,51 @@ class V2MutationsProfileAdminObservabilityTest extends TestCase
             return str_contains($request->url(), 'audit.garutkab.go.id/webhook')
                 && $request->header('X-Diskominfo-Event')[0] === 'mutation.approved';
         });
+
+        // 6. Webhook event stream endpoint returns real-time HMAC-SHA256 events & notifications
+        $streamRes = $this->actingAs($regularUser)->getJson('/api/webhooks/stream');
+        $streamRes->assertOk()
+            ->assertJsonPath('channel', 'webhook-hmac-sha256')
+            ->assertJsonStructure([
+                'ok',
+                'channel',
+                'timestamp',
+                'cursor',
+                'events',
+                'notifications' => [
+                    'unread_count',
+                    'latest',
+                ],
+            ]);
+        $events = $streamRes->json('events');
+        $this->assertNotEmpty($events);
+        $this->assertSame('mutation.approved', $events[0]['event'] ?? null);
+
+        // 7. Notifications Blade view renders Red Dot indicator instead of blue "Baru" pill
+        $notifHtml = $this->actingAs($regularUser)->get('/notifications')->assertOk()->getContent();
+        $this->assertStringContainsString('data-notif-red-dot', (string) $notifHtml);
+        $this->assertStringNotContainsString('bg-blue-100 text-blue-700', (string) $notifHtml);
+
+        // 8. 1-Second Live Observability Metrics JSON endpoint enforces RBAC & returns 1000ms interval
+        $this->actingAs($regularUser)->getJson('/observability/metrics')->assertForbidden();
+        $this->actingAs($admin)->getJson('/observability/metrics')
+            ->assertOk()
+            ->assertJsonPath('refresh_interval_ms', 1000)
+            ->assertJsonStructure([
+                'ok',
+                'refresh_interval_ms',
+                'entries',
+                'summary',
+                'tableStats',
+                'runtimeInfo',
+                'max_entries',
+            ]);
+
+        // 9. Dashboard removes misleading "Total Nilai Aset Tercatat" and seeds 6-month historical mutations
+        $this->seed(ProductSeeder::class);
+        $dashBlade = $this->actingAs($admin)->get('/dashboard')->assertOk();
+        $dashBlade->assertDontSee('Total Nilai Aset Tercatat');
+        $dashBlade->assertSee('dashChartTooltip', false);
+        $this->assertGreaterThanOrEqual(16, Mutation::count());
     }
 }

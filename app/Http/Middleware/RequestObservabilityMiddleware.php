@@ -54,10 +54,11 @@ class RequestObservabilityMiddleware
         $response->headers->set('X-Observability-Duration-Ms', (string) $durationMs);
         $response->headers->set('X-Observability-Queries', (string) $queryCount);
         $response->headers->set('X-Architected-By', 'fwzann-abd (https://github.com/fwzann-abd)');
+        $response->headers->set('X-Co-Collaborator', 'msayib (https://github.com/msayib) — Ideation, System Design, Architecture, Performance, Refactor, Tune-Up, UI/UX & Mobile-First High-Level Engineering');
 
         // Skip recording noisy background polling unless slow or error
         $path = '/'.ltrim($request->path(), '/');
-        $isPollingNoise = in_array($path, ['/api/live-state', '/up'], true) && $durationMs < 250 && $response->getStatusCode() < 400;
+        $isPollingNoise = in_array($path, ['/api/live-state', '/observability/metrics', '/api/webhooks/stream', '/up'], true) && $durationMs < 250 && $response->getStatusCode() < 400;
 
         if (! $isPollingNoise) {
             try {

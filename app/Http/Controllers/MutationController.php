@@ -229,6 +229,19 @@ class MutationController extends Controller
                     'description' => "Mencatat & menyetujui mutasi ({$mutation->type}) sebanyak {$mutation->quantity} unit untuk {$product->name}",
                 ]);
 
+                app(WebhookDispatcher::class)->broadcast(
+                    'mutation.approved',
+                    [
+                        'mutation_id' => $mutation->id,
+                        'product_id' => $product->id,
+                        'product_name' => $product->name,
+                        'type' => $mutation->type,
+                        'quantity' => (int) $mutation->quantity,
+                        'status' => 'approved',
+                    ],
+                    $user
+                );
+
                 $redirectRoute = $request->input('redirect_to') === 'product'
                     ? redirect()->route('products.show', $product)
                     : redirect()->route('mutations.index');
@@ -247,6 +260,19 @@ class MutationController extends Controller
                 'action' => 'created',
                 'description' => "Mengajukan permohonan mutasi ({$mutation->type}) sebanyak {$mutation->quantity} unit untuk {$product->name} (Menunggu Persetujuan)",
             ]);
+
+            app(WebhookDispatcher::class)->broadcast(
+                'mutation.submitted',
+                [
+                    'mutation_id' => $mutation->id,
+                    'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'type' => $mutation->type,
+                    'quantity' => (int) $mutation->quantity,
+                    'status' => 'pending',
+                ],
+                $user
+            );
 
             $redirectRoute = $request->input('redirect_to') === 'product'
                 ? redirect()->route('products.show', $product)

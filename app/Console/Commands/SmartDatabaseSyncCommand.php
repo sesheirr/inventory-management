@@ -114,14 +114,16 @@ class SmartDatabaseSyncCommand extends Command
         }
 
         // 4. Cek apakah data sedikit (sparse) -> Populate Seed + Keep Existing
+        $mutationCount = Mutation::count();
         $isSparseData = $forcedStrategy === 'populate-keep'
             || $productCount < 15
             || $roomCount < 6
             || $categoryCount < 5
-            || $userCount < 3;
+            || $userCount < 3
+            || $mutationCount < 12;
 
         if ($isSparseData) {
-            $this->components->info("Terdeteksi data lokal masih sedikit (Barang: {$productCount}, Ruangan: {$roomCount}, Kategori: {$categoryCount}). Menjalankan Populate Seed + Keep Existing...");
+            $this->components->info("Terdeteksi data lokal masih sedikit (Barang: {$productCount}, Ruangan: {$roomCount}, Kategori: {$categoryCount}, Mutasi: {$mutationCount}). Menjalankan Populate Seed + Keep Existing...");
             Artisan::call('db:seed', ['--force' => true, '--class' => DatabaseSeeder::class]);
             $this->renderSummary('SPARSE_DATA_POPULATED_KEEP_EXISTING');
 

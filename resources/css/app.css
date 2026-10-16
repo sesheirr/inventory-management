@@ -6,6 +6,8 @@
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
+@source '../**/*.ts';
+@source '../**/*.tsx';
 
 @theme {
     --font-sans: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -15,7 +17,7 @@
     :root {
         --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
         --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-        --hand-cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M9 11V6.5C9 5.67157 9.67157 5 10.5 5C11.3284 5 12 5.67157 12 6.5V10M12 10V5.5C12 4.67157 12.6716 4 13.5 4C14.3284 4 15 4.67157 15 5.5V10M15 10V6.5C15 5.67157 15.6716 5 16.5 5C17.3284 5 18 5.67157 18 6.5V11M18 10V8.5C18 7.67157 18.6716 7 19.5 7C20.3284 7 21 7.67157 21 8.5V14.5C21 18.0899 18.0899 21 14.5 21H12.2C10.2111 21 8.33208 20.0889 7.09219 18.5293L4.38298 15.1211C3.78859 14.3734 3.91368 13.2856 4.66135 12.6912C5.35785 12.1376 6.35962 12.2038 6.97683 12.8442L9 14.943V11Z' fill='%23ffffff' stroke='%230f172a' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") 10 4, pointer;
+        --hand-cursor: pointer;
     }
 
     html {
@@ -30,15 +32,21 @@
         font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     }
 
-    /* Actionable Hand Cursor Across Entire Application */
+    /* Native OS Pointer (Pointing Finger) Cursor Across All Actionable Elements */
     a,
+    a[href],
     button,
     [role="button"],
+    [role="tab"],
+    [role="menuitem"],
+    [role="option"],
+    [role="switch"],
     input[type="button"],
     input[type="submit"],
     input[type="reset"],
     input[type="checkbox"],
     input[type="radio"],
+    input[type="file"],
     select,
     summary,
     label[for],
@@ -48,12 +56,18 @@
     [data-share-code],
     [data-barcode-modal],
     [data-quick-status],
+    [data-chart-mode-btn],
+    [data-chart-point-index],
+    [data-dropdown-toggle],
     .ss-trigger,
     .ss-option,
+    .cdp-trigger,
+    .cdp-day,
     .pagination-link,
     .cursor-pointer,
-    .actionable-hand {
-        cursor: var(--hand-cursor) !important;
+    .actionable-hand,
+    .sheet-grab-handle {
+        cursor: pointer !important;
     }
 
     button:disabled,
@@ -62,13 +76,6 @@
     [aria-disabled="true"],
     .cursor-not-allowed {
         cursor: not-allowed !important;
-    }
-
-    .sheet-grab-handle {
-        cursor: grab !important;
-    }
-    .sheet-grab-handle:active {
-        cursor: grabbing !important;
     }
 }
 
@@ -780,3 +787,78 @@ html.theme-transitioning *::after {
 .tabular-nums {
     font-variant-numeric: tabular-nums;
 }
+
+/* ==========================================================================
+   LANDING PAGE SLOW-DRIFTING & COLOR-MORPHING AMBIENT AURA ORBS
+   ========================================================================== */
+@keyframes landingAmbientDriftA {
+    0% {
+        transform: translate3d(0px, 0px, 0) scale3d(1, 1, 1);
+        filter: blur(72px) hue-rotate(0deg);
+    }
+    33% {
+        transform: translate3d(-110px, 85px, 0) scale3d(1.14, 0.92, 1);
+        filter: blur(78px) hue-rotate(48deg);
+    }
+    66% {
+        transform: translate3d(95px, 140px, 0) scale3d(0.9, 1.12, 1);
+        filter: blur(74px) hue-rotate(-38deg);
+    }
+    100% {
+        transform: translate3d(0px, 0px, 0) scale3d(1, 1, 1);
+        filter: blur(72px) hue-rotate(0deg);
+    }
+}
+
+@keyframes landingAmbientDriftB {
+    0% {
+        transform: translate3d(0px, 0px, 0) scale3d(1, 1, 1);
+        filter: blur(68px) hue-rotate(0deg);
+    }
+    38% {
+        transform: translate3d(130px, -95px, 0) scale3d(1.18, 1.06, 1);
+        filter: blur(76px) hue-rotate(-55deg);
+    }
+    72% {
+        transform: translate3d(-75px, -120px, 0) scale3d(0.88, 1.15, 1);
+        filter: blur(70px) hue-rotate(62deg);
+    }
+    100% {
+        transform: translate3d(0px, 0px, 0) scale3d(1, 1, 1);
+        filter: blur(68px) hue-rotate(0deg);
+    }
+}
+
+@keyframes landingAmbientDriftC {
+    0% {
+        transform: translate3d(0px, 0px, 0) scale3d(1, 1, 1);
+        filter: blur(76px) hue-rotate(0deg);
+    }
+    50% {
+        transform: translate3d(-90px, -80px, 0) scale3d(1.22, 0.94, 1);
+        filter: blur(84px) hue-rotate(85deg);
+    }
+    100% {
+        transform: translate3d(0px, 0px, 0) scale3d(1, 1, 1);
+        filter: blur(76px) hue-rotate(0deg);
+    }
+}
+
+.landing-ambient-orb-a {
+    animation: landingAmbientDriftA 28s ease-in-out infinite;
+    transition: transform 12s cubic-bezier(0.4, 0, 0.2, 1), background-color 12s ease, filter 12s ease;
+    will-change: transform, filter;
+}
+
+.landing-ambient-orb-b {
+    animation: landingAmbientDriftB 34s ease-in-out infinite;
+    transition: transform 14s cubic-bezier(0.4, 0, 0.2, 1), background-color 14s ease, filter 14s ease;
+    will-change: transform, filter;
+}
+
+.landing-ambient-orb-c {
+    animation: landingAmbientDriftC 40s ease-in-out infinite;
+    transition: transform 16s cubic-bezier(0.4, 0, 0.2, 1), background-color 16s ease, filter 16s ease;
+    will-change: transform, filter;
+}
+

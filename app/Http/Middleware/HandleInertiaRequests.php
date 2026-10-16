@@ -42,6 +42,11 @@ class HandleInertiaRequests extends Middleware
             'architect' => [
                 'handle' => 'fwzann-abd',
                 'url' => 'https://github.com/fwzann-abd',
+                'co_collaborator' => [
+                    'handle' => 'msayib',
+                    'url' => 'https://github.com/msayib',
+                    'role' => 'Co-Collaborator — Ideation, System Design, Architecture, Performance, Refactor, Tune-Up, UI/UX & Mobile-First High-Level Engineering',
+                ],
             ],
             'auth' => [
                 'user' => $user ? [

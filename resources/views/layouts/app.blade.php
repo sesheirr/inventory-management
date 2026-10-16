@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="author" content="fwzann-abd (https://github.com/fwzann-abd)">
+    <meta name="co-collaborator" content="msayib (https://github.com/msayib) — Ideation, System Design, Architecture, Performance, Refactor, Tune-Up, UI/UX & Mobile-First High-Level Engineering">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -75,17 +76,24 @@
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/app.tsx'])
     @stack('styles')
 </head>
-<body class="min-h-screen flex bg-slate-50 dark:bg-[#0b132b] text-slate-800 dark:text-slate-100 antialiased selection:bg-blue-600 selection:text-white"
+<body class="min-h-screen flex bg-[#F8FAFC] dark:bg-[#0b132b] text-slate-800 dark:text-slate-100 antialiased selection:bg-blue-600 selection:text-white relative"
       data-page-share-code="{{ $resolvedShareCode }}"
       data-page-share-title="{{ $resolvedPageTitle }} — Inventaris Diskominfo Garut"
       data-page-share-description="{{ $resolvedPageSubtitle }}"
       data-page-share-image="{{ $resolvedShareImage }}">
 
+    {{-- Subtle Technical Grid Backdrop (Shared Aesthetic with Landing Page) --}}
+    <div id="appGridBackdrop" class="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
+        <div class="absolute inset-0 opacity-[0.032] dark:opacity-[0.052]" style="background-image: linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px); background-size: 40px 40px;"></div>
+        <div class="absolute -top-48 right-1/4 w-[38rem] h-[38rem] rounded-full bg-blue-600/7 dark:bg-blue-500/9 blur-3xl"></div>
+        <div class="absolute bottom-0 left-10 w-[30rem] h-[30rem] rounded-full bg-cyan-500/5 dark:bg-sky-500/7 blur-3xl"></div>
+    </div>
+
     {{-- Desktop Left Sidebar Navigation --}}
     @include('partials.sidebar')
 
     {{-- Main Content Area --}}
-    <div class="flex-1 flex flex-col min-w-0 min-h-screen">
+    <div class="relative z-10 flex-1 flex flex-col min-w-0 min-h-screen">
         {{-- Top Navbar --}}
         @include('partials.navbar', ['shareShortCode' => $resolvedShareCode])
 

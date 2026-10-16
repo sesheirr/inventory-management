@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="author" content="fwzann-abd (https://github.com/fwzann-abd)">
+    <meta name="co-collaborator" content="msayib (https://github.com/msayib) — Ideation, System Design, Architecture, Performance, Refactor, Tune-Up, UI/UX & Mobile-First High-Level Engineering">
     <meta name="description" content="Sistem Informasi Manajemen Inventaris, Pemetaan Ruangan, dan Pelacakan Mutasi Aset TIK Dinas Komunikasi dan Informatika Kabupaten Garut.">
     <title>SIM-Inventaris TIK — Diskominfo Kabupaten Garut</title>
 
@@ -29,11 +30,12 @@
 </head>
 <body class="bg-[#F8FAFC] dark:bg-[#090D16] text-slate-900 dark:text-slate-100 antialiased selection:bg-blue-600 selection:text-white transition-colors duration-300 overflow-x-hidden">
 
-    <!-- Subtle Technical Grid Backdrop -->
-    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
+    <!-- Subtle Technical Grid Backdrop + Slow-Drifting Random Color-Morphing Ambient Orbs -->
+    <div id="landingAmbientBackdrop" class="fixed inset-0 pointer-events-none z-0 overflow-hidden" aria-hidden="true">
         <div class="absolute inset-0 opacity-[0.035] dark:opacity-[0.055]" style="background-image: linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px); background-size: 40px 40px;"></div>
-        <div class="absolute -top-48 right-1/4 w-[38rem] h-[38rem] rounded-full bg-blue-600/8 dark:bg-blue-500/10 blur-3xl"></div>
-        <div class="absolute bottom-0 left-10 w-[30rem] h-[30rem] rounded-full bg-cyan-500/6 dark:bg-sky-500/8 blur-3xl"></div>
+        <div data-ambient-orb="a" class="landing-ambient-orb-a absolute -top-40 right-1/5 w-[38rem] h-[38rem] rounded-full bg-blue-600/10 dark:bg-blue-500/14 blur-3xl"></div>
+        <div data-ambient-orb="b" class="landing-ambient-orb-b absolute bottom-0 left-8 w-[32rem] h-[32rem] rounded-full bg-cyan-500/8 dark:bg-sky-500/12 blur-3xl"></div>
+        <div data-ambient-orb="c" class="landing-ambient-orb-c absolute top-1/3 left-1/2 -translate-x-1/2 w-[30rem] h-[30rem] rounded-full bg-indigo-500/7 dark:bg-violet-500/10 blur-3xl"></div>
     </div>
 
     <!-- Top Navigation Bar -->

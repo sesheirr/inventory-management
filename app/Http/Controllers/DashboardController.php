@@ -8,6 +8,7 @@ use App\Models\Mutation;
 use App\Models\Product;
 use App\Models\Room;
 use App\Models\User;
+use Database\Seeders\ProductSeeder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -15,10 +16,17 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
+        // Ensure 6-month historical sample mutations exist on seeded Diskominfo environments
+        if (
+            Mutation::count() < 12
+            && Product::where('kode_barang', 'like', 'DKI-GRT-%')->count() >= 15
+        ) {
+            app(ProductSeeder::class)->run();
+        }
+
         $totalProducts = Product::count();
         $activeProducts = Product::where('status', 'active')->where('stock', '>', 0)->count();
         $totalUnits = (int) Product::sum('stock');
-        $totalAssetValue = (float) Product::selectRaw('COALESCE(SUM(stock * price), 0) as total_val')->value('total_val');
 
         $totalCategories = Category::count();
         $totalRooms = Room::count();
@@ -62,9 +70,9 @@ class DashboardController extends Controller
             'approval_rate' => $totalMutations > 0
                 ? (int) round(($approvedMutationsCount / $totalMutations) * 100)
                 : 100,
-            'masuk_units' => (int) Mutation::where('jenis_mutasi', 'masuk')->sum('jumlah'),
-            'pindah_units' => (int) Mutation::where('jenis_mutasi', 'pindah_ruang')->sum('jumlah'),
-            'keluar_units' => (int) Mutation::where('jenis_mutasi', 'keluar')->sum('jumlah'),
+            'masuk_units' => (int) Mutation::where('type', 'masuk')->sum('quantity'),
+            'pindah_units' => (int) Mutation::where('type', 'pindah_ruang')->sum('quantity'),
+            'keluar_units' => (int) Mutation::where('type', 'keluar')->sum('quantity'),
         ];
 
         // 6-Month Analytics Series for Semi-Gradient Dashboard Chart
@@ -73,11 +81,11 @@ class DashboardController extends Controller
             $start = $monthDate->copy()->startOfMonth()->toDateString();
             $end = $monthDate->copy()->endOfMonth()->toDateString();
 
-            $monthMutations = Mutation::whereBetween('tanggal_mutasi', [$start, $end]);
+            $monthMutations = Mutation::whereBetween('mutation_date', [$start, $end]);
 
-            $masukUnits = (int) (clone $monthMutations)->where('jenis_mutasi', 'masuk')->sum('jumlah');
-            $pindahUnits = (int) (clone $monthMutations)->where('jenis_mutasi', 'pindah_ruang')->sum('jumlah');
-            $keluarUnits = (int) (clone $monthMutations)->where('jenis_mutasi', 'keluar')->sum('jumlah');
+            $masukUnits = (int) (clone $monthMutations)->where('type', 'masuk')->sum('quantity');
+            $pindahUnits = (int) (clone $monthMutations)->where('type', 'pindah_ruang')->sum('quantity');
+            $keluarUnits = (int) (clone $monthMutations)->where('type', 'keluar')->sum('quantity');
             $txCount = (int) (clone $monthMutations)->count();
             $newProductsCount = (int) Product::whereBetween('created_at', [
                 $monthDate->copy()->startOfMonth(),
@@ -139,9 +147,16 @@ class DashboardController extends Controller
                 'metrics' => [
                     'totalProducts' => $totalProducts,
                     'activeProducts' => $activeProducts,
+                    'totalUnits' => $totalUnits,
+                    'totalRooms' => $totalRooms,
+                    'activeRooms' => $activeRooms,
+                    'totalCategories' => $totalCategories,
                     'lowStockCount' => $lowStockCount,
+                    'outOfStockCount' => $outOfStockCount,
+                    'totalMutations' => $totalMutations,
                     'pendingMutations' => $pendingMutationsCount,
                 ],
+                'mutationAnalytics' => $mutationAnalytics,
                 'monthlyAnalytics' => $monthlyAnalytics,
                 'stockHealth' => $stockHealth,
             ]);
@@ -151,7 +166,6 @@ class DashboardController extends Controller
             'totalProducts',
             'activeProducts',
             'totalUnits',
-            'totalAssetValue',
             'totalCategories',
             'totalRooms',
             'activeRooms',

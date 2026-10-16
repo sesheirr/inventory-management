@@ -115,9 +115,8 @@
                                         {{ $title }}
                                     </span>
                                     @if($isUnread)
-                                        <span data-notif-unread-pill class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 dark:bg-blue-400/15 text-blue-600 dark:text-blue-300 border border-blue-500/25 dark:border-blue-400/25 backdrop-blur-xs">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400"></span>
-                                            Baru
+                                        <span data-notif-unread-pill data-notif-red-dot class="inline-flex items-center justify-center shrink-0" title="Belum dibaca" aria-label="Belum dibaca">
+                                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500 ring-4 ring-rose-500/20 animate-pulse"></span>
                                         </span>
                                     @endif
                                 </div>
