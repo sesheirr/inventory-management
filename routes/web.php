@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LiveStateController;
+use App\Http\Controllers\MediaUploadController;
 use App\Http\Controllers\MutationController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ObservabilityController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\ShareController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\WebhookController;
 use App\Models\Category;
 use App\Models\Mutation;
 use App\Models\Product;
@@ -120,10 +122,16 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::patch('mutations/{mutation}/approve', [MutationController::class, 'approve'])->name('mutations.approve');
     Route::patch('mutations/{mutation}/reject', [MutationController::class, 'reject'])->name('mutations.reject');
 
-    // Log Aktivitas & Observability / Telescope
+    // Log Aktivitas, Observability / Telescope, & Webhook Studio (Admin & Super Admin Only)
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
     Route::get('/observability', [ObservabilityController::class, 'index'])->name('observability.index');
     Route::post('/observability/clear', [ObservabilityController::class, 'clear'])->name('observability.clear');
+
+    Route::get('/webhooks', [WebhookController::class, 'index'])->name('webhooks.index');
+    Route::post('/webhooks', [WebhookController::class, 'store'])->name('webhooks.store');
+    Route::patch('/webhooks/{webhook}/toggle', [WebhookController::class, 'toggle'])->name('webhooks.toggle');
+    Route::delete('/webhooks/{webhook}', [WebhookController::class, 'destroy'])->name('webhooks.destroy');
+    Route::post('/webhooks/{webhook}/ping', [WebhookController::class, 'ping'])->name('webhooks.ping');
 });
 
 // ==========================================
@@ -146,6 +154,10 @@ Route::middleware(['auth', 'superadmin'])->group(function () {
 Route::middleware('auth')->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // Async FilePond Multi-Media Temporary Uploader
+    Route::post('/uploads/tmp', [MediaUploadController::class, 'storeTemporary'])->name('uploads.tmp.store');
+    Route::delete('/uploads/tmp', [MediaUploadController::class, 'destroyTemporary'])->name('uploads.tmp.destroy');
 
     // Semi-Realtime Live State Sync API
     Route::get('/api/live-state', [LiveStateController::class, 'index'])->name('live.state');

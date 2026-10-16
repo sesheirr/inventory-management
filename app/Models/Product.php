@@ -84,6 +84,33 @@ class Product extends Model implements HasMedia
             return null;
         }
 
+        return $this->resolveMediaItemUrl($media);
+    }
+
+    /**
+     * Return all product image URLs (Filament/FilePond multi-image gallery).
+     *
+     * @return array<int, string>
+     */
+    public function getGalleryUrlsAttribute(): array
+    {
+        $urls = [];
+        foreach ($this->getMedia('images') as $media) {
+            $resolved = $this->resolveMediaItemUrl($media);
+            if ($resolved !== null) {
+                $urls[] = $resolved;
+            }
+        }
+
+        return array_values(array_unique($urls));
+    }
+
+    private function resolveMediaItemUrl($media): ?string
+    {
+        if (! $media) {
+            return null;
+        }
+
         $relativePath = $media->id.'/'.$media->file_name;
         try {
             if (Storage::disk($media->disk)->exists($relativePath)) {

@@ -13,10 +13,47 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { createInertiaApp } from '@inertiajs/react';
 import { registerRuntimeFingerprint } from './core/author-fingerprint';
+import { MultiMediaUploader } from './components/upload/MultiMediaUploader';
 
 registerRuntimeFingerprint();
 
+function mountProgressiveIslands(): void {
+    const uploadNodes = document.querySelectorAll<HTMLElement>('[data-v2-multi-uploader]');
+    uploadNodes.forEach((node) => {
+        if (node.dataset.mounted === 'true') return;
+        node.dataset.mounted = 'true';
+
+        let initialGalleryUrls: string[] = [];
+        if (node.dataset.initialGallery) {
+            try {
+                const parsed = JSON.parse(node.dataset.initialGallery) as unknown;
+                if (Array.isArray(parsed)) {
+                    initialGalleryUrls = parsed.filter((x): x is string => typeof x === 'string');
+                }
+            } catch {
+                initialGalleryUrls = [];
+            }
+        }
+
+        const maxFiles = Number(node.dataset.maxFiles || '8') || 8;
+        const uploadEndpoint = node.dataset.uploadEndpoint || '/uploads/tmp';
+        const deleteEndpoint = node.dataset.deleteEndpoint || '/uploads/tmp';
+
+        createRoot(node).render(
+            <MultiMediaUploader
+                allowMultiple={maxFiles > 1}
+                maxFiles={maxFiles}
+                initialGalleryUrls={initialGalleryUrls}
+                uploadEndpoint={uploadEndpoint}
+                deleteEndpoint={deleteEndpoint}
+            />,
+        );
+    });
+}
+
 function bootV2Runtime(): void {
+    mountProgressiveIslands();
+
     const inertiaRoot = document.getElementById('app');
     if (inertiaRoot && inertiaRoot.hasAttribute('data-page')) {
         void createInertiaApp({

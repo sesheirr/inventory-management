@@ -9,10 +9,12 @@ use App\Models\Room;
 use App\Models\User;
 use App\Notifications\LowStockAlert;
 use App\Notifications\ProductCreatedNotice;
+use App\Services\WebhookDispatcher;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
@@ -142,9 +144,15 @@ class ProductController extends Controller
             'stock' => ['required', 'integer', 'min:0'],
             'price' => ['nullable', 'numeric', 'min:0'],
             'status' => ['required', 'in:active,inactive,out_of_stock'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:8192'],
+            'images' => ['nullable', 'array', 'max:8'],
+            'images.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:8192'],
+            'uploaded_tmp_files' => ['nullable', 'array', 'max:8'],
+            'uploaded_tmp_files.*' => ['string', 'max:255'],
             'barcode' => ['nullable', 'string', 'max:50', 'regex:/^[A-Z0-9\-]+$/', Rule::unique('products', 'barcode')],
         ]);
+
+        unset($data['images'], $data['uploaded_tmp_files']);
 
         $data = $this->resolveCategoryData($data, $request);
         $data = $this->resolveRoomData($data, $request);
@@ -159,9 +167,7 @@ class ProductController extends Controller
 
         $product = Product::create($data);
 
-        if ($request->hasFile('image')) {
-            $this->attachProductImage($product, $request->file('image'));
-        }
+        $this->attachMultiProductMedia($product, $request);
 
         // BARCODE FEATURE: generate otomatis jika tidak diisi
         if (empty($product->barcode)) {
@@ -216,9 +222,15 @@ class ProductController extends Controller
             'stock' => ['required', 'integer', 'min:0'],
             'price' => ['nullable', 'numeric', 'min:0'],
             'status' => ['required', 'in:active,inactive,out_of_stock'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:8192'],
+            'images' => ['nullable', 'array', 'max:8'],
+            'images.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:8192'],
+            'uploaded_tmp_files' => ['nullable', 'array', 'max:8'],
+            'uploaded_tmp_files.*' => ['string', 'max:255'],
             'barcode' => ['nullable', 'string', 'max:50', 'regex:/^[A-Z0-9\-]+$/', Rule::unique('products', 'barcode')->ignore($product->id)],
         ]);
+
+        unset($data['images'], $data['uploaded_tmp_files']);
 
         $data = $this->resolveCategoryData($data, $request);
         $data = $this->resolveRoomData($data, $request, $product);
@@ -234,9 +246,15 @@ class ProductController extends Controller
             $product->save();
         }
 
-        if ($request->hasFile('image')) {
-            $product->clearMediaCollection('images');
-            $this->attachProductImage($product, $request->file('image'));
+        $hasNewMedia = $request->hasFile('image')
+            || $request->hasFile('images')
+            || ! empty($request->input('uploaded_tmp_files'));
+
+        if ($hasNewMedia) {
+            if ($request->hasFile('image') && ! $request->hasFile('images') && empty($request->input('uploaded_tmp_files'))) {
+                $product->clearMediaCollection('images');
+            }
+            $this->attachMultiProductMedia($product, $request);
         } elseif ($request->boolean('remove_image')) {
             $product->clearMediaCollection('images');
         }
@@ -296,8 +314,56 @@ class ProductController extends Controller
                     Notification::send($admins, new LowStockAlert($product));
                 }
             }
+
+            $dispatcher = app(WebhookDispatcher::class);
+            $dispatcher->broadcast(
+                $isCreated ? 'product.created' : 'product.updated',
+                [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'kode_barang' => $product->kode_barang,
+                    'stock' => (int) $product->stock,
+                    'room' => $product->room_name,
+                ],
+                $actor
+            );
+
+            if ((int) $product->stock <= 5 || $product->status === 'out_of_stock') {
+                $dispatcher->broadcast(
+                    'stock.low',
+                    [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'stock' => (int) $product->stock,
+                    ],
+                    $actor
+                );
+            }
         } catch (\Throwable $e) {
             // Non-blocking notification
+        }
+    }
+
+    private function attachMultiProductMedia(Product $product, Request $request): void
+    {
+        if ($request->hasFile('image')) {
+            $this->attachProductImage($product, $request->file('image'));
+        }
+
+        if ($request->hasFile('images')) {
+            foreach ((array) $request->file('images') as $imgFile) {
+                if ($imgFile instanceof UploadedFile) {
+                    $this->attachProductImage($product, $imgFile);
+                }
+            }
+        }
+
+        $tmpFiles = (array) $request->input('uploaded_tmp_files', []);
+        foreach ($tmpFiles as $tmpPath) {
+            $cleanPath = trim((string) $tmpPath);
+            if ($cleanPath !== '' && str_starts_with($cleanPath, 'tmp/uploads/') && ! str_contains($cleanPath, '..')) {
+                $this->attachProductImageFromTmpPath($product, $cleanPath);
+            }
         }
     }
 
@@ -307,7 +373,9 @@ class ProductController extends Controller
         $dataUri = $this->buildImageDataUri($file);
 
         try {
-            $product->addMediaFromRequest('image')
+            $product->addMedia($file->getRealPath())
+                ->preservingOriginal()
+                ->usingFileName($file->getClientOriginalName() ?: basename((string) $storedPath))
                 ->withCustomProperties(array_filter([
                     'legacy_path' => $storedPath,
                     'data_url' => $dataUri,
@@ -315,6 +383,32 @@ class ProductController extends Controller
                 ->toMediaCollection('images');
         } catch (\Throwable $e) {
             // Media library fallback already stored in public/products
+        }
+    }
+
+    private function attachProductImageFromTmpPath(Product $product, string $tmpPath): void
+    {
+        try {
+            if (! Storage::disk('public')->exists($tmpPath)) {
+                return;
+            }
+
+            $filename = basename($tmpPath);
+            $permanentPath = 'products/'.$filename;
+            Storage::disk('public')->copy($tmpPath, $permanentPath);
+
+            $fullPath = Storage::disk('public')->path($permanentPath);
+            $product->addMedia($fullPath)
+                ->preservingOriginal()
+                ->usingFileName($filename)
+                ->withCustomProperties([
+                    'legacy_path' => $permanentPath,
+                ])
+                ->toMediaCollection('images');
+
+            Storage::disk('public')->delete($tmpPath);
+        } catch (\Throwable $e) {
+            // Non-blocking fallback
         }
     }
 

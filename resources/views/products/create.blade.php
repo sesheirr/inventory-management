@@ -127,11 +127,15 @@
                 @error('description')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
             </div>
 
-            {{-- Foto Barang --}}
-            <div class="space-y-1.5">
+            {{-- Foto Barang (Multi-Upload FilePond + Spatie MediaLibrary) --}}
+            <div class="space-y-2">
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                    Foto Barang <span class="text-[11px] font-normal text-slate-400">(JPG, PNG, WEBP — Maks. 5MB)</span>
+                    Foto & Galeri Barang <span class="text-[11px] font-normal text-slate-400">(Multi-Upload JPG, PNG, WEBP — Maks. 8MB/file)</span>
                 </label>
+                <div data-v2-multi-uploader
+                     data-upload-endpoint="{{ route('uploads.tmp.store') }}"
+                     data-delete-endpoint="{{ route('uploads.tmp.destroy') }}"
+                     data-max-files="8"></div>
                 <input type="file" name="image" accept="image/jpeg,image/png,image/webp" 
                        class="w-full px-4 py-2 rounded-xl text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-950/40 dark:file:text-blue-300 hover:file:bg-blue-100">
                 @error('image')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror

@@ -131,6 +131,20 @@
                         <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase {{ request()->routeIs('observability.*') ? 'bg-white/20 text-white' : 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300' }}">LIVE</span>
                     </a>
 
+                    {{-- Admin Webhook Studio (Strictly Admin & Super Admin) --}}
+                    <a href="{{ route('webhooks.index') }}"
+                       data-framer-nav
+                       class="flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group
+                       {{ request()->routeIs('webhooks.*')
+                          ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25 font-semibold'
+                          : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-blue-600 dark:hover:text-blue-400' }}">
+                        <span class="flex items-center gap-3">
+                            <i class="bi bi-broadcast-pin text-base {{ request()->routeIs('webhooks.*') ? 'text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400' }}"></i>
+                            <span>Webhook Studio</span>
+                        </span>
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase {{ request()->routeIs('webhooks.*') ? 'bg-white/20 text-white' : 'bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300' }}">HMAC</span>
+                    </a>
+
                     @if(auth()->user()->isSuperAdmin())
                         <a href="{{ route('users.index') }}"
                            data-framer-nav

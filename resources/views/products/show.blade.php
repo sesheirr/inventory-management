@@ -68,10 +68,11 @@
         <div data-framer-card class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-xs p-4 sm:p-6 text-center space-y-4">
             <div class="w-full aspect-square max-h-60 sm:max-h-none rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/80 flex items-center justify-center overflow-hidden p-3 skeleton-shimmer">
                 @if($product->image_url)
-                    <img src="{{ $product->image_url }}"
+                    <img id="productMainGalleryPreview"
+                         src="{{ $product->image_url }}"
                          alt="{{ $product->name }}"
                          onload="this.parentElement.classList.remove('skeleton-shimmer')"
-                         class="max-w-full max-h-full object-contain rounded-xl"
+                         class="max-w-full max-h-full object-contain rounded-xl transition-all duration-200"
                          onerror="this.onerror=null; this.src='{{ asset('images/fallback-torn-paper.svg') }}'; this.parentElement.classList.remove('skeleton-shimmer');">
                 @else
                     <img src="{{ asset('images/fallback-torn-paper.svg') }}"
@@ -80,6 +81,18 @@
                          class="w-36 h-36 object-contain opacity-85">
                 @endif
             </div>
+
+            @if(count($product->gallery_urls) > 1)
+                <div class="grid grid-cols-4 gap-2 pt-1">
+                    @foreach($product->gallery_urls as $idx => $gUrl)
+                        <button type="button"
+                                onclick="var mainImg = document.getElementById('productMainGalleryPreview'); if (mainImg) mainImg.src = '{{ $gUrl }}';"
+                                class="aspect-square rounded-xl overflow-hidden border-2 border-slate-200 dark:border-slate-700 hover:border-blue-500 focus:border-blue-600 transition-all cursor-pointer bg-slate-50 dark:bg-slate-900">
+                            <img src="{{ $gUrl }}" alt="Thumbnail {{ $idx + 1 }}" class="w-full h-full object-cover">
+                        </button>
+                    @endforeach
+                </div>
+            @endif
 
             {{-- Barcode Visual & Kode Barang Display with 1-Tap Copy --}}
             <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800 text-center space-y-2">
