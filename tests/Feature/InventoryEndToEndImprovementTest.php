@@ -924,7 +924,21 @@ class InventoryEndToEndImprovementTest extends TestCase
         $login->assertOk()
             ->assertSee('id="authThemeSwitcherRoot"', false)
             ->assertSee('id="authThemeCollapsibleBtn"', false)
-            ->assertSee('id="authThemeCollapsibleMenu"', false);
+            ->assertSee('id="authThemeCollapsibleMenu"', false)
+            ->assertSee('id="secChallengeBox"', false)
+            ->assertSee('id="secChallengeRender"', false)
+            ->assertSee('id="secChallengeInput"', false)
+            ->assertSee('name="security_code"', false)
+            ->assertSee('<svg ', false)
+            ->assertDontSee('id="captcha-img"', false)
+            ->assertDontSee('id="reload-captcha"', false);
+
+        // Verify adblock-immune token refresh route returns fresh inline SVG and updates session code
+        $syncRes = $this->getJson(route('auth.token.sync'));
+        $syncRes->assertOk()
+            ->assertJsonStructure(['svg']);
+        $this->assertStringContainsString('<svg', (string) $syncRes->json('svg'));
+        $this->assertNotEmpty(session('captcha_code'));
     }
 
     public function test_observability_dashboard_server_timing_header_and_official_telescope_gate(): void

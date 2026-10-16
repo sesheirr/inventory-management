@@ -147,10 +147,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const secRender = document.getElementById('secChallengeRender');
     const secInput = document.getElementById('secChallengeInput');
 
-    function refreshCaptcha() {
+    function syncSecurityToken() {
         if (!secRender) return;
         secRender.style.opacity = '0.4';
-        fetch('{{ route("security.refresh") }}')
+        fetch("{{ route('auth.token.sync', [], false) }}?_=" + Date.now(), {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            cache: 'no-store'
+        })
             .then(res => res.json())
             .then(data => {
                 if (data.svg) {
@@ -163,14 +169,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     secInput.focus();
                 }
             })
-            .catch(err => console.error('Error refreshing captcha:', err))
+            .catch(() => window.location.reload())
             .finally(() => {
                 secRender.style.opacity = '1';
             });
     }
 
-    secBox?.addEventListener('click', refreshCaptcha);
-    refreshSecBtn?.addEventListener('click', refreshCaptcha);
+    secBox?.addEventListener('click', syncSecurityToken);
+    refreshSecBtn?.addEventListener('click', syncSecurityToken);
 });
 </script>
 @endsection

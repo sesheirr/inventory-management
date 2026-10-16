@@ -53,6 +53,7 @@ Route::get('/maintenance-preview', function () {
     return response()->view('errors.503', [], 503);
 })->name('maintenance.preview');
 
+Route::get('/auth/session-token-sync', [AuthController::class, 'refreshCaptcha'])->name('auth.token.sync');
 Route::get('/captcha/image', [AuthController::class, 'getCaptchaImage'])->name('captcha.image');
 Route::get('/security/code-image', [AuthController::class, 'getCaptchaImage'])->name('security.image');
 Route::get('/api/captcha-regenerate', [AuthController::class, 'refreshCaptcha'])->name('captcha.refresh');

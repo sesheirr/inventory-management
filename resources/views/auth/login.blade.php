@@ -183,33 +183,42 @@
                     </div>
                 </div>
 
-                {{-- Security Verification (Conditional after 5 failed attempts) --}}
-                @if (!empty($showCaptcha))
-                <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-2.5 text-left">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                        Verifikasi Keamanan
-                    </label>
-
-                    <div class="flex items-center gap-2">
-                        <div class="flex-1 h-11 rounded-xl overflow-hidden bg-slate-900 flex items-center justify-center border border-slate-300 dark:border-slate-700">
-                            <img src="{{ route('security.image') }}?t={{ time() }}" id="captcha-img" alt="Kode Keamanan" class="h-full object-contain">
-                        </div>
-                        <button type="button" id="reload-captcha"
-                                class="w-11 h-11 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-white flex items-center justify-center border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
-                                title="Muat Ulang Kode">
-                            <i class="bi bi-arrow-clockwise"></i>
+                {{-- Security Verification (Inline SVG - 100% AdBlocker Immune across Chrome, Safari, Firefox) --}}
+                <div class="space-y-2 text-left pt-1">
+                    <div class="flex items-center justify-between">
+                        <label for="secChallengeInput" class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                            Verifikasi Keamanan
+                        </label>
+                        <button type="button" id="refreshSecCodeBtn"
+                                class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 inline-flex items-center gap-1 transition-colors cursor-pointer"
+                                title="Muat ulang kode verifikasi">
+                            <i class="bi bi-arrow-repeat" id="refreshSecCodeIcon"></i>
+                            <span>Ganti Kode</span>
                         </button>
                     </div>
 
-                    <input type="text" name="captcha" required
-                           placeholder="Ketik kode keamanan di atas"
-                           class="w-full px-3.5 py-2 rounded-xl text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40">
+                    <div id="secChallengeBox"
+                         class="h-14 w-full bg-slate-50 dark:bg-white rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden flex items-center justify-center cursor-pointer shadow-inner hover:border-blue-500 transition-colors select-none"
+                         title="Klik untuk mengganti kode verifikasi">
+                        <div id="secChallengeRender" class="w-full h-full flex items-center justify-center">
+                            {!! $captchaSvg ?? \App\Services\CaptchaGenerator::generateSVG() !!}
+                        </div>
+                    </div>
 
-                    @error('captcha')
-                        <span class="text-rose-600 dark:text-rose-400 text-[11px] block">{{ $message }}</span>
+                    <input type="text"
+                           name="security_code"
+                           id="secChallengeInput"
+                           required
+                           autocomplete="off"
+                           spellcheck="false"
+                           inputmode="text"
+                           placeholder="Ketik 6 karakter kode di atas"
+                           class="w-full px-4 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all font-mono font-bold tracking-widest text-center uppercase">
+
+                    @error('security_code')
+                        <span class="text-rose-600 dark:text-rose-400 text-[11px] font-medium block">{{ $message }}</span>
                     @enderror
                 </div>
-                @endif
 
                 {{-- Remember Me (7-Day Quick Profile) & Forgot Password --}}
                 <div class="flex items-center justify-between text-xs pt-0.5">
@@ -296,25 +305,46 @@
             }
         });
 
-        // 4. Reload Security Code Image
-        const reloadBtn = document.getElementById('reload-captcha');
-        if (reloadBtn) {
-            reloadBtn.addEventListener('click', function () {
-                const icon = this.querySelector('i');
-                icon?.classList.add('animate-spin');
+        // 4. AdBlocker-Immune Inline SVG Security Token Refresh
+        const secBox = document.getElementById('secChallengeBox');
+        const refreshSecBtn = document.getElementById('refreshSecCodeBtn');
+        const refreshSecIcon = document.getElementById('refreshSecCodeIcon');
+        const secRender = document.getElementById('secChallengeRender');
+        const secInput = document.getElementById('secChallengeInput');
 
-                fetch("{{ route('security.refresh') }}")
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById('captcha-img').src = data.image;
-                        icon?.classList.remove('animate-spin');
-                    })
-                    .catch(() => {
-                        document.getElementById('captcha-img').src = "{{ route('security.image') }}?t=" + new Date().getTime();
-                        icon?.classList.remove('animate-spin');
-                    });
-            });
+        function syncSecurityToken() {
+            if (!secRender) return;
+            secRender.style.opacity = '0.45';
+            refreshSecIcon?.classList.add('animate-spin');
+
+            fetch("{{ route('auth.token.sync', [], false) }}?_=" + Date.now(), {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                cache: 'no-store'
+            })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (data && data.svg) {
+                        secRender.innerHTML = data.svg;
+                    }
+                    if (secInput) {
+                        secInput.value = '';
+                        secInput.focus();
+                    }
+                })
+                .catch(function () {
+                    window.location.reload();
+                })
+                .finally(function () {
+                    secRender.style.opacity = '1';
+                    refreshSecIcon?.classList.remove('animate-spin');
+                });
         }
+
+        secBox?.addEventListener('click', syncSecurityToken);
+        refreshSecBtn?.addEventListener('click', syncSecurityToken);
 
         // 5. Submit Loading Feedback
         manualForm?.addEventListener('submit', function () {
