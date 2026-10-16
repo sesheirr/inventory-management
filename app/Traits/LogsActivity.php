@@ -1,4 +1,5 @@
 <?php
+
 // app/Traits/LogsActivity.php
 
 namespace App\Traits;
@@ -18,11 +19,11 @@ trait LogsActivity
     public function recordActivity(string $action): void
     {
         ActivityLog::create([
-            'user_id'      => Auth::id(),
-            'action'       => $action,
+            'user_id' => Auth::id(),
+            'action' => $action,
             'subject_type' => static::class,
-            'subject_id'   => $this->id,
-            'description'  => $this->buildActivityDescription($action),
+            'subject_id' => $this->id,
+            'description' => $this->buildActivityDescription($action),
         ]);
     }
 
@@ -31,13 +32,13 @@ trait LogsActivity
         // Gunakan property_exists / isset check, JANGAN deklarasikan
         // property $activityLabel di trait ini
         $label = $this->activityLabel ?? class_basename($this);
-        $name  = $this->{$this->activityNameField ?? 'name'} ?? '#' . $this->id;
+        $name = $this->{$this->activityNameField ?? 'name'} ?? '#'.$this->id;
 
         return match ($action) {
             'created' => "Menambah {$label}: {$name}",
             'updated' => "Mengubah {$label}: {$name}",
             'deleted' => "Menghapus {$label}: {$name}",
-            default   => "{$label}: {$name}",
+            default => "{$label}: {$name}",
         };
     }
 }

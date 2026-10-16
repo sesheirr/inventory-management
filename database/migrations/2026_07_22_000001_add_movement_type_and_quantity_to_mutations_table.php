@@ -10,11 +10,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('mutations', function (Blueprint $table): void {
-            if (Schema::hasColumn('mutations', 'movement_type') && !Schema::hasColumn('mutations', 'type')) {
+            if (Schema::hasColumn('mutations', 'movement_type') && ! Schema::hasColumn('mutations', 'type')) {
                 $table->enum('type', ['masuk', 'keluar', 'pindah_ruang'])->default('masuk');
             }
 
-            if (!Schema::hasColumn('mutations', 'quantity')) {
+            if (! Schema::hasColumn('mutations', 'quantity')) {
                 $table->integer('quantity')->default(0);
             }
         });

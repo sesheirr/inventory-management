@@ -4,13 +4,14 @@ namespace App\Exports;
 
 use App\Models\Product;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class BarangExport implements FromCollection, WithHeadings, WithMapping, WithColumnWidths, WithStyles
+class BarangExport implements FromCollection, WithColumnWidths, WithHeadings, WithMapping, WithStyles
 {
     public function __construct(
         protected array $filters = []
@@ -37,9 +38,9 @@ class BarangExport implements FromCollection, WithHeadings, WithMapping, WithCol
                         ->orWhereHas('room', fn ($rq) => $rq->where('name', 'like', "%{$search}%"));
                 });
             })
-            ->when(!empty($categoryId), fn ($q) => $q->where('category_id', $categoryId))
-            ->when(!empty($roomId), fn ($q) => $q->where('room_id', $roomId))
-            ->when(!empty($status) && $status !== 'all', function ($q) use ($status) {
+            ->when(! empty($categoryId), fn ($q) => $q->where('category_id', $categoryId))
+            ->when(! empty($roomId), fn ($q) => $q->where('room_id', $roomId))
+            ->when(! empty($status) && $status !== 'all', function ($q) use ($status) {
                 if ($status === 'low_stock') {
                     $q->where('stock', '>', 0)->where('stock', '<=', 5);
                 } elseif ($status === 'out_of_stock') {
@@ -78,7 +79,7 @@ class BarangExport implements FromCollection, WithHeadings, WithMapping, WithCol
             $product->category_name,
             $product->subcategory ?? '-',
             $product->room_name ?? '-',
-            ($product->stock ?? 0) . ' unit',
+            ($product->stock ?? 0).' unit',
             $this->formatStatus($product->status, (int) ($product->stock ?? 0)),
             $product->description ?? '-',
         ];
@@ -108,7 +109,7 @@ class BarangExport implements FromCollection, WithHeadings, WithMapping, WithCol
                 'color' => ['argb' => 'FFFFFFFF'],
             ],
             'fill' => [
-                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'fillType' => Fill::FILL_SOLID,
                 'startColor' => ['argb' => 'FF1E3A8A'],
             ],
         ]);

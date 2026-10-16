@@ -1,26 +1,67 @@
 <?php
 
 use App\Http\Controllers\ActivityLogController;
-use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LiveStateController;
 use App\Http\Controllers\MutationController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ObservabilityController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoomController;
-use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ShareController;
+use App\Http\Controllers\UserManagementController;
+use App\Models\Category;
+use App\Models\Mutation;
+use App\Models\Product;
+use App\Models\Room;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 
 // ==========================================
-// PUBLIC ROUTES
+// PUBLIC ROUTES, LANDING PAGE & DEEP LINK SHARE
 // ==========================================
+Route::get('/', function () {
+    $metrics = [
+        'products' => 20,
+        'total_stock' => 142,
+        'rooms' => 8,
+        'categories' => 6,
+        'mutations' => 15,
+    ];
+
+    try {
+        $metrics = [
+            'products' => Product::count(),
+            'total_stock' => (int) Product::sum('stock'),
+            'rooms' => Room::count(),
+            'categories' => Category::count(),
+            'mutations' => Mutation::count(),
+        ];
+    } catch (Throwable) {
+        // Fallback to default metrics if DB is not yet migrated
+    }
+
+    return view('welcome', ['metrics' => $metrics]);
+})->name('landing');
+
+Route::get('/maintenance-preview', function () {
+    return response()->view('errors.503', [], 503);
+})->name('maintenance.preview');
+
 Route::get('/captcha/image', [AuthController::class, 'getCaptchaImage'])->name('captcha.image');
 Route::get('/security/code-image', [AuthController::class, 'getCaptchaImage'])->name('security.image');
 Route::get('/api/captcha-regenerate', [AuthController::class, 'refreshCaptcha'])->name('captcha.refresh');
 Route::get('/api/security-code/regenerate', [AuthController::class, 'refreshCaptcha'])->name('security.refresh');
+
+// Short Deep Link & Rich OpenGraph Share Endpoint
+Route::get('/s/{code}', [ShareController::class, 'resolve'])
+    ->where('code', '[A-Za-z0-9\-]+')
+    ->name('share.short');
 
 // ==========================================
 // AUTH ROUTES (Guest / Belum Login)
@@ -28,6 +69,8 @@ Route::get('/api/security-code/regenerate', [AuthController::class, 'refreshCapt
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login/quick', [AuthController::class, 'quickLogin'])->name('login.quick');
+    Route::post('/login/forget-profile', [AuthController::class, 'forgetSavedProfile'])->name('login.forget-profile');
 
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
@@ -49,8 +92,8 @@ Route::middleware('guest')->group(function () {
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
         ]);
 
-        $user = \App\Models\User::where('email', $request->email)->first();
-        
+        $user = User::where('email', $request->email)->first();
+
         if ($user) {
             $user->password = Hash::make($request->password);
             $user->save();
@@ -76,8 +119,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::patch('mutations/{mutation}/approve', [MutationController::class, 'approve'])->name('mutations.approve');
     Route::patch('mutations/{mutation}/reject', [MutationController::class, 'reject'])->name('mutations.reject');
 
-    // Log Aktivitas
+    // Log Aktivitas & Observability / Telescope
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+    Route::get('/observability', [ObservabilityController::class, 'index'])->name('observability.index');
+    Route::post('/observability/clear', [ObservabilityController::class, 'clear'])->name('observability.clear');
 });
 
 // ==========================================
@@ -88,6 +133,8 @@ Route::middleware(['auth', 'superadmin'])->group(function () {
 
     // Manajemen User
     Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
+    Route::post('/users', [UserManagementController::class, 'store'])->name('users.store');
+    Route::put('/users/{user}', [UserManagementController::class, 'update'])->name('users.update');
     Route::put('/users/{user}/role', [UserManagementController::class, 'updateRole'])->name('users.update-role');
     Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
 });
@@ -96,12 +143,11 @@ Route::middleware(['auth', 'superadmin'])->group(function () {
 // PROTECTED ROUTES (Sudah Login / Authenticated)
 // ==========================================
 Route::middleware('auth')->group(function () {
-    
+
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    Route::get('/', function () {
-        return redirect()->route('dashboard');
-    });
+    // Semi-Realtime Live State Sync API
+    Route::get('/api/live-state', [LiveStateController::class, 'index'])->name('live.state');
 
     // Dashboard & Settings
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -111,12 +157,13 @@ Route::middleware('auth')->group(function () {
 
     // Profil
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
-    Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::match(['post', 'put'], '/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     // Barcode & Products (Read / Standar User)
     Route::get('/scan-barcode', [ProductController::class, 'scanBarcode'])->name('products.scan');
     Route::post('/scan-barcode/cari', [ProductController::class, 'scanBarcodeSearch'])->name('products.scan.search');
     Route::get('products/export-excel', [ProductController::class, 'exportExcel'])->name('products.export');
+    Route::get('products/export-pdf', [ProductController::class, 'exportPdf'])->name('products.export.pdf');
     Route::post('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected');
     Route::delete('products/destroy-selected', [ProductController::class, 'destroySelected'])->name('products.destroySelected.delete');
     Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
@@ -128,11 +175,14 @@ Route::middleware('auth')->group(function () {
     Route::resource('rooms', RoomController::class)->only(['index', 'show']);
 
     // Mutasi Barang (Kecuali Hapus)
+    Route::get('mutations/export-pdf', [MutationController::class, 'exportPdf'])->name('mutations.export.pdf');
     Route::resource('mutations', MutationController::class)->except(['destroy']);
 
     // Route Notifikasi
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
+    Route::get('/notifications/{id}/go', [NotificationController::class, 'go'])->name('notifications.go');
+    Route::post('/notifications/check-reminders', [NotificationController::class, 'checkReminders'])->name('notifications.checkReminders');
+    Route::match(['post', 'patch'], '/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
     Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 });

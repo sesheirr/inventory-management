@@ -2,74 +2,213 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 
 class UserManagementController extends Controller
 {
-    public function index()
+    public function index(Request $request): View
     {
         Gate::authorize('manage-users');
 
-        $users = User::orderBy('name')->paginate(15);
+        $search = trim((string) $request->input('search', ''));
+        $roleFilter = (string) $request->input('role', 'all');
+        $sort = (string) $request->input('sort', 'role');
 
-        return view('users.index', compact('users'));
-    }
+        $usersQuery = User::query()
+            ->withCount(['mutations', 'activityLogs']);
 
-    public function updateRole(Request $request, User $user)
-    {
-        Gate::authorize('update-user-role');
-
-        if (! auth()->user() || ! auth()->user()->isSuperAdmin()) {
-            abort(403, 'Anda tidak memiliki izin untuk mengubah role user.');
+        if ($search !== '') {
+            $usersQuery->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
         }
 
-        $request->validate([
-            'role' => 'required|in:superadmin,admin,user',
+        if (in_array($roleFilter, [User::ROLE_SUPERADMIN, User::ROLE_ADMIN, User::ROLE_USER], true)) {
+            $usersQuery->where('role', $roleFilter);
+        }
+
+        if ($sort === 'newest') {
+            $usersQuery->latest();
+        } elseif ($sort === 'name_asc') {
+            $usersQuery->orderBy('name', 'asc');
+        } else {
+            $usersQuery
+                ->orderByRaw("CASE role WHEN 'superadmin' THEN 1 WHEN 'admin' THEN 2 ELSE 3 END")
+                ->orderBy('name');
+        }
+
+        $users = $usersQuery->paginate(12)->withQueryString();
+
+        $summary = [
+            'total' => User::count(),
+            'superadmin' => User::where('role', User::ROLE_SUPERADMIN)->count(),
+            'admin' => User::where('role', User::ROLE_ADMIN)->count(),
+            'user' => User::where('role', User::ROLE_USER)->count(),
+        ];
+
+        return view('users.index', compact('users', 'search', 'roleFilter', 'sort', 'summary'));
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        Gate::authorize('manage-users');
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'email' => ['required', 'email', 'max:150', Rule::unique('users', 'email')],
+            'role' => ['required', 'string', Rule::in([User::ROLE_USER, User::ROLE_ADMIN, User::ROLE_SUPERADMIN])],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        if ($user->id === auth()->id()) {
-            return redirect()->route('users.index')
+        $newUser = User::create([
+            'name' => trim($validated['name']),
+            'email' => strtolower(trim($validated['email'])),
+            'role' => $validated['role'],
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        ActivityLog::create([
+            'user_id' => $request->user()->id,
+            'action' => 'created',
+            'description' => "Menambahkan akun pengguna baru {$newUser->name} ({$newUser->email}) dengan role {$newUser->role}",
+        ]);
+
+        return redirect()
+            ->route('users.index')
+            ->with('success', "Akun pengguna {$newUser->name} berhasil ditambahkan.");
+    }
+
+    public function update(Request $request, User $user): RedirectResponse
+    {
+        Gate::authorize('manage-users');
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'email' => ['required', 'email', 'max:150', Rule::unique('users', 'email')->ignore($user->id)],
+            'role' => ['required', 'string', Rule::in([User::ROLE_USER, User::ROLE_ADMIN, User::ROLE_SUPERADMIN])],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $newRole = $validated['role'];
+
+        if ($request->user()->is($user) && $newRole !== User::ROLE_SUPERADMIN) {
+            return redirect()
+                ->route('users.index')
                 ->with('error', 'Anda tidak bisa mengubah role akun Anda sendiri.');
         }
 
-        if ($user->isSuperAdmin() && $request->role !== 'superadmin') {
-            $superAdminCount = User::where('role', 'superadmin')->count();
-            if ($superAdminCount <= 1) {
-                return redirect()->route('users.index')
-                    ->with('error', 'Tidak dapat menurunkan role Super Admin karena ini adalah Super Admin terakhir di sistem.');
+        if ($user->isSuperAdmin() && $newRole !== User::ROLE_SUPERADMIN) {
+            $superadminCount = User::where('role', User::ROLE_SUPERADMIN)->count();
+            if ($superadminCount <= 1) {
+                return redirect()
+                    ->route('users.index')
+                    ->with('error', 'Sistem harus memiliki minimal satu superadmin.');
             }
         }
 
-        $user->update(['role' => $request->role]);
+        $user->name = trim($validated['name']);
+        $user->email = strtolower(trim($validated['email']));
+        $user->role = $newRole;
 
-        return redirect()->route('users.index')
-            ->with('success', "Role {$user->name} berhasil diubah menjadi {$request->role}.");
+        $passwordChanged = false;
+        if (! empty($validated['password'])) {
+            $user->password = Hash::make($validated['password']);
+            $passwordChanged = true;
+        }
+
+        $user->save();
+
+        ActivityLog::create([
+            'user_id' => $request->user()->id,
+            'action' => 'updated',
+            'description' => "Memperbarui profil/akses pengguna {$user->name} ({$user->role})".($passwordChanged ? ' beserta reset password' : ''),
+        ]);
+
+        return redirect()
+            ->route('users.index')
+            ->with('success', "Data pengguna {$user->name} berhasil diperbarui.");
     }
 
-    public function destroy(User $user)
+    public function updateRole(Request $request, User $user): RedirectResponse
+    {
+        Gate::authorize('update-user-role');
+
+        $validated = $request->validate([
+            'role' => ['required', 'string', Rule::in([User::ROLE_USER, User::ROLE_ADMIN, User::ROLE_SUPERADMIN])],
+        ]);
+
+        $newRole = $validated['role'];
+
+        if ($request->user()->is($user) && $newRole !== User::ROLE_SUPERADMIN) {
+            return redirect()
+                ->route('users.index')
+                ->with('error', 'Anda tidak bisa mengubah role akun Anda sendiri.');
+        }
+
+        if ($user->isSuperAdmin() && $newRole !== User::ROLE_SUPERADMIN) {
+            $superadminCount = User::where('role', User::ROLE_SUPERADMIN)->count();
+
+            if ($superadminCount <= 1) {
+                return redirect()
+                    ->route('users.index')
+                    ->with('error', 'Sistem harus memiliki minimal satu superadmin.');
+            }
+        }
+
+        $oldRole = $user->role;
+        $user->update(['role' => $newRole]);
+
+        ActivityLog::create([
+            'user_id' => $request->user()->id,
+            'action' => 'updated',
+            'description' => "Mengubah role pengguna {$user->name} dari {$oldRole} menjadi {$newRole}",
+        ]);
+
+        return redirect()
+            ->route('users.index')
+            ->with('success', "Role untuk {$user->name} berhasil diperbarui menjadi {$newRole}.");
+    }
+
+    public function destroy(Request $request, User $user): RedirectResponse
     {
         Gate::authorize('manage-users');
 
-        if (! auth()->user() || ! auth()->user()->isSuperAdmin()) {
-            abort(403, 'Anda tidak memiliki izin untuk menghapus user.');
-        }
-
-        if ($user->id === auth()->id()) {
-            return redirect()->route('users.index')
-                ->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
+        if ($request->user()->is($user)) {
+            return redirect()
+                ->route('users.index')
+                ->with('error', 'Anda tidak dapat menghapus akun sendiri saat sedang login.');
         }
 
         if ($user->isSuperAdmin()) {
-            return redirect()->route('users.index')
-                ->with('error', 'Akun Super Admin tidak bisa dihapus.');
+            $superadminCount = User::where('role', User::ROLE_SUPERADMIN)->count();
+
+            if ($superadminCount <= 1) {
+                return redirect()
+                    ->route('users.index')
+                    ->with('error', 'Tidak dapat menghapus superadmin terakhir di sistem.');
+            }
         }
 
-        $userName = $user->name;
+        $deletedName = $user->name;
+        $deletedEmail = $user->email;
         $user->delete();
 
-        return redirect()->route('users.index')
-            ->with('success', "Akun {$userName} berhasil dihapus.");
+        ActivityLog::create([
+            'user_id' => $request->user()->id,
+            'action' => 'deleted',
+            'description' => "Menghapus akun pengguna {$deletedName} ({$deletedEmail})",
+        ]);
+
+        return redirect()
+            ->route('users.index')
+            ->with('success', "Akun {$deletedName} berhasil dihapus.");
     }
 }

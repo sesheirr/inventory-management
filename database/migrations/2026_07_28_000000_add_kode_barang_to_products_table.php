@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('products', function (Blueprint $table): void {
-            if (!Schema::hasColumn('products', 'kode_barang')) {
+            if (! Schema::hasColumn('products', 'kode_barang')) {
                 $table->string('kode_barang')->nullable()->after('category_id');
             }
         });

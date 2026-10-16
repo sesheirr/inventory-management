@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Mutation;
 use App\Models\Product;
 use App\Models\User;
-use App\Models\Mutation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

@@ -12,28 +12,27 @@ return new class extends Migration
         // Tambahkan kolom name jika belum ada
         Schema::table('categories', function (Blueprint $table): void {
 
-            if (!Schema::hasColumn('categories', 'name')) {
+            if (! Schema::hasColumn('categories', 'name')) {
                 $table->string('name')->after('id');
             }
 
-            if (!Schema::hasColumn('categories', 'description')) {
+            if (! Schema::hasColumn('categories', 'description')) {
                 $table->text('description')->nullable()->after('name');
             }
 
         });
 
-
         // Tambahkan relasi ke products
         Schema::table('products', function (Blueprint $table): void {
 
-            if (!Schema::hasColumn('products', 'category_id')) {
+            if (! Schema::hasColumn('products', 'category_id')) {
                 $table->foreignId('category_id')
                     ->nullable()
                     ->constrained('categories')
                     ->nullOnDelete();
             }
 
-            if (!Schema::hasColumn('products', 'room_id')) {
+            if (! Schema::hasColumn('products', 'room_id')) {
                 $table->foreignId('room_id')
                     ->nullable()
                     ->constrained('rooms')
@@ -41,7 +40,6 @@ return new class extends Migration
             }
 
         });
-
 
         // Pindahkan data category lama ke tabel categories
         DB::transaction(function () {
@@ -53,16 +51,14 @@ return new class extends Migration
                 ->distinct()
                 ->pluck('category');
 
-
             $existingCategories = DB::table('categories')
                 ->whereIn('name', $categories->all())
                 ->pluck('id', 'name')
                 ->toArray();
 
-
             foreach ($categories as $categoryName) {
 
-                if (!array_key_exists($categoryName, $existingCategories)) {
+                if (! array_key_exists($categoryName, $existingCategories)) {
 
                     $existingCategories[$categoryName] = DB::table('categories')->insertGetId([
                         'name' => $categoryName,
@@ -74,13 +70,12 @@ return new class extends Migration
                 }
             }
 
-
             foreach ($existingCategories as $categoryName => $categoryId) {
 
                 DB::table('products')
                     ->where('category', $categoryName)
                     ->update([
-                        'category_id' => $categoryId
+                        'category_id' => $categoryId,
                     ]);
 
             }
@@ -88,7 +83,6 @@ return new class extends Migration
         });
 
     }
-
 
     public function down(): void
     {
@@ -105,7 +99,6 @@ return new class extends Migration
             }
 
         });
-
 
         Schema::table('categories', function (Blueprint $table): void {
 

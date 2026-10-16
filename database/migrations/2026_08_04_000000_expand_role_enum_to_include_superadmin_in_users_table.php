@@ -14,7 +14,7 @@ return new class extends Migration
             DB::table('users')
                 ->where(function ($query) {
                     $query->whereNotIn('role', ['superadmin', 'admin', 'user'])
-                          ->orWhereNull('role');
+                        ->orWhereNull('role');
                 })
                 ->update(['role' => 'user']);
 
@@ -26,7 +26,7 @@ return new class extends Migration
         DB::table('users')
             ->where(function ($query) {
                 $query->whereNotIn('role', ['admin', 'user'])
-                      ->orWhereNull('role');
+                    ->orWhereNull('role');
             })
             ->update(['role' => 'user']);
 

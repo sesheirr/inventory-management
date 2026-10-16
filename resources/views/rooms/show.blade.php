@@ -1,62 +1,97 @@
 @extends('layouts.app')
 
+@section('page-title', 'Detail Ruangan')
+@section('page-subtitle', 'Daftar aset di ' . $room->name)
+@section('title', 'Ruangan ' . $room->name . ' — Inventaris Diskominfo Garut')
+@section('share_code', 'r-' . $room->id)
+@section('og_title', 'Ruangan ' . $room->name . ' — Inventaris Diskominfo Garut')
+@section('og_description', 'Daftar penempatan aset dan barang inventaris di ' . $room->name . ' Diskominfo Kabupaten Garut.')
+
 @section('content')
-<div class="max-w-4xl mx-auto space-y-6">
-    <div class="flex items-center justify-between pb-4 border-b border-slate-200/80 dark:border-slate-800/80">
-        <div class="flex items-center gap-3">
-            <a href="{{ route('rooms.index') }}" class="w-9 h-9 rounded-xl flex items-center justify-center text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="Kembali">
+<div class="max-w-4xl mx-auto space-y-4 sm:space-y-6" data-framer-page>
+    <div class="flex items-center justify-between gap-3 pb-3 sm:pb-4 border-b border-slate-200/80 dark:border-slate-800/80">
+        <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <a href="{{ route('rooms.index') }}" class="w-9 h-9 rounded-xl flex items-center justify-center text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shrink-0" title="Kembali">
                 <i class="bi bi-arrow-left"></i>
             </a>
-            <div>
-                <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Detail Ruangan</h1>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Informasi ruangan dan penanggung jawab</p>
+            <div class="min-w-0">
+                <h1 class="text-base sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white truncate">{{ $room->name }}</h1>
+                <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">Detail ruangan & inventaris</p>
             </div>
         </div>
 
-        @if(auth()->user()->isAdmin())
-            <a href="{{ route('rooms.edit', $room) }}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-all">
-                <i class="bi bi-pencil"></i>
-                <span>Edit Ruangan</span>
-            </a>
-        @endif
+        <div class="flex items-center gap-2 shrink-0">
+            <button type="button"
+                    data-share-code="r-{{ $room->id }}"
+                    data-share-title="Ruangan {{ $room->name }} — Inventaris Diskominfo Garut"
+                    data-share-description="Daftar penempatan aset di {{ $room->name }} ({{ $room->products_count ?? $room->products->count() }} jenis barang)."
+                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 transition-colors cursor-pointer">
+                <i class="bi bi-share text-indigo-600 dark:text-indigo-400"></i>
+                <span>Bagikan</span>
+            </button>
+
+            @if(auth()->user()->isAdmin())
+                <a href="{{ route('rooms.edit', $room) }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-xs transition-all">
+                    <i class="bi bi-pencil"></i>
+                    <span>Edit</span>
+                </a>
+            @endif
+        </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="p-6 rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-2">
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Nama Ruangan</span>
-            <div class="text-xl font-bold text-slate-900 dark:text-white">{{ $room->name }}</div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4" data-framer-stagger>
+        <div class="col-span-2 sm:col-span-1 p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Ruangan</span>
+            <div class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white truncate">{{ $room->name }}</div>
         </div>
 
-        <div class="p-6 rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-2">
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Penanggung Jawab</span>
-            <div class="text-xl font-bold text-slate-900 dark:text-white">{{ $room->person_in_charge ?? 'Belum ditentukan' }}</div>
+        <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Penanggung Jawab</span>
+            <div class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate">{{ $room->person_in_charge ?? 'Belum ditentukan' }}</div>
         </div>
 
-        <div class="p-6 rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-2">
-            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Total Jenis Barang</span>
-            <div class="text-xl font-bold text-amber-600 dark:text-amber-400">{{ $room->products_count ?? $room->products->count() }} Barang</div>
+        <div class="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Total Barang</span>
+            <div class="text-sm sm:text-base font-extrabold text-amber-600 dark:text-amber-400 tabular-nums">{{ $room->products_count ?? $room->products->count() }} Barang</div>
         </div>
     </div>
 
     {{-- Daftar Barang di Ruangan Ini --}}
-    <div class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-sm overflow-hidden">
-        <div class="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
-            <div>
-                <h2 class="text-base font-bold text-slate-900 dark:text-white">Daftar Barang di {{ $room->name }}</h2>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Seluruh aset inventaris yang saat ini ditempatkan di ruangan ini</p>
-            </div>
-            <a href="{{ route('products.index', ['room_id' => $room->id]) }}" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
-                Buka di Katalog <i class="bi bi-arrow-right"></i>
+    <div class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-xs overflow-hidden">
+        <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+            <h2 class="text-sm font-bold text-slate-900 dark:text-white">Daftar Barang</h2>
+            <a href="{{ route('products.index', ['room_id' => $room->id]) }}" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                <span>Katalog</span>
+                <i class="bi bi-arrow-right text-[10px]"></i>
             </a>
         </div>
 
         @if(isset($products) && $products->isNotEmpty())
-            <div class="overflow-x-auto">
+            {{-- Mobile Compact List --}}
+            <div class="sm:hidden divide-y divide-slate-100 dark:divide-slate-800">
+                @foreach($products as $product)
+                    <a href="{{ route('products.show', $product) }}" class="flex items-center justify-between gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs font-bold text-slate-900 dark:text-white truncate">{{ $product->name }}</p>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                                <span class="font-mono text-[10px] text-blue-600 dark:text-blue-400">{{ $product->barcode ?: ($product->kode_barang ?: '-') }}</span>
+                                • {{ $product->category?->name ?? 'Tanpa Kategori' }}
+                            </p>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-lg text-[11px] font-extrabold tabular-nums bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 shrink-0">
+                            {{ $product->stock }} unit
+                        </span>
+                    </a>
+                @endforeach
+            </div>
+
+            {{-- Desktop Table --}}
+            <div class="hidden sm:block overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-50/80 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                             <th class="px-5 py-3">Nama Barang</th>
-                            <th class="px-4 py-3">Kode / Barcode</th>
+                            <th class="px-4 py-3">Kode</th>
                             <th class="px-4 py-3">Kategori</th>
                             <th class="px-4 py-3">Stok</th>
                             <th class="px-4 py-3 text-right">Status</th>
@@ -76,7 +111,7 @@
                                 <td class="px-4 py-3 text-slate-700 dark:text-slate-300">
                                     {{ $product->category?->name ?? $product->getRawOriginal('category') ?? 'Tanpa Kategori' }}
                                 </td>
-                                <td class="px-4 py-3 font-bold text-slate-900 dark:text-white">
+                                <td class="px-4 py-3 font-bold text-slate-900 dark:text-white tabular-nums">
                                     {{ $product->stock }} unit
                                 </td>
                                 <td class="px-4 py-3 text-right">
@@ -96,7 +131,7 @@
             @endif
         @else
             <div class="p-8 text-center text-xs text-slate-400">
-                Belum ada barang yang ditempatkan di ruangan ini.
+                Belum ada barang di ruangan ini.
             </div>
         @endif
     </div>

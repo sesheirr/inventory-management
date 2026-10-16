@@ -1,27 +1,27 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-4xl mx-auto space-y-6">
+<div class="max-w-4xl mx-auto space-y-5" data-framer-page>
     {{-- Header --}}
-    <div class="flex items-center justify-between pb-4 border-b border-slate-200/80 dark:border-slate-800/80">
+    <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-200/80 dark:border-slate-800/80">
         <div class="flex items-center gap-3">
             <a href="{{ route('products.index') }}" class="w-9 h-9 rounded-xl flex items-center justify-center text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="Kembali">
                 <i class="bi bi-arrow-left"></i>
             </a>
             <div>
-                <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Edit Data Barang</h1>
-                <p class="text-xs text-slate-500 dark:text-slate-400">Perbarui rincian informasi dan status barang inventaris</p>
+                <h1 class="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">Edit Barang</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Perbarui rincian informasi & status barang</p>
             </div>
         </div>
     </div>
 
     {{-- Form Card --}}
-    <div class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-sm p-6 sm:p-8">
-        <form action="{{ route('products.update', $product) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+    <div class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-sm p-5 sm:p-8" data-framer-card>
+        <form action="{{ route('products.update', $product) }}" method="POST" enctype="multipart/form-data" class="space-y-5">
             @csrf
             @method('PUT')
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {{-- Nama Barang --}}
                 <div class="space-y-1.5">
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
@@ -149,7 +149,7 @@
             <div class="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
                 <div class="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200">
                     <i class="bi bi-upc-scan text-blue-600 dark:text-blue-400"></i>
-                    <span>Informasi Kode Barcode Aset</span>
+                    <span>Kode Barcode</span>
                 </div>
 
                 <div class="space-y-2">
@@ -160,20 +160,20 @@
                                    name="barcode"
                                    id="barcode-input"
                                    value="{{ old('barcode', $product->barcode) }}"
-                                   placeholder="Scan stiker barcode atau kosongkan untuk otomatis"
+                                   placeholder="Scan atau kosongkan (otomatis)"
                                    class="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm font-mono uppercase bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors"
                                    autocomplete="off"
                                    oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9\-]/g,'')">
                         </div>
 
-                        <button type="button" id="btn-scan-camera" class="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800/40 transition-colors flex items-center gap-1.5 cursor-pointer">
+                        <button type="button" id="btn-scan-camera" class="px-3 py-2.5 rounded-xl text-xs font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800/40 transition-colors flex items-center gap-1.5 cursor-pointer shrink-0">
                             <i class="bi bi-camera"></i>
-                            <span>Scan Kamera</span>
+                            <span>Scan</span>
                         </button>
 
-                        <button type="button" id="preview-barcode-btn" class="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer">
+                        <button type="button" id="preview-barcode-btn" class="px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer shrink-0">
                             <i class="bi bi-eye"></i>
-                            <span>Preview</span>
+                            <span class="hidden sm:inline">Preview</span>
                         </button>
                     </div>
 
@@ -194,12 +194,12 @@
             </div>
 
             {{-- Actions --}}
-            <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
-                <a href="{{ route('products.index') }}" class="px-5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors">
+            <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2.5">
+                <a href="{{ route('products.index') }}" class="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors">
                     Batal
                 </a>
-                <button type="submit" class="px-6 py-2.5 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-500/25 active:scale-[0.98] transition-all cursor-pointer">
-                    Perbarui Data Barang
+                <button type="submit" class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-500/25 active:scale-[0.98] transition-all cursor-pointer">
+                    Simpan
                 </button>
             </div>
         </form>
@@ -207,22 +207,22 @@
 </div>
 
 {{-- Camera Scanner Modal --}}
-<div id="scannerModal" class="modal-container fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-    <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 text-center animate-fade-in">
+<div id="scannerModal" class="modal-container responsive-bottom-sheet fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div class="sheet-dialog relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 text-center animate-fade-in">
         <button type="button" id="btn-close-scanner" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
             <i class="bi bi-x-lg text-sm"></i>
         </button>
 
         <h3 class="text-base font-bold text-slate-900 dark:text-white mb-3 flex items-center justify-center gap-2">
-            <i class="bi bi-camera text-blue-600"></i> Scan Barcode Kamera
+            <i class="bi bi-camera text-blue-600"></i> Scan Barcode
         </h3>
 
         <div id="reader" class="w-full rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800"></div>
-        <p class="text-xs text-slate-400 mt-3">Arahkan kamera perangkat ke stiker barcode aset barang.</p>
+        <p class="text-xs text-slate-400 mt-3">Arahkan kamera ke stiker barcode barang.</p>
 
         <div class="mt-4">
             <button type="button" id="btn-stop-scanner" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800">
-                Tutup Scanner
+                Tutup
             </button>
         </div>
     </div>

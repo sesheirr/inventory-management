@@ -4,6 +4,9 @@ use App\Models\Product;
 use App\Models\Room;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
+
+Schedule::command('telescope:prune --hours=48')->daily();
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -24,6 +27,7 @@ Artisan::command('app:migrate-room-to-room-id', function () {
 
         if ($normalizedRoomName === '') {
             $skippedEmptyRoom++;
+
             continue;
         }
 

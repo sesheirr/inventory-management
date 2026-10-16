@@ -10,6 +10,10 @@ class ActivityLog extends Model
 {
     use HasFactory;
 
+    protected $attributes = [
+        'subject_type' => 'system',
+    ];
+
     protected $fillable = [
         'user_id',
         'action',

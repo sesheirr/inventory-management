@@ -1,36 +1,36 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="space-y-6">
-    <div class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 p-4 sm:p-5 shadow-sm">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+<div class="space-y-5" data-framer-page>
+    <div class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 p-3.5 sm:p-5 shadow-sm" data-framer-card>
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3.5">
             <div>
-                <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Log Aktivitas Sistem</h1>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Audit trail seluruh operasi dan interaksi data oleh pengguna di sistem</p>
+                <h1 class="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">Log Aktivitas</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Audit riwayat perubahan data oleh pengguna</p>
             </div>
 
-            <form action="{{ route('activity-logs.index') }}" method="GET" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-                <div class="relative w-full sm:w-64">
+            <form action="{{ route('activity-logs.index') }}" method="GET" class="flex items-center gap-2">
+                <div class="relative flex-1 sm:w-64">
                     <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
                     <input type="search" name="search" value="{{ $search ?? '' }}" placeholder="Cari pengguna atau aktivitas..."
-                           class="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40">
+                           class="w-full pl-9 pr-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40">
                 </div>
-                <select name="action" onchange="this.form.submit()" class="px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200">
+                <select name="action" onchange="this.form.submit()" class="px-3 py-2 rounded-xl text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 shrink-0">
                     <option value="">Semua Aksi</option>
                     <option value="created" @selected(($actionFilter ?? '') === 'created')>Dibuat</option>
                     <option value="updated" @selected(($actionFilter ?? '') === 'updated')>Diperbarui</option>
                     <option value="deleted" @selected(($actionFilter ?? '') === 'deleted')>Dihapus</option>
                 </select>
                 @if(!empty($search) || !empty($actionFilter))
-                    <a href="{{ route('activity-logs.index') }}" class="px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 text-center">
-                        Reset
+                    <a href="{{ route('activity-logs.index') }}" class="px-2.5 py-2 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 text-center shrink-0" title="Reset">
+                        <i class="bi bi-arrow-counterclockwise"></i>
                     </a>
                 @endif
             </form>
         </div>
     </div>
 
-    <div class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-sm overflow-hidden">
+    <div class="rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200/80 dark:border-slate-800/80 shadow-sm overflow-hidden" data-framer-card>
         {{-- Desktop Table --}}
         <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse">
@@ -88,21 +88,21 @@
         </div>
 
         {{-- Mobile Cards Feed --}}
-        <div class="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+        <div class="md:hidden divide-y divide-slate-100 dark:divide-slate-800" data-framer-stagger>
             @forelse($activityLogs as $log)
-                <div class="p-4 space-y-2">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
+                <div class="p-3.5 space-y-1.5">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2 min-w-0">
                             @if(!empty($log->user?->avatar_url))
-                                <img src="{{ $log->user->avatar_url }}" alt="{{ $log->user->name }}" class="w-6 h-6 rounded-full object-cover">
+                                <img src="{{ $log->user->avatar_url }}" alt="{{ $log->user->name }}" class="w-6 h-6 rounded-full object-cover shrink-0">
                             @else
-                                <div class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 text-xs font-bold flex items-center justify-center">
+                                <div class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 text-[10px] font-bold flex items-center justify-center shrink-0">
                                     {{ strtoupper(substr($log->user?->name ?? 'S', 0, 1)) }}
                                 </div>
                             @endif
-                            <span class="text-xs font-bold text-slate-900 dark:text-white">{{ $log->user?->name ?? 'Sistem' }}</span>
+                            <span class="text-xs font-bold text-slate-900 dark:text-white truncate">{{ $log->user?->name ?? 'Sistem' }}</span>
                         </div>
-                        <span class="text-[10px] text-slate-400">{{ $log->created_at ? $log->created_at->format('d/m/Y H:i') : '-' }}</span>
+                        <span class="text-[10px] text-slate-400 shrink-0">{{ $log->created_at ? $log->created_at->format('d/m/Y H:i') : '-' }}</span>
                     </div>
                     <p class="text-xs text-slate-700 dark:text-slate-300">{{ $log->description }}</p>
                 </div>

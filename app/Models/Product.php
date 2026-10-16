@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Traits\LogsActivity;
 use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -14,8 +14,12 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 class Product extends Model implements HasMedia
 {
     use HasFactory;
-    use LogsActivity;
     use InteractsWithMedia;
+    use LogsActivity;
+
+    protected $attributes = [
+        'category' => 'Umum',
+    ];
 
     protected $fillable = [
         'name',
@@ -69,20 +73,21 @@ class Product extends Model implements HasMedia
         }
 
         $rawRoom = $this->attributes['room'] ?? null;
+
         return (is_string($rawRoom) && trim($rawRoom) !== '') ? trim($rawRoom) : null;
     }
 
     public function getImageUrlAttribute(): ?string
     {
         $media = $this->getFirstMedia('images');
-        if (!$media) {
+        if (! $media) {
             return null;
         }
 
-        $relativePath = $media->id . '/' . $media->file_name;
+        $relativePath = $media->id.'/'.$media->file_name;
         try {
             if (Storage::disk($media->disk)->exists($relativePath)) {
-                return '/storage/' . $media->id . '/' . rawurlencode($media->file_name);
+                return '/storage/'.$media->id.'/'.rawurlencode($media->file_name);
             }
         } catch (\Throwable $e) {
             // Fallback below
@@ -92,7 +97,7 @@ class Product extends Model implements HasMedia
         if (is_string($legacyPath) && $legacyPath !== '') {
             try {
                 if (Storage::disk('public')->exists($legacyPath)) {
-                    return '/storage/' . ltrim($legacyPath, '/');
+                    return '/storage/'.ltrim($legacyPath, '/');
                 }
             } catch (\Throwable $e) {
                 // Fallback below
@@ -104,7 +109,7 @@ class Product extends Model implements HasMedia
             return $dataUrl;
         }
 
-        return '/storage/' . $media->id . '/' . rawurlencode($media->file_name);
+        return '/storage/'.$media->id.'/'.rawurlencode($media->file_name);
     }
 
     public function getStatusLabelAttribute(): string
@@ -120,6 +125,11 @@ class Product extends Model implements HasMedia
         return 'Tidak Aktif';
     }
 
+    public function isLowStock(int $threshold = 5): bool
+    {
+        return (int) $this->stock > 0 && (int) $this->stock <= $threshold;
+    }
+
     public function mutations(): HasMany
     {
         return $this->hasMany(Mutation::class);
@@ -127,5 +137,6 @@ class Product extends Model implements HasMedia
 
     // Activity log labels
     protected $activityLabel = 'Barang';
+
     protected $activityNameField = 'name';
 }

@@ -15,7 +15,9 @@ class RoleAccessControlTest extends TestCase
     use RefreshDatabase;
 
     protected User $superAdmin;
+
     protected User $admin;
+
     protected User $regularUser;
 
     protected function setUp(): void
@@ -169,7 +171,7 @@ class RoleAccessControlTest extends TestCase
 
     public function test_regular_user_cannot_access_admin_or_superadmin_actions(): void
     {
-        $category = \App\Models\Category::create(['name' => 'Restricted Category']);
+        $category = Category::create(['name' => 'Restricted Category']);
 
         $this->actingAs($this->regularUser)->get(route('users.index'))->assertForbidden();
         $this->actingAs($this->regularUser)->get(route('rooms.create'))->assertForbidden();

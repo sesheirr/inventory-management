@@ -1,0 +1,50 @@
+{
+  "name": "Inventaris Diskominfo Kabupaten Garut",
+  "short_name": "Inventaris Diskominfo",
+  "description": "Sistem Informasi Inventarisasi Barang, Lokasi Ruangan, Barcode & Mutasi Aset Dinas Komunikasi dan Informatika Kabupaten Garut",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b132b",
+  "theme_color": "#2563eb",
+  "lang": "id-ID",
+  "categories": ["productivity", "business", "government"],
+  "icons": [
+    {
+      "src": "/images/logo-diskominfo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/logo-diskominfo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Cari Barang Inventaris",
+      "short_name": "Katalog Barang",
+      "description": "Buka daftar katalog barang Diskominfo Garut",
+      "url": "/products",
+      "icons": [{ "src": "/images/logo-diskominfo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Scan Barcode Aset",
+      "short_name": "Scan Barcode",
+      "description": "Pindai barcode barang dengan cepat",
+      "url": "/scan-barcode",
+      "icons": [{ "src": "/images/logo-diskominfo.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Catat Mutasi Barang",
+      "short_name": "Mutasi",
+      "description": "Ajukan mutasi masuk, keluar, atau pindah ruangan",
+      "url": "/mutations/create",
+      "icons": [{ "src": "/images/logo-diskominfo.png", "sizes": "192x192" }]
+    }
+  ]
+}

@@ -24,6 +24,9 @@ if ! grep -q "APP_KEY=base64:" .env || [ -z "$(grep 'APP_KEY=base64:' .env | cut
     php artisan key:generate --ansi
 fi
 
+# Smart Database Detection & Auto-Sync (Empty DB -> migrate+seed, 0 items -> seed, sparse -> populate+keep, irrelevant -> keep identity + replace with seeds)
+php artisan inventory:smart-db-sync --ansi
+
 # Clean up stale Vite hot file if present
 rm -f public/hot 2>/dev/null || true
 

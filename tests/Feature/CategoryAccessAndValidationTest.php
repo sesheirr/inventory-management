@@ -68,7 +68,7 @@ class CategoryAccessAndValidationTest extends TestCase
             'status' => 'active',
         ]);
 
-        $response = $this->actingAs($admin)->from('/categories')->delete('/categories/' . $category->id);
+        $response = $this->actingAs($admin)->from('/categories')->delete('/categories/'.$category->id);
 
         $response->assertRedirect('/categories');
         $response->assertSessionHas('error');

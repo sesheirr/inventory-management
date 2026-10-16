@@ -502,7 +502,7 @@ class ProductSeeder extends Seeder
             }
         }
 
-        if (ActivityLog::count() === 0 && !empty($seededProducts)) {
+        if (ActivityLog::count() === 0 && ! empty($seededProducts)) {
             $adminUser = User::whereIn('role', ['superadmin', 'admin'])->first();
             $firstProduct = reset($seededProducts);
             ActivityLog::create([

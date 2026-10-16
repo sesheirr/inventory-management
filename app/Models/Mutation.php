@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Models\User;
+use App\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Mutation extends Model
 {
     use HasFactory;
-    use \App\Traits\LogsActivity;
+    use LogsActivity;
 
     protected $fillable = [
         'product_id',
@@ -29,18 +29,20 @@ class Mutation extends Model
 
     protected $casts = [
         'mutation_date' => 'date', // Mengubah menjadi tipe 'date' agar waktu/jam tidak ikut tampil
-        'approved_at'   => 'datetime',
+        'approved_at' => 'datetime',
     ];
 
     // Activity log defaults for Mutation
     protected $activityLabel = 'Mutasi';
+
     protected $activityNameField = 'id';
 
     // Mutation needs a custom description because it doesn't have a name field
     public function buildActivityDescription(string $action): string
     {
-        $productName = $this->product?->name ?? ('#' . ($this->product_id ?? $this->getKey()));
+        $productName = $this->product?->name ?? ('#'.($this->product_id ?? $this->getKey()));
         $typeLabel = ucfirst(str_replace('_', ' ', (string) $this->type));
+
         return sprintf('Mutasi %s untuk %s: %s', strtolower($typeLabel), $productName, $action);
     }
 
@@ -77,20 +79,20 @@ class Mutation extends Model
     public function statusBadgeClass(): string
     {
         return match ($this->status) {
-            'pending'  => 'bg-warning text-dark',
+            'pending' => 'bg-warning text-dark',
             'approved' => 'bg-success',
             'rejected' => 'bg-danger',
-            default    => 'bg-secondary',
+            default => 'bg-secondary',
         };
     }
 
     public function statusLabel(): string
     {
         return match ($this->status) {
-            'pending'  => 'Menunggu',
+            'pending' => 'Menunggu',
             'approved' => 'ACC',
             'rejected' => 'Ditolak',
-            default    => ucfirst($this->status),
+            default => ucfirst($this->status),
         };
     }
 }

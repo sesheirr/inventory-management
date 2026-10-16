@@ -1,4 +1,4 @@
-.PHONY: help dev up down build install test artisan composer bun migrate migrate-fresh seed bash sh logs clean restart
+.PHONY: help dev run tunnel lint up down build install test artisan composer bun migrate migrate-fresh seed bash sh logs clean restart
 
 # Default goal
 .DEFAULT_GOAL := help
@@ -12,17 +12,28 @@ COLOR_TITLE   = \033[1;34m
 
 help: ## Show this help documentation
 	@echo ""
-	@echo "$(COLOR_TITLE)Inventory Management - Docker & Development Commands$(COLOR_RESET)"
+	@echo "$(COLOR_TITLE)Inventory Management - Docker, Local & Tunnel Commands$(COLOR_RESET)"
 	@echo "=========================================================="
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(COLOR_INFO)%-15s$(COLOR_RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 	@echo "$(COLOR_WARNING)Example:$(COLOR_RESET)"
-	@echo "  make install         # One-time project setup"
-	@echo "  make dev             # Start Laravel + Bun Vite dev servers"
+	@echo "  make run             # Magic all-in-one local runner (NO Docker, auto-detects .env)"
+	@echo "  make dev             # Start Laravel + Bun Vite dev servers inside Docker"
+	@echo "  make tunnel          # Expose app via Cloudflare Free HTTPS (*.trycloudflare.com)"
+	@echo "  make install         # One-time Docker project setup"
 	@echo "  make artisan c=\"route:list\""
 	@echo ""
 
-install: build ## Setup project completely (env, deps, db, build)
+run: ## Magic all-in-one local runner WITHOUT Docker (auto-detects .env & smart diagnostics)
+	@bash ./docker/run-local.sh
+
+tunnel: ## Expose local/Docker server via Cloudflare Free HTTPS (*.trycloudflare.com) for remote CRUD testing
+	@bash ./docker/run-tunnel.sh
+
+lint: ## Check PHP syntax, Laravel Pint formatting, and frontend production build
+	@docker compose run --rm app sh -c "find app bootstrap config database routes tests -name '*.php' -print0 | xargs -0 -n1 php -l >/dev/null && ./vendor/bin/pint --test && bun run build"
+
+install: build ## Setup project completely via Docker (env, deps, db, build)
 	@echo "$(COLOR_INFO)Checking .env configuration...$(COLOR_RESET)"
 	@test -f .env || cp .env.example .env
 	@echo "$(COLOR_INFO)Installing Composer dependencies...$(COLOR_RESET)"
@@ -38,13 +49,13 @@ install: build ## Setup project completely (env, deps, db, build)
 	@docker compose run --rm app php artisan db:seed --force
 	@echo "$(COLOR_INFO)Building frontend assets...$(COLOR_RESET)"
 	@docker compose run --rm app bun run build
-	@echo "$(COLOR_SUCCESS)Project installation complete! Run 'make dev' to start development.$(COLOR_RESET)"
+	@echo "$(COLOR_SUCCESS)Project installation complete! Run 'make dev' or 'make run' to start development.$(COLOR_RESET)"
 
 build: ## Build or rebuild Docker images
 	@echo "$(COLOR_INFO)Building Docker images...$(COLOR_RESET)"
 	@docker compose build
 
-dev: ## Start Laravel (port 8000) + Bun Vite (port 5173) in foreground
+dev: ## Start Laravel (port 8000) + Bun Vite (port 5173) in Docker foreground
 	@echo "$(COLOR_SUCCESS)Starting development environment...$(COLOR_RESET)"
 	@docker compose up app
 
@@ -91,3 +102,4 @@ test: ## Run test suite inside container (PHPUnit / Pest)
 clean: ## Clear compiled views, cache, route, and config
 	@docker compose run --rm app php artisan optimize:clear
 	@rm -f public/hot
+

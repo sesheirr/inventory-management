@@ -94,11 +94,11 @@ class CategoryController extends Controller
         if ($productCount > 0) {
             if ($request->wantsJson()) {
                 return response()->json([
-                    'message' => 'Kategori tidak bisa dihapus karena masih digunakan oleh ' . $productCount . ' barang.'
+                    'message' => 'Kategori tidak bisa dihapus karena masih digunakan oleh '.$productCount.' barang.',
                 ], 422);
             }
 
-            return redirect()->route('categories.index')->with('error', 'Kategori tidak bisa dihapus karena masih digunakan oleh ' . $productCount . ' barang.');
+            return redirect()->route('categories.index')->with('error', 'Kategori tidak bisa dihapus karena masih digunakan oleh '.$productCount.' barang.');
         }
 
         $category->delete();

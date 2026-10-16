@@ -2,12 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
+use App\Models\Category;
 use App\Models\Mutation;
 use App\Models\Product;
 use App\Models\Room;
 use App\Models\User;
+use App\Notifications\LowStockAlert;
 use App\Notifications\MutationPending;
+use App\Notifications\MutationStatusUpdated;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
@@ -16,254 +21,119 @@ class MutationController extends Controller
 {
     public function index(Request $request)
     {
+        $search = trim((string) $request->input('search', ''));
         $dateFrom = $request->input('date_from');
         $dateTo = $request->input('date_to');
         $categoryId = $request->input('category_id');
         $roomId = $request->input('room_id');
+        $productId = $request->integer('product_id') ?: null;
         $type = $request->input('type');
         $status = $request->input('status');
-        $search = trim((string) $request->input('search', ''));
 
-        $categories = \App\Models\Category::orderBy('name')->get();
+        $query = $this->buildFilteredQuery($request);
+        $mutations = $query->paginate(10)->withQueryString();
+
+        $categories = Category::orderBy('name')->get();
         $rooms = Room::orderBy('name')->get();
+        $filteredProduct = $productId ? Product::find($productId) : null;
 
-        $mutationQuery = Mutation::with(['product.category', 'product.room', 'fromRoom', 'toRoom', 'user', 'approver']);
-
-        if ($dateFrom) {
-            $mutationQuery->where('mutation_date', '>=', $dateFrom);
-        }
-
-        if ($dateTo) {
-            $mutationQuery->where('mutation_date', '<=', $dateTo);
-        }
-
-        if ($categoryId) {
-            $mutationQuery->whereHas('product', function ($query) use ($categoryId) {
-                $query->where('category_id', $categoryId);
-            });
-        }
-
-        if ($roomId) {
-            $mutationQuery->where(function ($query) use ($roomId) {
-                $query->where('from_room_id', $roomId)
-                      ->orWhere('to_room_id', $roomId);
-            });
-        }
-
-        if ($type) {
-            $mutationQuery->where('type', $type);
-        }
-
-        if ($status) {
-            $mutationQuery->where('status', $status);
-        }
-
-        if ($search !== '') {
-            $mutationQuery->where(function ($query) use ($search) {
-                $query->whereHas('product', function ($query) use ($search) {
-                    $query->where('name', 'like', "%{$search}%")
-                          ->orWhere('kode_barang', 'like', "%{$search}%")
-                          ->orWhere('barcode', 'like', "%{$search}%");
-                })
-                ->orWhereHas('user', function ($query) use ($search) {
-                    $query->where('name', 'like', "%{$search}%");
-                })
-                ->orWhere('note', 'like', "%{$search}%");
-            });
-        }
-
-        // Yang paling baru ditambahkan tampil paling atas.
-        // (mutation_date hanya berisi tanggal tanpa jam, jadi tidak cukup untuk mengurutkan
-        // data di hari yang sama. id dipakai sebagai pembeda agar urutan selalu stabil.)
-        $mutations = $mutationQuery
-            ->orderByDesc('created_at')
-            ->orderByDesc('id')
-            ->paginate(10)
-            ->withQueryString();
+        $pipelineCounts = [
+            'all' => Mutation::count(),
+            'pending' => Mutation::where('status', 'pending')->count(),
+            'approved' => Mutation::where('status', 'approved')->count(),
+            'rejected' => Mutation::where('status', 'rejected')->count(),
+            'masuk' => Mutation::where('type', 'masuk')->count(),
+            'pindah_ruang' => Mutation::where('type', 'pindah_ruang')->count(),
+            'keluar' => Mutation::where('type', 'keluar')->count(),
+        ];
 
         return view('mutations.index', compact(
             'mutations',
             'categories',
             'rooms',
+            'search',
             'dateFrom',
             'dateTo',
             'categoryId',
             'roomId',
+            'productId',
+            'filteredProduct',
             'type',
             'status',
-            'search'
+            'pipelineCounts'
         ));
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $mutations = $this->buildFilteredQuery($request)->get();
+        $filters = $request->only(['search', 'date_from', 'date_to', 'category_id', 'room_id', 'product_id', 'type', 'status']);
+
+        return view('mutations.pdf', compact('mutations', 'filters'));
+    }
+
+    private function buildFilteredQuery(Request $request)
+    {
+        $query = Mutation::with(['product.category', 'product.room', 'fromRoom', 'toRoom', 'user', 'approver'])
+            ->latest('mutation_date')
+            ->latest('id');
+
+        if ($request->filled('product_id')) {
+            $query->where('product_id', $request->integer('product_id'));
+        }
+
+        if ($request->filled('search')) {
+            $search = trim((string) $request->input('search'));
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('product', function ($pq) use ($search) {
+                    $pq->where('name', 'like', "%{$search}%")
+                        ->orWhere('kode_barang', 'like', "%{$search}%")
+                        ->orWhere('barcode', 'like', "%{$search}%");
+                })
+                    ->orWhere('note', 'like', "%{$search}%")
+                    ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('mutation_date', '>=', $request->input('date_from'));
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('mutation_date', '<=', $request->input('date_to'));
+        }
+
+        if ($request->filled('category_id')) {
+            $categoryId = $request->input('category_id');
+            $query->whereHas('product', fn ($pq) => $pq->where('category_id', $categoryId));
+        }
+
+        if ($request->filled('room_id')) {
+            $roomId = $request->input('room_id');
+            $query->where(function ($rq) use ($roomId) {
+                $rq->where('from_room_id', $roomId)->orWhere('to_room_id', $roomId);
+            });
+        }
+
+        if ($request->filled('type') && $request->type !== 'all') {
+            $query->where('type', $request->type);
+        }
+
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        return $query;
     }
 
     public function create(Request $request)
     {
-        $items = Product::with('room')->orderBy('name')->get();
+        $products = Product::with('room')->orderBy('name')->get();
+        $items = $products;
         $rooms = Room::orderBy('name')->get();
-        $selectedProductId = $request->input('product_id');
+        $selectedProductId = $request->integer('product_id') ?: null;
 
-        return view('mutations.create', compact('items', 'rooms', 'selectedProductId'));
-    }
-
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'product_id' => ['required', 'integer', 'exists:products,id'],
-            'type' => ['required', 'in:masuk,keluar,pindah_ruang'],
-            'quantity' => ['required', 'integer', 'min:1'],
-            'to_room_id' => ['nullable', 'integer', 'exists:rooms,id'],
-            'mutation_date' => ['required', 'date'],
-            'note' => ['nullable', 'string'],
-        ]);
-
-        if ($data['type'] === 'pindah_ruang' && empty($data['to_room_id'])) {
-            throw ValidationException::withMessages(['to_room_id' => 'Ruangan tujuan wajib diisi untuk mutasi pindah ruang.']);
-        }
-
-        $product = Product::find($data['product_id']);
-
-        if (!$product) {
-            throw ValidationException::withMessages(['product_id' => 'Barang tidak ditemukan.']);
-        }
-
-        $isAdminAction = auth()->user()->isAdmin();
-        $type = $data['type'];
-        $toRoomId = $data['to_room_id'] ?? null;
-
-        $mutationData = [
-            'product_id' => $product->id,
-            'user_id' => auth()->id(),
-            'type' => $type,
-            'quantity' => $data['quantity'],
-            'mutation_date' => $data['mutation_date'],
-            'note' => $data['note'] ?? null,
-            'status' => 'pending',
-        ];
-
-        if ($type === 'masuk') {
-            if ($toRoomId) {
-                $mutationData['to_room_id'] = $toRoomId;
-            }
-        } elseif ($type === 'pindah_ruang') {
-            $mutationData['from_room_id'] = $product->room_id;
-            $mutationData['to_room_id'] = $toRoomId;
-        }
-
-        $mutation = null;
-
-        DB::transaction(function () use ($mutationData, $product, $type, $isAdminAction, &$mutation, $data) {
-            $productForUpdate = Product::lockForUpdate()->find($product->id);
-
-            if (!$productForUpdate) {
-                throw ValidationException::withMessages(['product_id' => 'Barang tidak ditemukan.']);
-            }
-
-            if ($type === 'keluar' && (int) $productForUpdate->stock < (int) $data['quantity']) {
-                throw ValidationException::withMessages(['quantity' => 'Stok barang tidak mencukupi untuk mutasi keluar.']);
-            }
-
-            $mutation = Mutation::create($mutationData);
-
-            if ($isAdminAction) {
-                $this->applyApprovedMutation($mutation, auth()->id());
-            }
-        });
-
-        if ($isAdminAction) {
-            return redirect()->route('mutations.index')->with('success', 'Mutasi berhasil dibuat dan otomatis disetujui karena Anda login sebagai admin.');
-        }
-
-        if ($mutation) {
-            try {
-                $mutation->load(['product', 'user']);
-                $admins = User::whereIn('role', ['admin', 'superadmin'])->get();
-                if ($admins->isNotEmpty()) {
-                    Notification::send($admins, new MutationPending($mutation));
-                }
-            } catch (\Throwable $e) {
-                // Jangan gagalkan request mutasi jika pengiriman notifikasi gagal
-            }
-        }
-
-        return redirect()->route('mutations.index')->with('success', 'Pengajuan mutasi berhasil dikirim dan menunggu persetujuan admin.');
-    }
-
-    public function approve(Mutation $mutation)
-    {
-        if (!auth()->user()->isAdmin()) {
-            abort(403, 'Anda tidak memiliki izin untuk memproses persetujuan mutasi.');
-        }
-
-        if ($mutation->status !== 'pending') {
-            return back()->with('error', 'Mutasi ini sudah diproses sebelumnya.');
-        }
-
-        DB::transaction(function () use ($mutation) {
-            $this->applyApprovedMutation($mutation, auth()->id());
-        });
-
-        return back()->with('success', 'Mutasi berhasil disetujui dan stok/lokasi barang telah diperbarui.');
-    }
-
-    public function reject(Request $request, Mutation $mutation)
-    {
-        if (!auth()->user()->isAdmin()) {
-            abort(403, 'Anda tidak memiliki izin untuk memproses persetujuan mutasi.');
-        }
-
-        if ($mutation->status !== 'pending') {
-            return back()->with('error', 'Mutasi ini sudah diproses sebelumnya.');
-        }
-
-        $request->validate([
-            'rejection_note' => ['required', 'string', 'max:500'],
-        ], [
-            'rejection_note.required' => 'Alasan penolakan wajib diisi.',
-        ]);
-
-        $mutation->update([
-            'status' => 'rejected',
-            'rejection_note' => $request->rejection_note,
-            'approved_by' => auth()->id(),
-            'approved_at' => now(),
-        ]);
-
-        return back()->with('success', 'Mutasi telah ditolak.');
-    }
-
-    private function applyApprovedMutation(Mutation $mutation, ?int $approverId = null): void
-    {
-        if ($mutation->status !== 'pending') {
-            return;
-        }
-
-        $product = Product::lockForUpdate()->find($mutation->product_id);
-
-        if (!$product) {
-            throw ValidationException::withMessages(['product_id' => 'Barang tidak ditemukan.']);
-        }
-
-        if ($mutation->type === 'masuk') {
-            $product->stock = (int) $product->stock + (int) $mutation->quantity;
-            if ($mutation->to_room_id) {
-                $product->room_id = $mutation->to_room_id;
-            }
-        } elseif ($mutation->type === 'keluar') {
-            if ((int) $product->stock < (int) $mutation->quantity) {
-                throw ValidationException::withMessages(['quantity' => 'Stok tidak mencukupi untuk disetujui.']);
-            }
-            $product->stock = (int) $product->stock - (int) $mutation->quantity;
-        } elseif ($mutation->type === 'pindah_ruang') {
-            $product->room_id = $mutation->to_room_id;
-        }
-
-        $product->save();
-
-        $mutation->update([
-            'status' => 'approved',
-            'approved_by' => $approverId ?? auth()->id(),
-            'approved_at' => now(),
-            'rejection_note' => null,
-        ]);
+        return view('mutations.create', compact('items', 'products', 'rooms', 'selectedProductId'));
     }
 
     public function show(Mutation $mutation)
@@ -273,10 +143,230 @@ class MutationController extends Controller
         return view('mutations.show', compact('mutation'));
     }
 
+    public function store(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'type' => 'required|in:masuk,keluar,pindah_ruang',
+            'from_room_id' => 'nullable|exists:rooms,id',
+            'to_room_id' => 'nullable|required_if:type,pindah_ruang|exists:rooms,id|different:from_room_id',
+            'quantity' => 'required|integer|min:1',
+            'mutation_date' => 'required|date',
+            'note' => 'nullable|string',
+        ], [
+            'to_room_id.different' => 'Ruangan tujuan harus berbeda dengan ruangan asal.',
+        ]);
+
+        return DB::transaction(function () use ($request) {
+            $product = Product::lockForUpdate()->findOrFail($request->product_id);
+            /** @var User|null $user */
+            $user = Auth::user();
+            $isAdmin = $user && $user->isAdmin();
+
+            if (in_array($request->type, ['keluar', 'pindah_ruang'], true) && $product->stock < $request->quantity) {
+                throw ValidationException::withMessages([
+                    'quantity' => 'Stok barang saat ini ('.$product->stock.') tidak mencukupi untuk mutasi ini.',
+                ]);
+            }
+
+            if ($request->type === 'pindah_ruang' && $product->room_id && (int) $request->from_room_id !== (int) $product->room_id) {
+                throw ValidationException::withMessages([
+                    'from_room_id' => 'Ruangan asal tidak sesuai dengan lokasi barang saat ini.',
+                ]);
+            }
+
+            $status = $isAdmin ? 'approved' : 'pending';
+
+            $mutation = Mutation::create([
+                'product_id' => $request->product_id,
+                'user_id' => Auth::id(),
+                'type' => $request->type,
+                'from_room_id' => $request->type === 'masuk' ? null : ($request->from_room_id ?: $product->room_id),
+                'to_room_id' => $request->type === 'keluar' ? null : $request->to_room_id,
+                'quantity' => $request->quantity,
+                'mutation_date' => $request->mutation_date,
+                'status' => $status,
+                'approved_by' => $isAdmin ? Auth::id() : null,
+                'approved_at' => $isAdmin ? now() : null,
+                'note' => $request->note,
+            ]);
+
+            if ($isAdmin) {
+                $this->applyStockMutation($product, $mutation);
+                $this->notifyLowStockIfNeeded($product);
+
+                ActivityLog::create([
+                    'user_id' => Auth::id(),
+                    'action' => 'created',
+                    'description' => "Mencatat & menyetujui mutasi ({$mutation->type}) sebanyak {$mutation->quantity} unit untuk {$product->name}",
+                ]);
+
+                $redirectRoute = $request->input('redirect_to') === 'product'
+                    ? redirect()->route('products.show', $product)
+                    : redirect()->route('mutations.index');
+
+                return $redirectRoute->with('success', 'Data mutasi barang berhasil dicatat dan langsung disetujui!');
+            }
+
+            $mutation->load(['product', 'user']);
+            $admins = User::whereIn('role', [User::ROLE_ADMIN, User::ROLE_SUPERADMIN])->get();
+            if ($admins->isNotEmpty()) {
+                Notification::send($admins, new MutationPending($mutation));
+            }
+
+            ActivityLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'created',
+                'description' => "Mengajukan permohonan mutasi ({$mutation->type}) sebanyak {$mutation->quantity} unit untuk {$product->name} (Menunggu Persetujuan)",
+            ]);
+
+            $redirectRoute = $request->input('redirect_to') === 'product'
+                ? redirect()->route('products.show', $product)
+                : redirect()->route('mutations.index');
+
+            return $redirectRoute->with('success', 'Permohonan mutasi barang berhasil diajukan dan sedang menunggu persetujuan Admin.');
+        });
+    }
+
+    public function approve(Mutation $mutation)
+    {
+        return DB::transaction(function () use ($mutation) {
+            $mutation = Mutation::lockForUpdate()->findOrFail($mutation->id);
+
+            if ($mutation->status !== 'pending') {
+                return redirect()->route('mutations.index')->with('error', 'Mutasi ini sudah diproses sebelumnya.');
+            }
+
+            $product = Product::lockForUpdate()->findOrFail($mutation->product_id);
+
+            if (in_array($mutation->type, ['keluar', 'pindah_ruang'], true) && $product->stock < $mutation->quantity) {
+                return redirect()->route('mutations.index')->with('error', 'Gagal menyetujui: Stok barang saat ini ('.$product->stock.') tidak mencukupi.');
+            }
+
+            $this->applyStockMutation($product, $mutation);
+
+            $mutation->status = 'approved';
+            $mutation->approved_by = Auth::id();
+            $mutation->approved_at = now();
+            $mutation->save();
+
+            $mutation->load(['product', 'approver', 'user']);
+            if ($mutation->user && (int) $mutation->user_id !== (int) Auth::id()) {
+                $mutation->user->notify(new MutationStatusUpdated($mutation, 'approved'));
+            }
+
+            $this->notifyLowStockIfNeeded($product);
+
+            ActivityLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'updated',
+                'description' => "Menyetujui permohonan mutasi ({$mutation->type}) sebanyak {$mutation->quantity} unit untuk {$product->name}",
+            ]);
+
+            return redirect()->route('mutations.index')->with('success', 'Permohonan mutasi berhasil disetujui dan stok barang telah diperbarui.');
+        });
+    }
+
+    public function reject(Request $request, Mutation $mutation)
+    {
+        $request->validate([
+            'rejection_note' => 'nullable|string|max:500',
+        ]);
+
+        return DB::transaction(function () use ($request, $mutation) {
+            $mutation = Mutation::with('product')->lockForUpdate()->findOrFail($mutation->id);
+
+            if ($mutation->status !== 'pending') {
+                return redirect()->route('mutations.index')->with('error', 'Mutasi ini sudah diproses sebelumnya.');
+            }
+
+            $mutation->status = 'rejected';
+            $mutation->rejection_note = trim((string) $request->input('rejection_note')) ?: 'Ditolak oleh Administrator.';
+            $mutation->approved_by = Auth::id();
+            $mutation->approved_at = now();
+            $mutation->save();
+
+            $mutation->load(['product', 'approver', 'user']);
+            if ($mutation->user && (int) $mutation->user_id !== (int) Auth::id()) {
+                $mutation->user->notify(new MutationStatusUpdated($mutation, 'rejected'));
+            }
+
+            ActivityLog::create([
+                'user_id' => Auth::id(),
+                'action' => 'updated',
+                'description' => 'Menolak permohonan mutasi ('.$mutation->type.') untuk '.($mutation->product?->name ?? 'Barang'),
+            ]);
+
+            return redirect()->route('mutations.index')->with('success', 'Permohonan mutasi telah ditolak.');
+        });
+    }
+
     public function destroy(Mutation $mutation)
     {
-        $mutation->delete();
+        return DB::transaction(function () use ($mutation) {
+            $mutation = Mutation::lockForUpdate()->findOrFail($mutation->id);
+            $product = Product::lockForUpdate()->find($mutation->product_id);
 
-        return redirect()->route('mutations.index')->with('success', 'Mutasi barang berhasil dihapus.');
+            if ($product && $mutation->status === 'approved') {
+                if ($mutation->type === 'masuk') {
+                    $product->stock = max(0, $product->stock - $mutation->quantity);
+                } elseif ($mutation->type === 'keluar') {
+                    $product->stock += $mutation->quantity;
+                } elseif ($mutation->type === 'pindah_ruang') {
+                    $product->room_id = $mutation->from_room_id;
+                }
+
+                if ($product->stock <= 0) {
+                    $product->status = 'out_of_stock';
+                } elseif ($product->status === 'out_of_stock') {
+                    $product->status = 'active';
+                }
+
+                $product->save();
+            }
+
+            $mutation->delete();
+
+            return redirect()->route('mutations.index')->with('success', 'Data mutasi berhasil dihapus dan perubahan stok telah dikembalikan.');
+        });
+    }
+
+    private function applyStockMutation(Product $product, Mutation $mutation): void
+    {
+        if ($mutation->type === 'masuk') {
+            $product->stock += $mutation->quantity;
+            if ($mutation->to_room_id) {
+                $product->room_id = $mutation->to_room_id;
+            }
+        } elseif ($mutation->type === 'keluar') {
+            $product->stock = max(0, $product->stock - $mutation->quantity);
+        } elseif ($mutation->type === 'pindah_ruang') {
+            $product->room_id = $mutation->to_room_id;
+        }
+
+        if ($product->stock <= 0) {
+            $product->status = 'out_of_stock';
+        } elseif ($product->status === 'out_of_stock') {
+            $product->status = 'active';
+        }
+
+        $product->save();
+    }
+
+    private function notifyLowStockIfNeeded(Product $product): void
+    {
+        if ((int) $product->stock > 5 && $product->status !== 'out_of_stock') {
+            return;
+        }
+
+        try {
+            $product->loadMissing('room');
+            $admins = User::whereIn('role', [User::ROLE_ADMIN, User::ROLE_SUPERADMIN])->get();
+            if ($admins->isNotEmpty()) {
+                Notification::send($admins, new LowStockAlert($product));
+            }
+        } catch (\Throwable $e) {
+            // Non-blocking notification
+        }
     }
 }

@@ -6,12 +6,16 @@ use App\Exports\BarangExport;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Room;
+use App\Models\User;
+use App\Notifications\LowStockAlert;
+use App\Notifications\ProductCreatedNotice;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -23,56 +27,7 @@ class ProductController extends Controller
         $status = (string) $request->input('status', 'all');
         $sort = (string) $request->input('sort', 'latest');
 
-        $productsQuery = Product::query();
-
-        if ($query !== '') {
-            $productsQuery->where(function ($q) use ($query): void {
-                $q->where('name', 'like', "%{$query}%")
-                    ->orWhere('kode_barang', 'like', "%{$query}%")
-                    ->orWhere('barcode', 'like', "%{$query}%")
-                    ->orWhere('category', 'like', "%{$query}%")
-                    ->orWhere('subcategory', 'like', "%{$query}%")
-                    ->orWhere('edition', 'like', "%{$query}%")
-                    ->orWhere('description', 'like', "%{$query}%")
-                    ->orWhereHas('category', fn ($cq) => $cq->where('name', 'like', "%{$query}%"))
-                    ->orWhereHas('room', fn ($rq) => $rq->where('name', 'like', "%{$query}%"));
-            });
-        }
-
-        if (!empty($categoryId)) {
-            $categoryModel = Category::find($categoryId);
-            $productsQuery->where(function ($q) use ($categoryId, $categoryModel): void {
-                $q->where('category_id', $categoryId);
-                if ($categoryModel) {
-                    $q->orWhere('category', $categoryModel->name);
-                }
-            });
-        }
-
-        if (!empty($roomId)) {
-            $productsQuery->where('room_id', $roomId);
-        }
-
-        if ($status !== '' && $status !== 'all') {
-            if ($status === 'low_stock') {
-                $productsQuery->where('stock', '>', 0)->where('stock', '<=', 5);
-            } elseif ($status === 'out_of_stock') {
-                $productsQuery->where(function ($q): void {
-                    $q->where('status', 'out_of_stock')->orWhere('stock', '<=', 0);
-                });
-            } else {
-                $productsQuery->where('status', $status);
-            }
-        }
-
-        match ($sort) {
-            'name_asc' => $productsQuery->orderBy('name', 'asc'),
-            'name_desc' => $productsQuery->orderBy('name', 'desc'),
-            'stock_asc' => $productsQuery->orderBy('stock', 'asc'),
-            'stock_desc' => $productsQuery->orderBy('stock', 'desc'),
-            'oldest' => $productsQuery->oldest(),
-            default => $productsQuery->latest(),
-        };
+        $productsQuery = $this->buildFilteredProductsQuery($query, $categoryId, $roomId, $status, $sort);
 
         $products = $productsQuery
             ->with(['category', 'room', 'media'])
@@ -100,6 +55,62 @@ class ProductController extends Controller
             'sort',
             'summary'
         ));
+    }
+
+    private function buildFilteredProductsQuery(string $query, $categoryId, $roomId, string $status, string $sort)
+    {
+        $productsQuery = Product::query();
+
+        if ($query !== '') {
+            $productsQuery->where(function ($q) use ($query): void {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('kode_barang', 'like', "%{$query}%")
+                    ->orWhere('barcode', 'like', "%{$query}%")
+                    ->orWhere('category', 'like', "%{$query}%")
+                    ->orWhere('subcategory', 'like', "%{$query}%")
+                    ->orWhere('edition', 'like', "%{$query}%")
+                    ->orWhere('description', 'like', "%{$query}%")
+                    ->orWhereHas('category', fn ($cq) => $cq->where('name', 'like', "%{$query}%"))
+                    ->orWhereHas('room', fn ($rq) => $rq->where('name', 'like', "%{$query}%"));
+            });
+        }
+
+        if (! empty($categoryId)) {
+            $categoryModel = Category::find($categoryId);
+            $productsQuery->where(function ($q) use ($categoryId, $categoryModel): void {
+                $q->where('category_id', $categoryId);
+                if ($categoryModel) {
+                    $q->orWhere('category', $categoryModel->name);
+                }
+            });
+        }
+
+        if (! empty($roomId)) {
+            $productsQuery->where('room_id', $roomId);
+        }
+
+        if ($status !== '' && $status !== 'all') {
+            if ($status === 'low_stock') {
+                $productsQuery->where('stock', '>', 0)->where('stock', '<=', 5);
+            } elseif ($status === 'out_of_stock') {
+                $productsQuery->where(function ($q): void {
+                    $q->where('status', 'out_of_stock')->orWhere('stock', '<=', 0);
+                });
+            } else {
+                $productsQuery->where('status', $status);
+            }
+        }
+
+        match ($sort) {
+            'name_asc' => $productsQuery->orderBy('name', 'asc'),
+            'name_desc' => $productsQuery->orderBy('name', 'desc'),
+            'stock_asc' => $productsQuery->orderBy('stock', 'asc'),
+            'stock_desc' => $productsQuery->orderBy('stock', 'desc'),
+            'oldest' => $productsQuery->oldest(),
+            default => $productsQuery->latest(),
+        };
+
+        return $productsQuery;
     }
 
     public function create()
@@ -140,7 +151,7 @@ class ProductController extends Controller
 
         if (empty($data['kode_barang'])) {
             do {
-                $kodeBarang = 'BRG-' . strtoupper(Str::random(6));
+                $kodeBarang = 'BRG-'.strtoupper(Str::random(6));
             } while (Product::where('kode_barang', $kodeBarang)->exists());
 
             $data['kode_barang'] = $kodeBarang;
@@ -158,6 +169,8 @@ class ProductController extends Controller
             $product->save();
         }
 
+        $this->dispatchProductNotifications($product, $request->user(), true);
+
         return redirect()->route('products.index')->with('success', 'Barang berhasil disimpan.');
     }
 
@@ -167,10 +180,11 @@ class ProductController extends Controller
             'category',
             'room',
             'media',
-            'mutations' => fn ($q) => $q->with(['user', 'approver'])->latest()->take(15),
+            'mutations' => fn ($q) => $q->with(['user', 'approver', 'fromRoom', 'toRoom'])->latest()->take(15),
         ]);
+        $rooms = Room::orderBy('name')->get();
 
-        return view('products.show', compact('product'));
+        return view('products.show', compact('product', 'rooms'));
     }
 
     public function edit(Product $product)
@@ -227,6 +241,8 @@ class ProductController extends Controller
             $product->clearMediaCollection('images');
         }
 
+        $this->dispatchProductNotifications($product, $request->user(), false);
+
         return redirect()->route('products.index')->with('success', 'Barang berhasil diperbarui.');
     }
 
@@ -256,7 +272,33 @@ class ProductController extends Controller
             $products->each->delete();
         });
 
-        return redirect()->route('products.index')->with('success', count($ids) . ' barang terpilih berhasil dihapus.');
+        return redirect()->route('products.index')->with('success', count($ids).' barang terpilih berhasil dihapus.');
+    }
+
+    private function dispatchProductNotifications(Product $product, ?User $actor, bool $isCreated): void
+    {
+        try {
+            $product->loadMissing('room');
+            $admins = User::whereIn('role', [User::ROLE_ADMIN, User::ROLE_SUPERADMIN])->get();
+
+            if ($isCreated) {
+                $otherAdmins = $actor
+                    ? $admins->filter(fn (User $u) => (int) $u->id !== (int) $actor->id)
+                    : $admins;
+
+                if ($otherAdmins->isNotEmpty()) {
+                    Notification::send($otherAdmins, new ProductCreatedNotice($product, $actor));
+                }
+            }
+
+            if ((int) $product->stock <= 5 || $product->status === 'out_of_stock') {
+                if ($admins->isNotEmpty()) {
+                    Notification::send($admins, new LowStockAlert($product));
+                }
+            }
+        } catch (\Throwable $e) {
+            // Non-blocking notification
+        }
     }
 
     private function attachProductImage(Product $product, UploadedFile $file): void
@@ -280,7 +322,7 @@ class ProductController extends Controller
     {
         try {
             $realPath = $file->getRealPath();
-            if (!$realPath || !is_readable($realPath)) {
+            if (! $realPath || ! is_readable($realPath)) {
                 return null;
             }
 
@@ -314,14 +356,15 @@ class ProductController extends Controller
                     imagedestroy($src);
 
                     if (is_string($compressed) && $compressed !== '') {
-                        return 'data:image/jpeg;base64,' . base64_encode($compressed);
+                        return 'data:image/jpeg;base64,'.base64_encode($compressed);
                     }
                 }
             }
 
             if (strlen($raw) <= 512 * 1024) {
                 $mime = $file->getMimeType() ?: 'image/jpeg';
-                return 'data:' . $mime . ';base64,' . base64_encode($raw);
+
+                return 'data:'.$mime.';base64,'.base64_encode($raw);
             }
         } catch (\Throwable $e) {
             return null;
@@ -422,6 +465,36 @@ class ProductController extends Controller
         return Excel::download(new BarangExport($filters), 'laporan-inventaris-barang.xlsx');
     }
 
+    public function exportPdf(Request $request)
+    {
+        $query = trim((string) $request->input('search', ''));
+        $categoryId = $request->input('category_id');
+        $roomId = $request->input('room_id');
+        $status = (string) $request->input('status', 'all');
+        $sort = (string) $request->input('sort', 'latest');
+
+        $products = $this->buildFilteredProductsQuery($query, $categoryId, $roomId, $status, $sort)
+            ->with(['category', 'room'])
+            ->get();
+
+        $summary = [
+            'total_items' => $products->count(),
+            'total_units' => $products->sum('stock'),
+            'active_count' => $products->where('status', 'active')->where('stock', '>', 0)->count(),
+            'low_stock_count' => $products->where('stock', '>', 0)->where('stock', '<=', 5)->count(),
+            'out_of_stock_count' => $products->filter(fn ($p) => ($p->stock ?? 0) <= 0 || $p->status === 'out_of_stock')->count(),
+        ];
+
+        $filterMeta = [
+            'search' => $query,
+            'category' => $categoryId ? Category::find($categoryId)?->name : 'Semua Kategori',
+            'room' => $roomId ? Room::find($roomId)?->name : 'Semua Lokasi Ruangan',
+            'status' => $status,
+        ];
+
+        return view('products.pdf', compact('products', 'summary', 'filterMeta'));
+    }
+
     public function search(Request $request)
     {
         return $this->index($request);
@@ -442,7 +515,7 @@ class ProductController extends Controller
             }
 
             do {
-                $code = 'BRG-' . str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
+                $code = 'BRG-'.str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
                 $nextNumber++;
             } while (Product::where('barcode', $code)->exists());
 
@@ -453,6 +526,8 @@ class ProductController extends Controller
     // BARCODE FEATURE: halaman cetak stiker barcode
     public function printBarcode(Product $product)
     {
+        $product->loadMissing(['category', 'room']);
+
         return view('products.barcode-print', compact('product'));
     }
 
@@ -475,7 +550,7 @@ class ProductController extends Controller
             ->orWhere('kode_barang', $barcode)
             ->first();
 
-        if (!$product) {
+        if (! $product) {
             return response()->json([
                 'found' => false,
                 'message' => 'Barang dengan barcode tersebut tidak ditemukan.',
@@ -488,5 +563,3 @@ class ProductController extends Controller
         ]);
     }
 }
-
-
