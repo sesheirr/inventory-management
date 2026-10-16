@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Room;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
@@ -132,6 +133,19 @@ class DashboardController extends Controller
 
         $activityLogs = $activityLogsQuery->limit(8)->get();
         $recentLogs = $activityLogs;
+
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Dashboard/Index', [
+                'metrics' => [
+                    'totalProducts' => $totalProducts,
+                    'activeProducts' => $activeProducts,
+                    'lowStockCount' => $lowStockCount,
+                    'pendingMutations' => $pendingMutationsCount,
+                ],
+                'monthlyAnalytics' => $monthlyAnalytics,
+                'stockHealth' => $stockHealth,
+            ]);
+        }
 
         return view('dashboard', compact(
             'totalProducts',

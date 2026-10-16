@@ -23,11 +23,12 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 // ==========================================
 // PUBLIC ROUTES, LANDING PAGE & DEEP LINK SHARE
 // ==========================================
-Route::get('/', function () {
+Route::get('/', function (Request $request) {
     $metrics = [
         'products' => 20,
         'total_stock' => 142,
@@ -46,6 +47,13 @@ Route::get('/', function () {
         ];
     } catch (Throwable) {
         // Fallback to default metrics if DB is not yet migrated
+    }
+
+    if ($request->header('X-Inertia') || $request->boolean('v2')) {
+        return Inertia::render('Welcome', [
+            'metrics' => $metrics,
+            'authenticated' => auth()->check(),
+        ]);
     }
 
     return view('welcome', ['metrics' => $metrics]);
@@ -78,7 +86,13 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
 
-    Route::get('/forgot-password', function () {
+    Route::get('/forgot-password', function (Request $request) {
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Auth/ForgotPassword', [
+                'csrfToken' => csrf_token(),
+            ]);
+        }
+
         return view('auth.forgot-password');
     })->name('password.request');
 

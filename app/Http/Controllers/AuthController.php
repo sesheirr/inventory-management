@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
+use Inertia\Inertia;
 
 class AuthController extends Controller
 {
@@ -120,6 +121,14 @@ class AuthController extends Controller
         $captchaSvg = CaptchaGenerator::generateSVG();
         $savedProfile = $this->resolveSavedProfile($request);
 
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Auth/Login', [
+                'securityChallengeSvg' => $captchaSvg,
+                'savedQuickProfile' => $savedProfile,
+                'csrfToken' => csrf_token(),
+            ]);
+        }
+
         return view('auth.login', [
             'captchaSvg' => $captchaSvg,
             'savedProfile' => $savedProfile,
@@ -225,9 +234,16 @@ class AuthController extends Controller
     /**
      * Tampilkan register form
      */
-    public function showRegister()
+    public function showRegister(Request $request)
     {
         $captchaSvg = CaptchaGenerator::generateSVG();
+
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Auth/Register', [
+                'securityChallengeSvg' => $captchaSvg,
+                'csrfToken' => csrf_token(),
+            ]);
+        }
 
         return view('auth.register', [
             'captchaSvg' => $captchaSvg,
