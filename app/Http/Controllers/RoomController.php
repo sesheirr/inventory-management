@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Room;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Inertia\Inertia;
 
 class RoomController extends Controller
 {
@@ -54,6 +55,13 @@ class RoomController extends Controller
             })
             ->orderBy('name')
             ->get();
+
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Rooms/Index', [
+                'rooms' => $rooms,
+                'picList' => $picList,
+            ]);
+        }
 
         return view('rooms.index', compact('rooms', 'query', 'pic', 'picList'));
     }
@@ -122,13 +130,20 @@ class RoomController extends Controller
         return redirect()->route('rooms.index')->with('success', 'Ruangan berhasil dibuat.');
     }
 
-    public function show(Room $room)
+    public function show(Request $request, Room $room)
     {
         $room->loadCount('products');
         $products = $room->products()
             ->with(['category', 'media'])
             ->latest()
             ->paginate(10);
+
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Rooms/Show', [
+                'room' => $room,
+                'products' => $products,
+            ]);
+        }
 
         return view('rooms.show', compact('room', 'products'));
     }

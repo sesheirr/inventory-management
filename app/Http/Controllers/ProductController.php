@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ProductController extends Controller
@@ -45,6 +46,15 @@ class ProductController extends Controller
             'low_stock' => Product::where('stock', '>', 0)->where('stock', '<=', 5)->count(),
             'out_of_stock' => Product::where(fn ($q) => $q->where('status', 'out_of_stock')->orWhere('stock', '<=', 0))->count(),
         ];
+
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Products/Index', [
+                'products' => $products,
+                'summary' => $summary,
+                'categories' => $categories,
+                'rooms' => $rooms,
+            ]);
+        }
 
         return view('products.index', compact(
             'products',
@@ -115,10 +125,19 @@ class ProductController extends Controller
         return $productsQuery;
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $categories = Category::orderBy('name')->get();
         $rooms = Room::orderBy('name')->get();
+
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Products/Form', [
+                'mode' => 'create',
+                'categories' => $categories,
+                'rooms' => $rooms,
+                'csrfToken' => csrf_token(),
+            ]);
+        }
 
         return view('products.create', compact('categories', 'rooms'));
     }
@@ -180,7 +199,7 @@ class ProductController extends Controller
         return redirect()->route('products.index')->with('success', 'Barang berhasil disimpan.');
     }
 
-    public function show(Product $product)
+    public function show(Request $request, Product $product)
     {
         $product->load([
             'category',
@@ -190,13 +209,49 @@ class ProductController extends Controller
         ]);
         $rooms = Room::orderBy('name')->get();
 
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Products/Show', [
+                'product' => [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'kode_barang' => $product->kode_barang,
+                    'barcode' => $product->barcode,
+                    'stock' => (int) $product->stock,
+                    'status_label' => $product->status_label,
+                    'category_name' => $product->category_name,
+                    'room_name' => $product->room_name,
+                    'image_url' => $product->image_url,
+                    'gallery_urls' => $product->gallery_urls,
+                ],
+                'rooms' => $rooms,
+            ]);
+        }
+
         return view('products.show', compact('product', 'rooms'));
     }
 
-    public function edit(Product $product)
+    public function edit(Request $request, Product $product)
     {
         $categories = Category::orderBy('name')->get();
         $rooms = Room::orderBy('name')->get();
+
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Products/Form', [
+                'mode' => 'edit',
+                'product' => [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'kode_barang' => $product->kode_barang,
+                    'barcode' => $product->barcode,
+                    'stock' => (int) $product->stock,
+                    'status' => $product->status,
+                    'gallery_urls' => $product->gallery_urls,
+                ],
+                'categories' => $categories,
+                'rooms' => $rooms,
+                'csrfToken' => csrf_token(),
+            ]);
+        }
 
         return view('products.edit', compact('product', 'categories', 'rooms'));
     }
@@ -626,8 +681,12 @@ class ProductController extends Controller
     }
 
     // BARCODE FEATURE: halaman scan barcode
-    public function scanBarcode()
+    public function scanBarcode(Request $request)
     {
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Products/Scan');
+        }
+
         return view('products.scan-barcode');
     }
 

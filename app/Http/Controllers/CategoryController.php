@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
 
 class CategoryController extends Controller
 {
@@ -32,6 +33,12 @@ class CategoryController extends Controller
             ->orderBy('name')
             ->get();
 
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Categories/Index', [
+                'categories' => $categories,
+            ]);
+        }
+
         return view('categories.index', compact('categories', 'query'));
     }
 
@@ -54,13 +61,20 @@ class CategoryController extends Controller
         return redirect()->route('categories.index')->with('success', 'Kategori berhasil ditambahkan.');
     }
 
-    public function show(Category $category)
+    public function show(Request $request, Category $category)
     {
         $category->loadCount('products');
         $products = $category->products()
             ->with(['room', 'media'])
             ->latest()
             ->paginate(10);
+
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Categories/Show', [
+                'category' => $category,
+                'products' => $products,
+            ]);
+        }
 
         return view('categories.show', compact('category', 'products'));
     }
