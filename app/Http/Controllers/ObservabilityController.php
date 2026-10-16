@@ -13,12 +13,12 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\View\View;
+use Inertia\Inertia;
 use Throwable;
 
 class ObservabilityController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request)
     {
         $entries = Cache::get(RequestObservabilityMiddleware::CACHE_KEY, []);
         if (! is_array($entries)) {
@@ -75,16 +75,31 @@ class ObservabilityController extends Controller
             'db_ping_ms' => $dbPingMs,
         ];
 
+        $summary = [
+            'total_requests' => $totalRequests,
+            'avg_duration_ms' => $avgDurationMs,
+            'p95_duration_ms' => $p95DurationMs,
+            'avg_queries' => $avgQueries,
+            'slow_queries_total' => $slowQueriesTotal,
+            'peak_memory_mb' => $peakMemoryMb,
+        ];
+
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Admin/Observability/Index', [
+                'summary' => [
+                    'avg_response_ms' => $avgDurationMs,
+                    'p95_response_ms' => $p95DurationMs,
+                    'db_queries_avg' => $avgQueries,
+                    'memory_peak_mb' => $peakMemoryMb,
+                    'recent_requests' => $entries,
+                ],
+                'telescopeEnabled' => true,
+            ]);
+        }
+
         return view('observability.index', [
             'entries' => $entries,
-            'summary' => [
-                'total_requests' => $totalRequests,
-                'avg_duration_ms' => $avgDurationMs,
-                'p95_duration_ms' => $p95DurationMs,
-                'avg_queries' => $avgQueries,
-                'slow_queries_total' => $slowQueriesTotal,
-                'peak_memory_mb' => $peakMemoryMb,
-            ],
+            'summary' => $summary,
             'tableStats' => $tableStats,
             'runtimeInfo' => $runtimeInfo,
         ]);

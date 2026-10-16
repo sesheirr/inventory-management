@@ -8,13 +8,31 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class ProfileController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        /** @var User $user */
+        $user = Auth::user();
+
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Profile/Index', [
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'role_label' => $user->roleLabel(),
+                    'avatar_url' => $user->avatar_url,
+                ],
+                'csrfToken' => csrf_token(),
+            ]);
+        }
+
         return view('profile.index', [
-            'user' => Auth::user(),
+            'user' => $user,
         ]);
     }
 

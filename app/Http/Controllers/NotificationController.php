@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Notifications\LowStockAlert;
 use App\Notifications\MutationPending;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class NotificationController extends Controller
 {
@@ -37,6 +38,19 @@ class NotificationController extends Controller
             'all' => $user->notifications()->count(),
             'unread' => $user->unreadNotifications()->count(),
         ];
+
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Notifications/Index', [
+                'notifications' => $notifications->through(fn ($n) => [
+                    'id' => $n->id,
+                    'title' => $n->data['title'] ?? 'Notifikasi Sistem',
+                    'message' => $n->data['message'] ?? '',
+                    'read_at' => $n->read_at?->toIso8601String(),
+                    'created_at_human' => $n->created_at?->diffForHumans(),
+                ])->items(),
+                'counts' => $counts,
+            ]);
+        }
 
         return view('notifications.index', compact('notifications', 'filter', 'counts'));
     }

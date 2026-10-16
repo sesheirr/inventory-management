@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ActivityLogController extends Controller
 {
@@ -24,6 +25,12 @@ class ActivityLogController extends Controller
             ->latest()
             ->paginate(20)
             ->withQueryString();
+
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Admin/ActivityLogs/Index', [
+                'logs' => $activityLogs,
+            ]);
+        }
 
         return view('activity-logs.index', compact('activityLogs', 'search', 'action'));
     }

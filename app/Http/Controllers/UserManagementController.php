@@ -9,11 +9,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
-use Illuminate\View\View;
+use Inertia\Inertia;
 
 class UserManagementController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request)
     {
         Gate::authorize('manage-users');
 
@@ -53,6 +53,13 @@ class UserManagementController extends Controller
             'admin' => User::where('role', User::ROLE_ADMIN)->count(),
             'user' => User::where('role', User::ROLE_USER)->count(),
         ];
+
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Admin/Users/Index', [
+                'users' => $users->items(),
+                'summary' => $summary,
+            ]);
+        }
 
         return view('users.index', compact('users', 'search', 'roleFilter', 'sort', 'summary'));
     }

@@ -102,21 +102,18 @@ if [ ${#MISSING_EXTS[@]} -gt 0 ]; then
 fi
 
 # ------------------------------------------------------------------------------
-# 2. Detect Frontend Runtime (Bun preferred, automatic fallback to NPM)
+# 2. Detect Frontend Runtime (Strictly Bun Only)
 # ------------------------------------------------------------------------------
 FRONTEND_RUNNER=""
 if command -v bun >/dev/null 2>&1; then
     FRONTEND_RUNNER="bun"
-elif command -v npm >/dev/null 2>&1 && command -v node >/dev/null 2>&1; then
-    FRONTEND_RUNNER="npm"
 else
-    print_box_error "Bun atau Node.js (NPM) Tidak Ditemukan" \
-        "${COLOR_WARNING}Penyebab:${COLOR_RESET} Vite membutuhkan Bun atau Node.js untuk menjalankan & mem-build aset frontend." \
+    print_box_error "Bun Runtime Tidak Ditemukan" \
+        "${COLOR_WARNING}Penyebab:${COLOR_RESET} Proyek v2 ini mewajibkan Bun untuk menjalankan & mem-build aset frontend (React 19 + Inertia v2 + Vite)." \
         "" \
         "${COLOR_SUCCESS}Solusi Cepat:${COLOR_RESET}" \
-        "  • Install Bun (Direkomendasikan) : ${COLOR_BOLD}curl -fsSL https://bun.sh/install | bash${COLOR_RESET}" \
-        "  • Atau via Homebrew (macOS)      : ${COLOR_BOLD}brew install oven-sh/bun/bun${COLOR_RESET}" \
-        "  • Atau Install Node.js           : ${COLOR_BOLD}https://nodejs.org/${COLOR_RESET}"
+        "  • Install Bun (macOS/Linux) : ${COLOR_BOLD}curl -fsSL https://bun.sh/install | bash${COLOR_RESET}" \
+        "  • Atau via Homebrew (macOS) : ${COLOR_BOLD}brew install oven-sh/bun/bun${COLOR_RESET}"
     exit 1
 fi
 

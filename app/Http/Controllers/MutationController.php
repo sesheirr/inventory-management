@@ -11,11 +11,13 @@ use App\Models\User;
 use App\Notifications\LowStockAlert;
 use App\Notifications\MutationPending;
 use App\Notifications\MutationStatusUpdated;
+use App\Services\WebhookDispatcher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
 
 class MutationController extends Controller
 {
@@ -46,6 +48,15 @@ class MutationController extends Controller
             'pindah_ruang' => Mutation::where('type', 'pindah_ruang')->count(),
             'keluar' => Mutation::where('type', 'keluar')->count(),
         ];
+
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Mutations/Index', [
+                'mutations' => $mutations,
+                'pipelineCounts' => $pipelineCounts,
+                'csrfToken' => csrf_token(),
+                'isAdmin' => (bool) $request->user()?->isAdmin(),
+            ]);
+        }
 
         return view('mutations.index', compact(
             'mutations',
@@ -133,12 +144,29 @@ class MutationController extends Controller
         $rooms = Room::orderBy('name')->get();
         $selectedProductId = $request->integer('product_id') ?: null;
 
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Mutations/Create', [
+                'products' => $products,
+                'rooms' => $rooms,
+                'selectedProductId' => $selectedProductId,
+                'csrfToken' => csrf_token(),
+            ]);
+        }
+
         return view('mutations.create', compact('items', 'products', 'rooms', 'selectedProductId'));
     }
 
-    public function show(Mutation $mutation)
+    public function show(Request $request, Mutation $mutation)
     {
         $mutation->load(['product.category', 'product.room', 'fromRoom', 'toRoom', 'user', 'approver']);
+
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Mutations/Show', [
+                'mutation' => $mutation,
+                'csrfToken' => csrf_token(),
+                'isAdmin' => (bool) $request->user()?->isAdmin(),
+            ]);
+        }
 
         return view('mutations.show', compact('mutation'));
     }
@@ -263,6 +291,21 @@ class MutationController extends Controller
                 'description' => "Menyetujui permohonan mutasi ({$mutation->type}) sebanyak {$mutation->quantity} unit untuk {$product->name}",
             ]);
 
+            /** @var User|null $actor */
+            $actor = Auth::user();
+            app(WebhookDispatcher::class)->broadcast(
+                'mutation.approved',
+                [
+                    'mutation_id' => $mutation->id,
+                    'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'type' => $mutation->type,
+                    'quantity' => (int) $mutation->quantity,
+                    'status' => 'approved',
+                ],
+                $actor
+            );
+
             return redirect()->route('mutations.index')->with('success', 'Permohonan mutasi berhasil disetujui dan stok barang telah diperbarui.');
         });
     }
@@ -296,6 +339,21 @@ class MutationController extends Controller
                 'action' => 'updated',
                 'description' => 'Menolak permohonan mutasi ('.$mutation->type.') untuk '.($mutation->product?->name ?? 'Barang'),
             ]);
+
+            /** @var User|null $actor */
+            $actor = Auth::user();
+            app(WebhookDispatcher::class)->broadcast(
+                'mutation.rejected',
+                [
+                    'mutation_id' => $mutation->id,
+                    'product_id' => $mutation->product_id,
+                    'product_name' => $mutation->product?->name,
+                    'type' => $mutation->type,
+                    'quantity' => (int) $mutation->quantity,
+                    'status' => 'rejected',
+                ],
+                $actor
+            );
 
             return redirect()->route('mutations.index')->with('success', 'Permohonan mutasi telah ditolak.');
         });

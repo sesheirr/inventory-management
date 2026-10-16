@@ -178,7 +178,11 @@ Route::middleware('auth')->group(function () {
 
     // Dashboard & Settings
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/settings', function () {
+    Route::get('/settings', function (Request $request) {
+        if ($request->header('X-Inertia') || $request->boolean('v2')) {
+            return Inertia::render('Settings/Index');
+        }
+
         return view('settings', ['user' => auth()->user()]);
     })->name('settings');
 

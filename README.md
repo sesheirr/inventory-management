@@ -19,17 +19,22 @@ Sistem Informasi Manajemen Inventaris, Pemetaan Ruangan, Pemindaian Barcode, dan
 5. **Profil Pengguna & Smart Phone Detection + 1:1 Avatar Crop Studio**
    - Deteksi otomatis kode negara & format nomor telepon Indonesia (`08xx`, `628xx`, `+628xx`) maupun internasional (`+60`, `+65`, `+1`, `+81`, dll.) dengan validasi panjang digit yang presisi.
    - Pratinjau foto profil 1:1 secara instan disertai studio pemotongan rasio 1:1 (maksimal 8 MB).
-6. **Observability Resmi Laravel Telescope (`/telescope`) & Panel Telemetri (`/observability`)**
-   - Terintegrasi dengan paket resmi [`laravel/telescope`](https://laravel.com/framework/docs/telescope) (`/telescope`) untuk memantau Requests, Queries, Models, Exceptions, Notifications, Cache, Views, dan Commands.
-   - Dilengkapi header standar W3C `Server-Timing` dan ringkasan latensi rata-rata/P95 di `/observability`.
-7. **Custom Animated Maintenance Mode (`503`)**
+6. **Observability Resmi Laravel Telescope (`/telescope`), Panel Telemetri (`/observability`), & Webhook Studio (`/webhooks`) — Khusus Admin**
+   - Terintegrasi dengan paket resmi [`laravel/telescope`](https://laravel.com/framework/docs/telescope) (`/telescope`) dan panel telemetri (`/observability`) dengan header W3C `Server-Timing` serta ringkasan latensi rata-rata/P95.
+   - Dilengkapi **Outbound Webhook Studio (`/webhooks`)** berstandar HMAC-SHA256 (`X-Diskominfo-Signature-256`) untuk integrasi event real-time (`product.created`, `mutation.approved`, `stock.low`, dll.) dengan log pengiriman dan fitur uji *Ping*.
+   - Seluruh akses Observability dan Webhook dibatasi ketat hanya untuk **Admin & Super Admin**.
+7. **Multi-File/Image Uploader Setara Filament (`FilePond` + `Spatie MediaLibrary`)**
+   - Mendukung unggah banyak foto/dokumen sekaligus dengan *drag-and-drop*, pratinjau *thumbnail* instan, *image crop* rasio 1:1 / 16:9, koreksi orientasi EXIF, dan penyimpanan koleksi terstruktur.
+8. **Arsitektur Frontend v2 (`Inertia.js v2` + `React 19` + `TypeScript` + `Zustand v5` + `Vaul` + `Motion`)**
+   - Transisi antar-halaman SPA tanpa *full page reload*, *bottom-sheet drawer* mobile bergaya aplikasi native dengan gestur *drag-to-dismiss* (`Vaul`), baris daftar dengan aksi *swipe* 60fps (`Motion`), dan state management terpusat (`Zustand v5`).
+9. **Custom Animated Maintenance Mode (`503`)**
    - Tampilan pemeliharaan terjadwal beranimasi (`resources/views/errors/503.blade.php`) yang dapat dipratinjau kapan saja melalui `/maintenance-preview`.
 
 ---
 
 ## Quick Setup Guide
 
-Anda dapat menjalankan aplikasi ini dengan **Docker (`make dev`)** maupun **Tanpa Docker (`make run`)**.
+Proyek ini menggunakan **Bun** secara eksklusif untuk manajemen paket dan *bundler* frontend. Anda dapat menjalankan aplikasi ini dengan **Docker (`make dev`)** maupun **Tanpa Docker (`make run`)**.
 
 ### Opsi 1: Menggunakan Docker (Direkomendasikan)
 
@@ -40,17 +45,17 @@ make dev
 ```
 
 Perintah `make dev` akan secara otomatis:
-- Menyiapkan container PHP 8.3+, MySQL 8.0, dan Bun/Vite HMR.
+- Menyiapkan container PHP 8.4, MySQL 8.0, dan Bun + Vite HMR.
 - Membuat file `.env` dan `APP_KEY` jika belum tersedia.
 - Menjalankan **Smart Database Sync (`php artisan inventory:smart-db-sync`)**.
 - Menjalankan server di:
   - **Aplikasi Web**: `http://localhost:8000`
-  - **Vite HMR**: `http://localhost:5173`
-  - **Laravel Telescope**: `http://localhost:8000/telescope`
+  - **Vite HMR (Bun)**: `http://localhost:5173`
+  - **Laravel Telescope (Admin)**: `http://localhost:8000/telescope`
 
 ### Opsi 2: Tanpa Docker (Smart Local Runner)
 
-Jika ingin menjalankan langsung menggunakan PHP, Composer, MySQL/SQLite, dan Bun/NPM di mesin lokal:
+Jika ingin menjalankan langsung menggunakan PHP, Composer, MySQL/SQLite, dan **Bun** di mesin lokal:
 
 ```bash
 make run
@@ -83,8 +88,8 @@ php artisan inventory:smart-db-sync --strategy=replace-irrelevant
 
 | Role | Email | Password | Hak Akses |
 | :--- | :--- | :--- | :--- |
-| **Super Admin** | `fauzan@example.com` | `password` | Akses penuh + Manajemen User + Telescope & Observability |
-| **Admin** | `admin@inventory.local` | `admin123` | Persetujuan Mutasi, Kelola Ruangan/Kategori, Telescope & Observability |
+| **Super Admin** | `fauzan@example.com` | `password` | Akses penuh + Manajemen User + Telescope, Observability & Webhooks |
+| **Admin** | `admin@inventory.local` | `admin123` | Persetujuan Mutasi, Kelola Ruangan/Kategori, Telescope, Observability & Webhooks |
 | **Staf / Operator** | `test@example.com` | `password` | Pengajuan Mutasi, Pindai Barcode, Lihat Inventaris |
 
 ---
@@ -95,15 +100,15 @@ php artisan inventory:smart-db-sync --strategy=replace-irrelevant
 # Menjalankan aplikasi dengan Docker + Smart DB Sync
 make dev
 
-# Menjalankan aplikasi tanpa Docker (Local PHP + Bun/NPM)
+# Menjalankan aplikasi tanpa Docker (Local PHP + Bun)
 make run
 
 # Menjalankan seluruh pengujian (PHPUnit Feature & Unit Tests)
 make test
 
-# Memeriksa kualitas kode & pemformatan (Laravel Pint + Blade Linter)
+# Memeriksa kualitas kode & pemformatan (Laravel Pint + TypeScript + Bun Vite Build)
 make lint
 
-# Membangun aset produksi frontend (Vite)
-npm run build
+# Menjalankan perintah Bun di dalam container Docker
+make bun c="run build"
 ```
