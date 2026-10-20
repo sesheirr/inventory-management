@@ -173,9 +173,9 @@
 </div>
 
 {{-- Edit Profile Modal --}}
-<div id="editProfileModal" class="modal-container fixed inset-0 z-[75] hidden items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm">
-    <div class="relative w-full sm:max-w-xl rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200 dark:border-slate-800 shadow-2xl p-5 sm:p-7 max-h-[92vh] overflow-y-auto overflow-x-hidden">
-        <div class="sheet-grab-handle sm:hidden mb-2"></div>
+<div id="editProfileModal" class="modal-container responsive-bottom-sheet fixed inset-0 z-[90] hidden items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm overscroll-contain">
+    <div class="sheet-dialog relative w-full sm:max-w-xl rounded-t-3xl sm:rounded-2xl bg-white dark:bg-[#0f1b38] border border-slate-200 dark:border-slate-800 shadow-2xl p-5 sm:p-7 max-h-[90dvh] overflow-y-auto overflow-x-hidden overscroll-contain">
+        <div class="sheet-grab-handle w-11 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-3 sm:hidden"></div>
 
         <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
             <div>

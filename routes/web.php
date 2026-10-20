@@ -80,6 +80,38 @@ Route::match(['get', 'post'], '/api/webhooks/receiver', [WebhookController::clas
     ->withoutMiddleware([ValidateCsrfToken::class])
     ->name('webhooks.receiver');
 
+// Local Network (LAN) HTTPS Root CA & Info Endpoints for Mobile Chrome PWA Installation
+Route::get('/lan-ca.crt', function () {
+    $certPath = storage_path('certs/lan-ca.crt');
+    if (! file_exists($certPath)) {
+        $certPath = public_path('lan-ca.crt');
+    }
+    abort_unless(file_exists($certPath), 404, 'Sertifikat Root CA LAN belum dibuat.');
+
+    return response()->file($certPath, [
+        'Content-Type' => 'application/x-x509-ca-cert',
+        'Content-Disposition' => 'attachment; filename="Inventaris-Diskominfo-LAN-CA.crt"',
+        'Cache-Control' => 'no-store',
+    ]);
+})->name('lan.ca.cert');
+
+Route::get('/api/lan-https-info', function (Request $request) {
+    $metaPath = storage_path('certs/lan-meta.json');
+    $meta = file_exists($metaPath) ? (json_decode((string) file_get_contents($metaPath), true) ?: []) : [];
+    $host = $request->getHost();
+    $httpsPort = (int) ($meta['https_port'] ?? 8443);
+    $primaryIp = (string) ($meta['primary_ip'] ?? $host);
+    $targetHost = filter_var($host, FILTER_VALIDATE_IP) ? $host : $primaryIp;
+
+    return response()->json([
+        'ok' => true,
+        'https_url' => "https://{$targetHost}:{$httpsPort}",
+        'ca_cert_url' => url('/lan-ca.crt'),
+        'https_port' => $httpsPort,
+        'lan_ip' => $targetHost,
+    ]);
+})->name('lan.https.info');
+
 // ==========================================
 // AUTH ROUTES (Guest / Belum Login)
 // ==========================================

@@ -285,8 +285,9 @@
 </div>
 
 {{-- Create User Modal --}}
-<div id="createUserModal" class="modal-container responsive-bottom-sheet fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-    <div class="sheet-dialog relative w-full max-w-lg rounded-3xl bg-white dark:bg-[#0f1b38] border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-5 animate-fade-in">
+<div id="createUserModal" class="modal-container responsive-bottom-sheet fixed inset-0 z-[90] hidden items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm overscroll-contain">
+    <div class="sheet-dialog relative w-full max-w-lg max-h-[90dvh] overflow-y-auto overscroll-contain rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0f1b38] border border-slate-200 dark:border-slate-800 shadow-2xl p-5 sm:p-6 space-y-5 animate-fade-in">
+        <div class="sheet-grab-handle w-11 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-2 sm:hidden"></div>
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg">
@@ -356,8 +357,9 @@
 {{-- Edit & Delete Modals per User --}}
 @foreach ($users as $managedUser)
     {{-- Edit / Reset Password Modal --}}
-    <div id="editUserModal{{ $managedUser->id }}" class="modal-container responsive-bottom-sheet fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-        <div class="sheet-dialog relative w-full max-w-lg rounded-3xl bg-white dark:bg-[#0f1b38] border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-5 animate-fade-in">
+    <div id="editUserModal{{ $managedUser->id }}" class="modal-container responsive-bottom-sheet fixed inset-0 z-[90] hidden items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-sm overscroll-contain">
+        <div class="sheet-dialog relative w-full max-w-lg max-h-[90dvh] overflow-y-auto overscroll-contain rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0f1b38] border border-slate-200 dark:border-slate-800 shadow-2xl p-5 sm:p-6 space-y-5 animate-fade-in">
+            <div class="sheet-grab-handle w-11 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-2 sm:hidden"></div>
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-base font-bold text-slate-900 dark:text-white">Edit Pengguna</h3>

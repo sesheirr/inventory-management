@@ -8,8 +8,11 @@ services:
     restart: unless-stopped
     ports:
       - "8000:8000"
+      - "8443:8443"
       - "5173:5173"
       - "8085:8085"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - .:/var/www/html
     depends_on:

@@ -34,6 +34,11 @@ class LiveStateController extends Controller
         $webhookStream = $this->resolveWebhookStream();
         $latestWebhookId = $webhookStream[0]['id'] ?? '';
 
+        /** @var User|null $user */
+        $user = $request->user();
+        [$unreadCount, $latestNotifications] = $this->resolveUserNotifications($user);
+        $latestNotifId = $latestNotifications[0]['id'] ?? '';
+
         $version = substr(sha1(implode('|', [
             $totalProducts,
             $activeProducts,
@@ -46,11 +51,9 @@ class LiveStateController extends Controller
             $latestProductUpdated,
             $latestMutationUpdated,
             $latestWebhookId,
+            $unreadCount,
+            $latestNotifId,
         ])), 0, 16);
-
-        /** @var User|null $user */
-        $user = $request->user();
-        [$unreadCount, $latestNotifications] = $this->resolveUserNotifications($user);
 
         return response()->json([
             'ok' => true,

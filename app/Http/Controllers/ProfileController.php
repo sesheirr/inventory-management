@@ -85,13 +85,24 @@ class ProfileController extends Controller
         }
 
         $croppedAvatarData = (string) $request->input('cropped_avatar', '');
+        $tmpFiles = (array) $request->input('uploaded_tmp_files', []);
 
-        if ($request->hasFile('avatar')) {
-            $data['avatar'] = $this->storeAvatar($request->file('avatar'), $user);
-        } elseif (str_starts_with($croppedAvatarData, 'data:image/')) {
+        if (str_starts_with($croppedAvatarData, 'data:image/')) {
             $storedCrop = $this->storeCroppedAvatarDataUrl($croppedAvatarData, $user);
             if ($storedCrop !== null) {
                 $data['avatar'] = $storedCrop;
+            } elseif ($request->hasFile('avatar')) {
+                $data['avatar'] = $this->storeAvatar($request->file('avatar'), $user);
+            }
+        } elseif ($request->hasFile('avatar')) {
+            $data['avatar'] = $this->storeAvatar($request->file('avatar'), $user);
+        } elseif (! empty($tmpFiles[0]) && is_string($tmpFiles[0]) && str_starts_with($tmpFiles[0], 'tmp/uploads/') && ! str_contains($tmpFiles[0], '..')) {
+            if (Storage::disk('public')->exists($tmpFiles[0])) {
+                $ext = pathinfo($tmpFiles[0], PATHINFO_EXTENSION) ?: 'jpg';
+                $dest = 'avatars/avatar-'.$user->id.'-'.time().'.'.$ext;
+                Storage::disk('public')->copy($tmpFiles[0], $dest);
+                Storage::disk('public')->delete($tmpFiles[0]);
+                $data['avatar'] = $dest;
             }
         }
 

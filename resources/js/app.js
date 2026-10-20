@@ -1424,11 +1424,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function openModalById(modalId) {
         const modal = document.getElementById(modalId);
         if (!modal) return;
+        if (modal.parentElement !== document.body && !modal.closest('form')) {
+            document.body.appendChild(modal);
+        }
         cancelElementAnimations(modal);
         delete modal.dataset.isClosing;
         modal.classList.remove('hidden');
         modal.classList.add('flex');
-        document.body.classList.add('overflow-hidden');
+        document.body.classList.add('overflow-hidden', 'has-open-modal');
 
         animateSpringElement(modal, [
             { opacity: 0 },
@@ -1488,7 +1491,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 try { dialogAnim.cancel(); } catch (e) {}
             }
             if (!document.querySelector('.modal-container.flex')) {
-                document.body.classList.remove('overflow-hidden');
+                document.body.classList.remove('overflow-hidden', 'has-open-modal');
             }
         };
 
@@ -2393,10 +2396,36 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        function dataUrlToFile(dataUrl, filename = 'avatar-cropped.jpg') {
+            try {
+                const parts = dataUrl.split(',');
+                if (parts.length < 2) return null;
+                const mimeMatch = parts[0].match(/:(.*?);/);
+                const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+                const bstr = atob(parts[1]);
+                let n = bstr.length;
+                const u8arr = new Uint8Array(n);
+                while (n--) {
+                    u8arr[n] = bstr.charCodeAt(n);
+                }
+                return new File([u8arr], filename, { type: mime, lastModified: Date.now() });
+            } catch (e) {
+                return null;
+            }
+        }
+
         function syncPreviewAndHiddenInput(showToastMsg = false) {
             const dataUrl = exportCroppedDataUrl();
             if (!dataUrl) return;
             if (croppedInput) croppedInput.value = dataUrl;
+            try {
+                const croppedFile = dataUrlToFile(dataUrl, 'avatar-cropped-1x1.jpg');
+                if (croppedFile && typeof DataTransfer !== 'undefined') {
+                    const dt = new DataTransfer();
+                    dt.items.add(croppedFile);
+                    fileInput.files = dt.files;
+                }
+            } catch (e) {}
             showAvatarThumbnails(dataUrl);
             if (showToastMsg) {
                 window.toast?.success('Potongan foto 1:1 diterapkan!', {
@@ -3046,8 +3075,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 3. Update Navbar Unread Notification Badge & Webhook-Driven Preview List
+        let notifToastFired = false;
         if (payload.notifications) {
+            const prevKnownSize = knownNotificationIds.size;
             applyWebhookNotifications(payload.notifications, payload.webhook_stream || null, fromBroadcast);
+            if (!isFirstPoll && knownNotificationIds.size > prevKnownSize) {
+                notifToastFired = true;
+            }
         }
 
         // 4. Detect Data Manipulation by Another User
@@ -3055,7 +3089,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (typeof window.refreshProductsTableRealtime === 'function') {
                 window.refreshProductsTableRealtime();
             }
-            if (!fromBroadcast && payload.latest_product) {
+            if (!fromBroadcast && !notifToastFired && payload.latest_product) {
                 window.toast?.info('Data Inventaris Diperbarui', {
                     description: `Sinkronisasi semi-realtime: ${payload.latest_product.name} (${payload.latest_product.stock} unit)`,
                     duration: 4000,
@@ -3164,6 +3198,246 @@ document.addEventListener('DOMContentLoaded', () => {
     // =========================================================================
     // 11. REUSABLE MEDIA UPLOADER WITH INSTANT CLIENT-SIDE THUMBNAIL PREVIEW
     // =========================================================================
+    function openUniversalImageCropperModal(file, onCroppedFileReady) {
+        if (!file || !file.type.startsWith('image/')) return;
+
+        let modal = document.getElementById('universalImageCropperModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'universalImageCropperModal';
+            modal.className = 'fixed inset-0 z-[120] hidden items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xs';
+            modal.innerHTML = `
+                <div class="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90dvh]">
+                    <div class="px-4 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="w-7 h-7 rounded-lg bg-blue-600/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                                <i class="bi bi-crop text-xs"></i>
+                            </span>
+                            <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Potong & Sesuaikan Gambar (1:1)</h3>
+                        </div>
+                        <button type="button" data-ucrop-close class="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center cursor-pointer">
+                            <i class="bi bi-x-lg text-xs"></i>
+                        </button>
+                    </div>
+                    <div class="p-4 space-y-3 overflow-y-auto">
+                        <div class="flex justify-center">
+                            <div class="relative w-60 h-60 rounded-2xl overflow-hidden border-2 border-blue-500/50 bg-slate-950 shadow-inner select-none touch-none">
+                                <canvas data-ucrop-canvas width="320" height="320" class="w-full h-full cursor-grab active:cursor-grabbing"></canvas>
+                                <div class="pointer-events-none absolute inset-0 border border-white/25 grid grid-cols-3 grid-rows-3">
+                                    <div class="border-r border-b border-white/15"></div>
+                                    <div class="border-r border-b border-white/15"></div>
+                                    <div class="border-b border-white/15"></div>
+                                    <div class="border-r border-b border-white/15"></div>
+                                    <div class="border-r border-b border-white/15"></div>
+                                    <div class="border-b border-white/15"></div>
+                                    <div class="border-r border-white/15"></div>
+                                    <div class="border-r border-white/15"></div>
+                                    <div></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                                <span>Zoom</span>
+                                <span data-ucrop-zoom-label class="font-mono text-blue-600 dark:text-blue-400">100%</span>
+                            </div>
+                            <input type="range" data-ucrop-zoom min="1" max="3" step="0.05" value="1" class="w-full accent-blue-600 cursor-pointer">
+                            <div class="flex items-center justify-center gap-2 pt-1">
+                                <button type="button" data-ucrop-rot-left class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 cursor-pointer">
+                                    <i class="bi bi-arrow-counterclockwise mr-1"></i> Putar Kiri
+                                </button>
+                                <button type="button" data-ucrop-rot-right class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 cursor-pointer">
+                                    <i class="bi bi-arrow-clockwise mr-1"></i> Putar Kanan
+                                </button>
+                                <button type="button" data-ucrop-reset class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 cursor-pointer">
+                                    Reset
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2 bg-slate-50/70 dark:bg-slate-900/80">
+                        <button type="button" data-ucrop-close class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-800 cursor-pointer">
+                            Batal
+                        </button>
+                        <button type="button" data-ucrop-apply class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm cursor-pointer">
+                            <i class="bi bi-check2-circle mr-1"></i> Terapkan Crop
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        const canvas = modal.querySelector('[data-ucrop-canvas]');
+        const ctx = canvas?.getContext('2d');
+        const zoomInput = modal.querySelector('[data-ucrop-zoom]');
+        const zoomLabel = modal.querySelector('[data-ucrop-zoom-label]');
+        const rotLeftBtn = modal.querySelector('[data-ucrop-rot-left]');
+        const rotRightBtn = modal.querySelector('[data-ucrop-rot-right]');
+        const resetBtn = modal.querySelector('[data-ucrop-reset]');
+        const applyBtn = modal.querySelector('[data-ucrop-apply]');
+        const closeBtns = modal.querySelectorAll('[data-ucrop-close]');
+
+        if (!canvas || !ctx) return;
+
+        let imgObj = null;
+        let uZoom = 1;
+        let uRot = 0;
+        let uOffX = 0;
+        let uOffY = 0;
+        let uDrag = false;
+        let uStartX = 0;
+        let uStartY = 0;
+
+        function drawUCanvas() {
+            if (!imgObj) return;
+            const w = canvas.width;
+            const h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.save();
+            ctx.translate(w / 2 + uOffX, h / 2 + uOffY);
+            ctx.rotate((uRot * Math.PI) / 180);
+
+            const rot90 = Math.abs(uRot % 180) === 90;
+            const iw = rot90 ? imgObj.height : imgObj.width;
+            const ih = rot90 ? imgObj.width : imgObj.height;
+            const scale = Math.max(w / iw, h / ih) * uZoom;
+
+            ctx.drawImage(imgObj, (-imgObj.width * scale) / 2, (-imgObj.height * scale) / 2, imgObj.width * scale, imgObj.height * scale);
+            ctx.restore();
+        }
+
+        function closeUModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const img = new Image();
+            img.onload = () => {
+                imgObj = img;
+                uZoom = 1;
+                uRot = 0;
+                uOffX = 0;
+                uOffY = 0;
+                if (zoomInput) zoomInput.value = '1';
+                if (zoomLabel) zoomLabel.textContent = '100%';
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                drawUCanvas();
+            };
+            img.src = String(ev.target?.result || '');
+        };
+        reader.readAsDataURL(file);
+
+        if (zoomInput) {
+            zoomInput.oninput = () => {
+                uZoom = parseFloat(zoomInput.value || '1') || 1;
+                if (zoomLabel) zoomLabel.textContent = `${Math.round(uZoom * 100)}%`;
+                drawUCanvas();
+            };
+        }
+        if (rotLeftBtn) {
+            rotLeftBtn.onclick = () => {
+                uRot = (uRot - 90) % 360;
+                drawUCanvas();
+            };
+        }
+        if (rotRightBtn) {
+            rotRightBtn.onclick = () => {
+                uRot = (uRot + 90) % 360;
+                drawUCanvas();
+            };
+        }
+        if (resetBtn) {
+            resetBtn.onclick = () => {
+                uZoom = 1;
+                uRot = 0;
+                uOffX = 0;
+                uOffY = 0;
+                if (zoomInput) zoomInput.value = '1';
+                if (zoomLabel) zoomLabel.textContent = '100%';
+                drawUCanvas();
+            };
+        }
+        closeBtns.forEach((btn) => {
+            btn.onclick = closeUModal;
+        });
+
+        canvas.onmousedown = (e) => {
+            uDrag = true;
+            uStartX = e.clientX - uOffX;
+            uStartY = e.clientY - uOffY;
+        };
+        window.addEventListener('mousemove', (e) => {
+            if (!uDrag) return;
+            uOffX = Math.max(-180, Math.min(180, e.clientX - uStartX));
+            uOffY = Math.max(-180, Math.min(180, e.clientY - uStartY));
+            drawUCanvas();
+        });
+        window.addEventListener('mouseup', () => {
+            uDrag = false;
+        });
+
+        canvas.ontouchstart = (e) => {
+            if (e.touches.length === 1) {
+                e.preventDefault();
+                uDrag = true;
+                uStartX = e.touches[0].clientX - uOffX;
+                uStartY = e.touches[0].clientY - uOffY;
+            }
+        };
+        canvas.ontouchmove = (e) => {
+            if (uDrag && e.touches.length === 1) {
+                e.preventDefault();
+                uOffX = Math.max(-180, Math.min(180, e.touches[0].clientX - uStartX));
+                uOffY = Math.max(-180, Math.min(180, e.touches[0].clientY - uStartY));
+                drawUCanvas();
+            }
+        };
+        canvas.ontouchend = () => {
+            uDrag = false;
+        };
+
+        if (applyBtn) {
+            applyBtn.onclick = () => {
+                if (!imgObj) return;
+                const out = document.createElement('canvas');
+                out.width = 720;
+                out.height = 720;
+                const octx = out.getContext('2d');
+                if (!octx) return;
+
+                const ratio = 720 / canvas.width;
+                octx.save();
+                octx.translate(360 + uOffX * ratio, 360 + uOffY * ratio);
+                octx.rotate((uRot * Math.PI) / 180);
+                const rot90 = Math.abs(uRot % 180) === 90;
+                const iw = rot90 ? imgObj.height : imgObj.width;
+                const ih = rot90 ? imgObj.width : imgObj.height;
+                const scale = Math.max(720 / iw, 720 / ih) * uZoom;
+                octx.drawImage(imgObj, (-imgObj.width * scale) / 2, (-imgObj.height * scale) / 2, imgObj.width * scale, imgObj.height * scale);
+                octx.restore();
+
+                out.toBlob((blob) => {
+                    if (!blob) return;
+                    const baseName = file.name.replace(/\.[^.]+$/, '');
+                    const croppedFile = new File([blob], `${baseName}-cropped.jpg`, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now(),
+                    });
+                    onCroppedFileReady(croppedFile);
+                    closeUModal();
+                    window.toast?.success('Potongan gambar berhasil diterapkan!');
+                }, 'image/jpeg', 0.92);
+            };
+        }
+    }
+
     function initReusableMediaUploaders(root = document) {
         root.querySelectorAll('[data-reusable-media-uploader="true"]').forEach((uploader) => {
             if (uploader.dataset.uploaderBound === '1') return;
@@ -3171,13 +3445,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const fileInput = uploader.querySelector('[data-uploader-file-input]');
             const dropzone = uploader.querySelector('[data-uploader-dropzone]');
-            const previewWrap = uploader.querySelector('[data-uploader-preview-wrap]');
+            const previewWrap = uploader.querySelector('[data-uploader-preview-wrap], [data-uploader-preview-wrapper]');
             const previewGrid = uploader.querySelector('[data-uploader-preview-grid]');
-            const countBadge = uploader.querySelector('[data-uploader-count-badge]');
+            const countBadge = uploader.querySelector('[data-uploader-count-badge], [data-uploader-count-text]');
             const clearBtn = uploader.querySelector('[data-uploader-clear-btn]');
             const existingWrap = uploader.querySelector('[data-uploader-existing-wrap]');
             const removeExistingBtn = uploader.querySelector('[data-uploader-remove-existing-btn]');
             const removeFlagInput = uploader.querySelector('[data-uploader-remove-flag]');
+            const maxFiles = parseInt(uploader.dataset.maxFiles || '8', 10) || 8;
 
             if (!fileInput || !previewGrid || !previewWrap) return;
 
@@ -3192,18 +3467,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             function renderThumbnails() {
-                previewGrid.innerHTML = '';
-                if (selectedFiles.length === 0) {
+                previewGrid.querySelectorAll('[data-selected-media-card]').forEach((el) => el.remove());
+                const existingCardsCount = previewGrid.querySelectorAll('[data-existing-media-card]').length;
+
+                if (selectedFiles.length === 0 && existingCardsCount === 0) {
                     previewWrap.classList.add('hidden');
-                    if (countBadge) countBadge.textContent = '0 file dipilih';
+                    clearBtn?.classList.add('hidden');
+                    if (countBadge) countBadge.textContent = `0 / ${maxFiles} Foto`;
                     return;
                 }
 
                 previewWrap.classList.remove('hidden');
-                if (countBadge) countBadge.textContent = `${selectedFiles.length} foto siap diunggah`;
+                if (selectedFiles.length > 0) {
+                    clearBtn?.classList.remove('hidden');
+                    if (countBadge) countBadge.textContent = `${selectedFiles.length} foto siap diunggah`;
+                } else {
+                    clearBtn?.classList.add('hidden');
+                    if (countBadge) countBadge.textContent = `${existingCardsCount} / ${maxFiles} Foto`;
+                }
 
                 selectedFiles.forEach((file, idx) => {
                     const card = document.createElement('div');
+                    card.setAttribute('data-selected-media-card', '1');
                     card.className = 'group relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xs';
                     const sizeKb = Math.max(1, Math.round(file.size / 1024));
                     const sizeLabel = sizeKb >= 1024 ? `${(sizeKb / 1024).toFixed(1)} MB` : `${sizeKb} KB`;
@@ -3213,15 +3498,38 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="aspect-square w-full bg-slate-100 dark:bg-slate-800 overflow-hidden relative">
                             <img src="${objectUrl}" alt="${escapeHtmlText(file.name)}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
                             ${idx === 0 ? '<span class="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-blue-600/90 text-white text-[9px] font-extrabold uppercase tracking-wider shadow-xs">Utama</span>' : ''}
-                            <button type="button" data-remove-thumb-idx="${idx}" class="absolute top-1.5 right-1.5 w-6 h-6 rounded-lg bg-slate-900/75 hover:bg-rose-600 text-white flex items-center justify-center text-xs transition-colors cursor-pointer" title="Hapus gambar">
-                                <i class="bi bi-x-lg text-[10px]"></i>
+                            <div class="absolute top-1.5 right-1.5 flex items-center gap-1">
+                                <button type="button" data-crop-thumb-idx="${idx}" class="w-6 h-6 rounded-lg bg-slate-900/75 hover:bg-blue-600 text-white flex items-center justify-center text-xs transition-colors cursor-pointer" title="Crop 1:1 gambar">
+                                    <i class="bi bi-crop text-[10px]"></i>
+                                </button>
+                                <button type="button" data-remove-thumb-idx="${idx}" class="w-6 h-6 rounded-lg bg-slate-900/75 hover:bg-rose-600 text-white flex items-center justify-center text-xs transition-colors cursor-pointer" title="Hapus gambar">
+                                    <i class="bi bi-x-lg text-[10px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-2 flex items-center justify-between gap-1">
+                            <div class="min-w-0">
+                                <p class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">${escapeHtmlText(file.name)}</p>
+                                <p class="text-[10px] font-mono text-slate-400">${sizeLabel}</p>
+                            </div>
+                            <button type="button" data-crop-thumb-btn="${idx}" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 shrink-0 cursor-pointer">
+                                Crop
                             </button>
                         </div>
-                        <div class="p-2">
-                            <p class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">${escapeHtmlText(file.name)}</p>
-                            <p class="text-[10px] font-mono text-slate-400">${sizeLabel}</p>
-                        </div>
                     `;
+
+                    const handleOpenCrop = (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        openUniversalImageCropperModal(file, (croppedFile) => {
+                            selectedFiles[idx] = croppedFile;
+                            syncInputFiles();
+                            renderThumbnails();
+                        });
+                    };
+
+                    card.querySelector('[data-crop-thumb-idx]')?.addEventListener('click', handleOpenCrop);
+                    card.querySelector('[data-crop-thumb-btn]')?.addEventListener('click', handleOpenCrop);
 
                     card.querySelector('[data-remove-thumb-idx]')?.addEventListener('click', (ev) => {
                         ev.preventDefault();
@@ -3241,7 +3549,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const isMultiple = fileInput.hasAttribute('multiple');
                 if (isMultiple) {
-                    selectedFiles = [...selectedFiles, ...incoming].slice(0, 8);
+                    selectedFiles = [...selectedFiles, ...incoming].slice(0, maxFiles);
                 } else {
                     selectedFiles = [incoming[0]];
                 }
@@ -3523,6 +3831,49 @@ document.addEventListener('DOMContentLoaded', () => {
             iosGuideBox?.classList.toggle('hidden');
         });
 
+        const lanHelperBox = document.getElementById('pwaLanHttpsHelperBox');
+        const lanIpLabel = document.getElementById('pwaLanIpLabel');
+        const switchToLanHttpsBtn = document.getElementById('pwaSwitchToLanHttpsBtn');
+        const lanProtocolBadge = document.getElementById('pwaLanProtocolBadge');
+
+        const host = window.location.hostname || '';
+        const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
+        const isPrivateLanHost = !isLocalhost && (
+            /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(host) ||
+            host.endsWith('.local')
+        );
+        const isInsecureContext = window.isSecureContext === false || (window.location.protocol === 'http:' && !isLocalhost);
+
+        if (lanHelperBox && (isPrivateLanHost || isInsecureContext)) {
+            lanHelperBox.classList.remove('hidden');
+            const httpsPort = 8443;
+            const targetHttpsUrl = `https://${host}:${httpsPort}${window.location.pathname}${window.location.search}`;
+            if (lanIpLabel) lanIpLabel.textContent = host;
+            if (switchToLanHttpsBtn) {
+                if (window.location.protocol === 'https:') {
+                    switchToLanHttpsBtn.href = '#';
+                    switchToLanHttpsBtn.innerHTML = '<i class="bi bi-check-circle-fill"></i><span>HTTPS LAN Aktif</span>';
+                    switchToLanHttpsBtn.classList.replace('bg-indigo-600', 'bg-emerald-600');
+                    if (lanProtocolBadge) {
+                        lanProtocolBadge.textContent = 'HTTPS AKTIF';
+                        lanProtocolBadge.className = 'px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-500/15 text-emerald-700 dark:text-emerald-300';
+                    }
+                } else {
+                    switchToLanHttpsBtn.href = targetHttpsUrl;
+                }
+            }
+
+            // Also fetch dynamic LAN HTTPS metadata from backend if available
+            fetch('/api/lan-https-info', { headers: { Accept: 'application/json' } })
+                .then((r) => (r.ok ? r.json() : null))
+                .then((info) => {
+                    if (info && info.https_url && window.location.protocol !== 'https:' && switchToLanHttpsBtn) {
+                        switchToLanHttpsBtn.href = `${info.https_url}${window.location.pathname}${window.location.search}`;
+                    }
+                })
+                .catch(() => {});
+        }
+
         oneClickInstallBtn?.addEventListener('click', async () => {
             await requestDeviceCapabilities(false);
             if (deferredInstallPrompt && typeof deferredInstallPrompt.prompt === 'function') {
@@ -3534,6 +3885,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     closePwaModal();
                     window.toast?.success('Aplikasi berhasil diinstal ke Home Screen!');
                 }
+            } else if (isInsecureContext && switchToLanHttpsBtn && switchToLanHttpsBtn.href && switchToLanHttpsBtn.href !== '#') {
+                lanHelperBox?.classList.remove('hidden');
+                window.toast?.warning('Membuka jalur HTTPS LAN (:8443) agar Chrome mengizinkan instalasi PWA...', {
+                    duration: 3500,
+                });
+                setTimeout(() => {
+                    window.location.href = switchToLanHttpsBtn.href;
+                }, 900);
             } else if (iosGuideBox) {
                 iosGuideBox.classList.remove('hidden');
                 window.toast?.info('Ikuti panduan di bawah untuk menambahkan ke Home Screen perangkat Anda.');

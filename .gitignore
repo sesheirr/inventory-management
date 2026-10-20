@@ -3,6 +3,10 @@
 .env
 .env.backup
 .env.production
+.env.local
+.env.live
+.env.db.*
+!.env.db.*.example
 .phpactor.json
 .phpunit.result.cache
 /.codex
@@ -52,3 +56,9 @@ SCRATCH*.md
 scratch/
 *.notes.md
 .notes/
+
+# Local portable binaries & generated LAN SSL certificates
+/.bin/
+/public/lan-ca.crt
+/storage/certs/
+

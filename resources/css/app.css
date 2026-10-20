@@ -197,7 +197,7 @@
     }
     to {
         opacity: 1;
-        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+        transform: none;
     }
 }
 
@@ -278,7 +278,7 @@
     }
     to {
         opacity: 1;
-        transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+        transform: none;
     }
 }
 
@@ -1031,7 +1031,38 @@ html.theme-transitioning th {
 /* ==========================================================================
    MOBILE BOTTOM SHEET & FRAMER MOTION SPRING EXPERIENCE (NO BOTTOM CUTOFF)
    ========================================================================== */
+.modal-container {
+    z-index: 90 !important;
+    overscroll-behavior: contain;
+}
+
+.modal-container > .sheet-dialog,
+.modal-container > div {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+body:has(.modal-container.flex) #mobileBottomDock,
+body.has-open-modal #mobileBottomDock {
+    z-index: 10 !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+    transform: translate3d(0, 100%, 0) !important;
+    transition: opacity 180ms ease, transform 220ms var(--ease-out-expo);
+}
+
 @media (max-width: 767px) {
+    .modal-container {
+        overflow-y: auto;
+    }
+
+    .modal-container > .sheet-dialog,
+    .modal-container > div {
+        max-height: 90dvh !important;
+        overflow-y: auto !important;
+        padding-bottom: max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1.25rem)) !important;
+    }
+
     .responsive-bottom-sheet {
         align-items: flex-end !important;
         padding: 0 !important;
@@ -1042,14 +1073,14 @@ html.theme-transitioning th {
         width: 100% !important;
         max-width: 100% !important;
         min-height: 44vh;
-        max-height: 88vh;
-        overflow-y: auto;
+        max-height: 90dvh !important;
+        overflow-y: auto !important;
         border-bottom-left-radius: 0 !important;
         border-bottom-right-radius: 0 !important;
         border-top-left-radius: 1.75rem !important;
         border-top-right-radius: 1.75rem !important;
         margin-bottom: 0 !important;
-        padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0.75rem));
+        padding-bottom: max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1.25rem)) !important;
     }
 }
 

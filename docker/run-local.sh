@@ -286,11 +286,13 @@ fi
 rm -f public/hot 2>/dev/null || true
 
 WEBHOOK_PORT="${WEBHOOK_PORT:-8085}"
+HTTPS_PORT="${HTTPS_PORT:-8443}"
 
 echo ""
 echo -e "${COLOR_SUCCESS}${COLOR_BOLD}======================================================================${COLOR_RESET}"
-echo -e "${COLOR_SUCCESS}${COLOR_BOLD} ✅ Semua Siap! Menjalankan Server Lokal + Webhook (Tanpa Docker)${COLOR_RESET}"
+echo -e "${COLOR_SUCCESS}${COLOR_BOLD} ✅ Semua Siap! Menjalankan Server Lokal + LAN HTTPS + Webhook${COLOR_RESET}"
 echo -e "${COLOR_SUCCESS}${COLOR_BOLD} 👉 Aplikasi Web   : http://127.0.0.1:${PORT}${COLOR_RESET}"
+echo -e "${COLOR_SUCCESS}${COLOR_BOLD} 📱 LAN HTTPS PWA  : https://<IP_LAN_ANDA>:${HTTPS_PORT} (Mobile Chrome PWA)${COLOR_RESET}"
 echo -e "${COLOR_INFO}${COLOR_BOLD} ⚡ Vite HMR       : http://127.0.0.1:${VITE_PORT}${COLOR_RESET}"
 echo -e "${COLOR_INFO}${COLOR_BOLD} 🔔 Webhook Server : http://127.0.0.1:${WEBHOOK_PORT}/webhook${COLOR_RESET}"
 echo -e "${COLOR_WARNING}${COLOR_BOLD} 🌐 Ingin akses HTTPS jarak jauh? Buka terminal baru & ketik: make tunnel${COLOR_RESET}"
@@ -300,11 +302,11 @@ echo ""
 
 cleanup() {
     echo ""
-    echo -e "${COLOR_WARNING}🛑 Menghentikan server lokal & webhook...${COLOR_RESET}"
+    echo -e "${COLOR_WARNING}🛑 Menghentikan server lokal, LAN HTTPS & webhook...${COLOR_RESET}"
     rm -f public/hot 2>/dev/null || true
-    kill "${LARAVEL_PID:-}" "${VITE_PID:-}" "${WEBHOOK_PID:-}" 2>/dev/null || true
-    wait "${LARAVEL_PID:-}" "${VITE_PID:-}" "${WEBHOOK_PID:-}" 2>/dev/null || true
-    echo -e "${COLOR_SUCCESS}✅ Server lokal & webhook berhenti dengan bersih.${COLOR_RESET}"
+    kill "${LARAVEL_PID:-}" "${VITE_PID:-}" "${WEBHOOK_PID:-}" "${LAN_HTTPS_PID:-}" 2>/dev/null || true
+    wait "${LARAVEL_PID:-}" "${VITE_PID:-}" "${WEBHOOK_PID:-}" "${LAN_HTTPS_PID:-}" 2>/dev/null || true
+    echo -e "${COLOR_SUCCESS}✅ Server lokal, LAN HTTPS & webhook berhenti dengan bersih.${COLOR_RESET}"
     exit 0
 }
 trap cleanup SIGINT SIGTERM EXIT
@@ -317,6 +319,11 @@ VITE_PID=$!
 
 php artisan inventory:webhook-server --host=0.0.0.0 --port="${WEBHOOK_PORT}" &
 WEBHOOK_PID=$!
+
+if [ -f scripts/lan-https-proxy.mjs ]; then
+    HTTPS_PORT="${HTTPS_PORT}" PORT="${PORT}" ${FRONTEND_RUNNER} scripts/lan-https-proxy.mjs &
+    LAN_HTTPS_PID=$!
+fi
 
 while kill -0 "$LARAVEL_PID" 2>/dev/null && kill -0 "$VITE_PID" 2>/dev/null; do
     sleep 1

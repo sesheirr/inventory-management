@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
 use App\Models\User;
+use App\Notifications\UserLoggedInNotice;
 use App\Services\CaptchaGenerator;
+use App\Services\WebhookDispatcher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
 
 class AuthController extends Controller
@@ -17,6 +20,34 @@ class AuthController extends Controller
     public const QUICK_PROFILE_COOKIE = 'inv_quick_profile';
 
     public const QUICK_PROFILE_TTL_DAYS = 7;
+
+    /**
+     * Notify other users & broadcast realtime webhook event when someone logs in
+     */
+    private function dispatchUserLoginNotifications(User $actor, Request $request, string $method = 'standar'): void
+    {
+        try {
+            $otherUsers = User::where('id', '!=', $actor->id)->get();
+            if ($otherUsers->isNotEmpty()) {
+                Notification::send($otherUsers, new UserLoggedInNotice($actor, $request->ip(), $method));
+            }
+
+            app(WebhookDispatcher::class)->broadcast(
+                'user.login',
+                [
+                    'id' => $actor->id,
+                    'name' => $actor->name,
+                    'email' => $actor->email,
+                    'role' => $actor->roleLabel(),
+                    'ip' => $request->ip(),
+                    'method' => $method,
+                ],
+                $actor
+            );
+        } catch (\Throwable $e) {
+            // Non-blocking notification
+        }
+    }
 
     /**
      * Resolve and validate 7-day saved quick login profile from cookie
@@ -182,6 +213,8 @@ class AuthController extends Controller
                 $user->id,
                 $user->id
             );
+            $this->dispatchUserLoginNotifications($user, $request, 'standar');
+
             $redirect = redirect()->route('dashboard')->with('success', 'Login berhasil!');
 
             if ($remember && $user) {
@@ -226,6 +259,7 @@ class AuthController extends Controller
             $user->id,
             $user->id
         );
+        $this->dispatchUserLoginNotifications($user, $request, 'quick');
 
         return redirect()->route('dashboard')
             ->with('success', 'Selamat datang kembali, '.$user->name.'!');

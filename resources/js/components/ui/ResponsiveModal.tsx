@@ -51,10 +51,10 @@ export function ResponsiveModal({
         return (
             <Drawer.Root open={open} onOpenChange={onOpenChange} shouldScaleBackground>
                 <Drawer.Portal>
-                    <Drawer.Overlay className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs" />
-                    <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 mt-24 flex max-h-[92dvh] flex-col rounded-t-3xl border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl outline-none">
+                    <Drawer.Overlay className="fixed inset-0 z-[90] bg-slate-950/60 backdrop-blur-xs overscroll-contain" />
+                    <Drawer.Content className="fixed inset-x-0 bottom-0 z-[95] mt-16 flex max-h-[92dvh] flex-col rounded-t-3xl border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl outline-none overscroll-contain pb-[max(1rem,env(safe-area-inset-bottom,1rem))]">
                         <div className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-slate-300 dark:bg-slate-700" />
-                        <div className="flex items-start justify-between gap-3 px-5 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800/80">
+                        <div className="flex items-start justify-between gap-3 px-5 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800/80 shrink-0">
                             <div>
                                 <Drawer.Title className="text-base font-bold text-slate-900 dark:text-slate-100">
                                     {title}
@@ -74,9 +74,9 @@ export function ResponsiveModal({
                                 <X className="h-4 w-4" />
                             </button>
                         </div>
-                        <div className="flex-1 overflow-y-auto px-5 py-4">{children}</div>
+                        <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 pb-6">{children}</div>
                         {footer && (
-                            <div className="border-t border-slate-100 dark:border-slate-800/80 px-5 py-3.5 bg-slate-50/60 dark:bg-slate-900/80">
+                            <div className="shrink-0 border-t border-slate-100 dark:border-slate-800/80 px-5 py-3.5 bg-slate-50/90 dark:bg-slate-900/95 backdrop-blur-xs">
                                 {footer}
                             </div>
                         )}

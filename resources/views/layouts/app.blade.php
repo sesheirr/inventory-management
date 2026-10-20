@@ -96,7 +96,7 @@
     @endif
 
     {{-- Main Content Area --}}
-    <div class="relative z-10 flex-1 flex flex-col min-w-0 min-h-screen">
+    <div class="relative flex-1 flex flex-col min-w-0 min-h-screen">
         {{-- Top Navbar (Hidden in Fullscreen Barcode Scanner Mode) --}}
         @if (!request()->routeIs('products.scan'))
             @include('partials.navbar', ['shareShortCode' => $resolvedShareCode])
@@ -660,6 +660,38 @@
                     <span>Install 1-Klik ke Home Screen</span>
                 </button>
 
+                {{-- Smart LAN HTTPS Switcher & Root CA Certificate Helper (Auto-shown on LAN HTTP / LAN IP) --}}
+                <div id="pwaLanHttpsHelperBox" class="hidden rounded-2xl bg-indigo-50/90 dark:bg-indigo-950/35 border border-indigo-200/80 dark:border-indigo-800/60 p-3.5 space-y-2.5">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5 text-indigo-800 dark:text-indigo-300 font-extrabold text-xs">
+                            <i class="bi bi-shield-lock-fill"></i>
+                            <span>Mode Jaringan Lokal (LAN HTTPS)</span>
+                        </div>
+                        <span id="pwaLanProtocolBadge" class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-indigo-600/15 text-indigo-700 dark:text-indigo-300">LAN PWA</span>
+                    </div>
+                    <p class="text-[11px] text-indigo-900/90 dark:text-stone-300 leading-relaxed">
+                        Chrome Mobile mewajibkan <strong>HTTPS</strong> di jaringan lokal (<code id="pwaLanIpLabel" class="font-mono font-bold">LAN</code>) agar tombol <strong>Install Aplikasi (PWA)</strong> &amp; kamera scanner aktif.
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
+                        <a id="pwaSwitchToLanHttpsBtn"
+                           href="#"
+                           class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-extrabold text-white bg-indigo-600 hover:bg-indigo-700 shadow-xs transition-all">
+                            <i class="bi bi-lock-fill"></i>
+                            <span>Buka Mode HTTPS (:8443)</span>
+                        </a>
+                        <a id="pwaDownloadLanCaBtn"
+                           href="/lan-ca.crt"
+                           download="Inventaris-Diskominfo-LAN-CA.crt"
+                           class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-bold text-indigo-700 dark:text-indigo-200 bg-white dark:bg-stone-800 border border-indigo-200 dark:border-indigo-700 hover:bg-indigo-50 transition-all">
+                            <i class="bi bi-patch-check-fill"></i>
+                            <span>Unduh Sertifikat CA</span>
+                        </a>
+                    </div>
+                    <p class="text-[10px] text-indigo-800/75 dark:text-stone-400 leading-snug">
+                        Tips: Jika Chrome menampilkan peringatan sertifikat lokal pada port <code>:8443</code>, pilih <strong>Lanjutan (Advanced) &rarr; Lanjutkan</strong> atau pasang <em>Sertifikat CA</em> di Pengaturan Keamanan HP.
+                    </p>
+                </div>
+
                 {{-- Manual Install Guide Fallback (iOS Safari / iPadOS / Browser Tanpa Auto-Prompt) --}}
                 <div id="pwaManualInstallGuideBox" class="hidden rounded-2xl bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 p-3.5 space-y-2">
                     <div class="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-extrabold text-xs">
@@ -668,7 +700,7 @@
                     </div>
                     <ol class="text-[11px] text-amber-900/90 dark:text-stone-300 space-y-1.5 list-decimal list-inside leading-relaxed">
                         <li><strong>iPhone / iPad (Safari):</strong> Ketuk ikon <strong>Bagikan (Share <i class="bi bi-box-arrow-up"></i>)</strong> di bilah browser, lalu pilih <strong>"Tambah ke Layar Utama" (Add to Home Screen)</strong>.</li>
-                        <li><strong>Android (Chrome / Edge / Samsung):</strong> Ketuk ikon menu <strong> titik tiga (⋮)</strong> di kanan atas, lalu pilih <strong>"Instal Aplikasi"</strong> atau <strong>"Tambahkan ke Layar Utama"</strong>.</li>
+                        <li><strong>Android (Chrome / Edge / Samsung):</strong> Buka melalui <strong>Mode HTTPS (:8443)</strong> di atas, lalu ketuk menu <strong>titik tiga (⋮)</strong> &rarr; <strong>"Instal Aplikasi"</strong> atau <strong>"Tambahkan ke Layar Utama"</strong>.</li>
                     </ol>
                 </div>
 
