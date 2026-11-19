@@ -4,6 +4,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import {
     buildJsInstallArgs,
+    configureWindowsPhpIniContent,
     detectLanIps,
     formatEnvValue,
     getWindowsExtraPaths,
@@ -126,5 +127,43 @@ describe('dev-cli-helpers', () => {
         const out = execFileSync(process.execPath, [cliPath, '--help'], { encoding: 'utf8' });
         assert.match(out, /Cross-Platform Dev CLI/);
         assert.match(out, /setup \/ install/);
+    });
+
+    it('configures Windows php.ini with extension_dir="ext" and required extensions idempotently', () => {
+        const sampleIni = [
+            ';extension_dir = "./"',
+            '; On windows:',
+            ';extension_dir = "ext"',
+            ';extension=curl',
+            ';extension=fileinfo',
+            ';extension=mbstring',
+            ';extension=openssl',
+            ';extension=pdo_sqlite',
+            ';extension=exif',
+        ].join('\r\n');
+
+        const availableDlls = new Set(['curl', 'fileinfo', 'mbstring', 'openssl', 'pdo_sqlite', 'exif', 'gd']);
+        const first = configureWindowsPhpIniContent(
+            sampleIni,
+            ['mbstring', 'openssl', 'fileinfo', 'curl', 'gd', 'exif', 'pdo_sqlite', 'missing_ext'],
+            (ext) => availableDlls.has(ext)
+        );
+
+        assert.equal(first.changed, true);
+        assert.match(first.content, /^;extension_dir = "\.\/"/m);
+        assert.match(first.content, /^extension_dir = "ext"$/m);
+        assert.match(first.content, /^extension=mbstring$/m);
+        assert.match(first.content, /^extension=openssl$/m);
+        assert.match(first.content, /^extension=fileinfo$/m);
+        assert.match(first.content, /^extension=gd$/m);
+        assert.doesNotMatch(first.content, /missing_ext/);
+
+        const second = configureWindowsPhpIniContent(
+            first.content,
+            ['mbstring', 'openssl', 'fileinfo', 'curl', 'gd', 'exif', 'pdo_sqlite'],
+            (ext) => availableDlls.has(ext)
+        );
+        assert.equal(second.changed, false);
+        assert.deepEqual(second.enabled, []);
     });
 });

@@ -11,6 +11,7 @@ import path from 'node:path';
 import readline from 'node:readline';
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import {
+    autoEnableWindowsPhpExtensions,
     buildJsInstallArgs,
     detectLanIps,
     findExecutable,
@@ -155,6 +156,17 @@ function isDockerDaemonRunning(dockerBin) {
     return res.status === 0;
 }
 
+function probePhpMissingExtensions(phpBin, extensions = REQUIRED_PHP_EXTENSIONS) {
+    const modRes = runSync(phpBin, ['-m'], { capture: true });
+    const loadedMods = new Set(
+        String(modRes.stdout || '')
+            .split(/\r?\n/)
+            .map((s) => s.trim().toLowerCase())
+            .filter(Boolean)
+    );
+    return extensions.filter((ext) => !loadedMods.has(ext));
+}
+
 function detectEnvironment() {
     const phpBin = resolveBestPhpBinary(EXTRA_DIRS);
     let phpVersion = null;
@@ -165,15 +177,7 @@ function detectEnvironment() {
         const verRes = runSync(phpBin, ['-v'], { capture: true });
         phpVersion = parsePhpVersion(verRes.stdout || '');
         phpOk = isPhpVersionSupported(phpVersion, '8.3.0');
-
-        const modRes = runSync(phpBin, ['-m'], { capture: true });
-        const loadedMods = new Set(
-            String(modRes.stdout || '')
-                .split(/\r?\n/)
-                .map((s) => s.trim().toLowerCase())
-                .filter(Boolean)
-        );
-        phpMissingExts = REQUIRED_PHP_EXTENSIONS.filter((ext) => !loadedMods.has(ext));
+        phpMissingExts = probePhpMissingExtensions(phpBin);
     }
 
     const composerBin = findCmd('composer');
@@ -423,6 +427,26 @@ function ensureLocalPrerequisites(env) {
     if (!env.phpOk) {
         logErr(`Versi PHP terdeteksi ${env.phpVersion || 'unknown'}, aplikasi butuh PHP >= 8.3 (sesuai composer.json).`);
         process.exit(1);
+    }
+    if (process.platform === 'win32') {
+        const winNeeded = [...REQUIRED_PHP_EXTENSIONS, 'curl', 'gd', 'zip', 'pdo_sqlite', 'pdo_mysql'];
+        const winMissing = probePhpMissingExtensions(env.phpBin, winNeeded);
+        if (winMissing.length > 0) {
+            logStep(`Mengaktifkan ekstensi PHP di Windows php.ini (${winMissing.join(', ')})...`);
+            const fix = autoEnableWindowsPhpExtensions(env.phpBin);
+            if (fix.ok) {
+                if (fix.createdIni) {
+                    logOk(`Membuat php.ini otomatis di ${fix.iniPath}`);
+                }
+                if (fix.enabled.length > 0) {
+                    logOk(`Ekstensi diaktifkan di ${fix.iniPath}: ${fix.enabled.join(', ')}`);
+                }
+                env.phpMissingExts = probePhpMissingExtensions(env.phpBin);
+            } else {
+                logWarn(`Tidak dapat menulis ${fix.iniPath}: ${fix.error}`);
+                logWarn('Jalankan terminal sebagai Administrator atau aktifkan manual di php.ini.');
+            }
+        }
     }
     if (env.phpMissingExts.length > 0) {
         logErr(`Ekstensi PHP wajib belum aktif: ${env.phpMissingExts.join(', ')}`);
