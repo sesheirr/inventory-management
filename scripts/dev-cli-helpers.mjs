@@ -334,12 +334,22 @@ export function getWindowsExtraPaths(
     // Laravel Herd, XAMPP, Scoop, Winget PHP, Composer
     if (userProfile) {
         candidates.push(path.win32.join(userProfile, '.config', 'herd', 'bin'));
+        candidates.push(path.win32.join(userProfile, '.composer', 'bin'));
         candidates.push(path.win32.join(userProfile, '.bun', 'bin'));
         candidates.push(path.win32.join(userProfile, 'scoop', 'shims'));
     }
     if (localAppData) {
         candidates.push(path.win32.join(localAppData, 'Programs', 'Php'));
+        candidates.push(path.win32.join(localAppData, 'Programs', 'Composer'));
         candidates.push(path.win32.join(localAppData, 'Microsoft', 'WinGet', 'Links'));
+        const wingetPkgs = path.win32.join(localAppData, 'Microsoft', 'WinGet', 'Packages');
+        if (existsFn(wingetPkgs)) {
+            for (const dir of readDirsFn(wingetPkgs)) {
+                if (/^PHP\.PHP/i.test(dir)) {
+                    candidates.push(path.win32.join(wingetPkgs, dir));
+                }
+            }
+        }
     }
 
     candidates.push(
@@ -643,4 +653,72 @@ export function autoEnableWindowsPhpExtensions(phpBin, desiredExtensions = WINDO
         };
     }
 }
+
+/**
+ * Find Composer executable or portable `composer.phar` across PATH, extra dirs, `.bin/`, and `~/.composer/bin`.
+ * @param {string[]} [extraDirs]
+ * @param {string} [rootDir]
+ * @returns {string | null}
+ */
+export function findComposerBinary(extraDirs = [], rootDir = process.cwd()) {
+    const found = findExecutable('composer', extraDirs);
+    if (found) {
+        return found;
+    }
+
+    const candidates = [
+        path.join(rootDir, '.bin', 'composer.phar'),
+        path.join(os.homedir(), '.composer', 'bin', 'composer.phar'),
+    ];
+    for (const c of candidates) {
+        if (fs.existsSync(c)) {
+            return c;
+        }
+    }
+    return null;
+}
+
+/**
+ * Download official `composer-stable.phar` into `targetDir` and create platform wrapper (`composer.bat` / `composer`).
+ * @param {string} phpBin
+ * @param {string} targetDir
+ * @returns {Promise<{ ok: boolean, bin: string | null, error?: string }>}
+ */
+export async function ensurePortableComposer(phpBin, targetDir) {
+    try {
+        fs.mkdirSync(targetDir, { recursive: true });
+        const pharPath = path.join(targetDir, 'composer.phar');
+
+        if (!fs.existsSync(pharPath)) {
+            const resp = await fetch('https://getcomposer.org/composer-stable.phar');
+            if (!resp.ok) {
+                return { ok: false, bin: null, error: `HTTP ${resp.status} saat mengunduh composer-stable.phar` };
+            }
+            const buf = Buffer.from(await resp.arrayBuffer());
+            fs.writeFileSync(pharPath, buf);
+        }
+
+        if (process.platform === 'win32') {
+            const batPath = path.join(targetDir, 'composer.bat');
+            fs.writeFileSync(batPath, `@echo off\r\n"${phpBin}" "%~dp0composer.phar" %*\r\n`, 'utf8');
+        } else {
+            const shPath = path.join(targetDir, 'composer');
+            fs.writeFileSync(shPath, `#!/usr/bin/env sh\nexec "${phpBin}" "$(dirname "$0")/composer.phar" "$@"\n`, 'utf8');
+            fs.chmodSync(shPath, 0o755);
+        }
+
+        const verify = spawnSync(phpBin, [pharPath, '--version'], {
+            encoding: 'utf8',
+            stdio: ['ignore', 'pipe', 'pipe'],
+        });
+        if (verify.status !== 0) {
+            return { ok: false, bin: null, error: (verify.stderr || verify.stdout || 'Verifikasi composer.phar gagal').trim() };
+        }
+
+        return { ok: true, bin: pharPath };
+    } catch (err) {
+        return { ok: false, bin: null, error: err?.message || String(err) };
+    }
+}
+
 

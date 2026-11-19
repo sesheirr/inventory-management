@@ -1,11 +1,14 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import {
     buildJsInstallArgs,
     configureWindowsPhpIniContent,
     detectLanIps,
+    findComposerBinary,
     formatEnvValue,
     getWindowsExtraPaths,
     isPhpVersionSupported,
@@ -165,5 +168,17 @@ describe('dev-cli-helpers', () => {
         );
         assert.equal(second.changed, false);
         assert.deepEqual(second.enabled, []);
+    });
+
+    it('finds portable .bin/composer.phar when present in project root', () => {
+        const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'inv-comp-'));
+        const binDir = path.join(tmpRoot, '.bin');
+        fs.mkdirSync(binDir, { recursive: true });
+        const phar = path.join(binDir, 'composer.phar');
+        fs.writeFileSync(phar, 'stub');
+
+        const found = findComposerBinary([], tmpRoot);
+        assert.ok(found && found.length > 0);
+        fs.rmSync(tmpRoot, { recursive: true, force: true });
     });
 });

@@ -88,6 +88,18 @@ if ($ShowHelp) {
 # Auto-Discover Local Toolchains (Laragon, Herd, XAMPP, Scoop, Winget, Bun, Node)
 # ---------------------------------------------------------------------------
 function Initialize-LocalToolchainPaths {
+    # Refresh Registry PATH so tools installed by winget in this session are immediately visible
+    try {
+        $machinePath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+        $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+        foreach ($seg in (($machinePath + ";" + $userPath) -split ";")) {
+            $trimmed = $seg.Trim()
+            if ($trimmed -and ($env:PATH -notlike "*$trimmed*")) {
+                $env:PATH = "$env:PATH;$trimmed"
+            }
+        }
+    } catch {}
+
     $extraPaths = @()
 
     foreach ($laragonRoot in @("C:\laragon\bin", "D:\laragon\bin")) {
@@ -116,11 +128,23 @@ function Initialize-LocalToolchainPaths {
         if (Test-Path $compDir) { $extraPaths += $compDir }
     }
 
+    $wingetPkgs = "$env:LOCALAPPDATA\Microsoft\WinGet\Packages"
+    if (Test-Path $wingetPkgs) {
+        Get-ChildItem -Path $wingetPkgs -Directory -Filter "PHP.PHP*" -ErrorAction SilentlyContinue | Sort-Object Name -Descending | ForEach-Object {
+            if (Test-Path (Join-Path $_.FullName "php.exe")) {
+                $extraPaths += $_.FullName
+            }
+        }
+    }
+
     $candidates = @(
+        (Join-Path $ProjectRoot ".bin"),
+        "$env:USERPROFILE\.composer\bin",
         "$env:USERPROFILE\.config\herd\bin",
         "$env:USERPROFILE\.bun\bin",
         "$env:USERPROFILE\scoop\shims",
         "$env:LOCALAPPDATA\Programs\Php",
+        "$env:LOCALAPPDATA\Programs\Composer",
         "$env:LOCALAPPDATA\Microsoft\WinGet\Links",
         "C:\xampp\php",
         "C:\php",
@@ -369,14 +393,42 @@ function Ensure-PhpAndComposerForLocal($snap) {
     Ensure-WindowsPhpExtensions -PhpExePath $snap.PhpCmd.Source
 
     if (-not $snap.ComposerCmd) {
-        Write-Warn "Composer belum ditemukan di PATH."
-        if ($snap.WingetCmd -and (Confirm-Action "Install Composer otomatis via winget (Composer.Composer)?" $true)) {
-            & winget install -e --id Composer.Composer --accept-package-agreements --accept-source-agreements
+        Write-Step "Composer belum ditemukan. Menginstall Composer secara otomatis..."
+        $composerBinDir = "$env:USERPROFILE\.composer\bin"
+        $composerPhar = Join-Path $composerBinDir "composer.phar"
+        $composerBat = Join-Path $composerBinDir "composer.bat"
+        try {
+            New-Item -ItemType Directory -Path $composerBinDir -Force | Out-Null
+            if (-not (Test-Path $composerPhar)) {
+                [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+                Invoke-WebRequest -Uri "https://getcomposer.org/composer-stable.phar" -OutFile $composerPhar -UseBasicParsing
+            }
+            $batContent = "@echo off`r`n`"$($snap.PhpCmd.Source)`" `"%~dp0composer.phar`" %*`r`n"
+            Set-Content -Path $composerBat -Value $batContent -Encoding ASCII
+
+            # Persist ~/.composer/bin in User PATH so Composer works in future terminals too
+            $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+            if ($userPath -notlike "*$composerBinDir*") {
+                $newUserPath = if ([string]::IsNullOrWhiteSpace($userPath)) { $composerBinDir } else { "$userPath;$composerBinDir" }
+                [Environment]::SetEnvironmentVariable("Path", $newUserPath, "User")
+            }
             Initialize-LocalToolchainPaths
             $snap = Get-ToolSnapshot
+        } catch {
+            Write-Warn "Unduhan langsung composer.phar gagal ($($_.Exception.Message))."
+            if ($snap.WingetCmd) {
+                Write-Step "Mencoba instalasi Composer via winget (Composer.Composer)..."
+                & winget install -e --id Composer.Composer --accept-package-agreements --accept-source-agreements
+                Initialize-LocalToolchainPaths
+                $snap = Get-ToolSnapshot
+            }
         }
-        if (-not $snap.ComposerCmd) {
-            Write-Err "Composer belum ditemukan. Install dari https://getcomposer.org/download/ lalu jalankan .\onboarding.bat lagi."
+
+        if ($snap.ComposerCmd) {
+            $compVer = (& $snap.ComposerCmd.Source --version 2>$null | Select-Object -First 1)
+            Write-Ok "Composer otomatis terpasang: $compVer"
+        } else {
+            Write-Err "Gagal menginstall Composer otomatis. Install manual dari https://getcomposer.org/download/ lalu jalankan .\onboarding.bat lagi."
             exit 1
         }
     }

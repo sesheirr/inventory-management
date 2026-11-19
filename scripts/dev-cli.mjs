@@ -14,6 +14,8 @@ import {
     autoEnableWindowsPhpExtensions,
     buildJsInstallArgs,
     detectLanIps,
+    ensurePortableComposer,
+    findComposerBinary,
     findExecutable,
     getWindowsExtraPaths,
     isPhpVersionSupported,
@@ -180,7 +182,7 @@ function detectEnvironment() {
         phpMissingExts = probePhpMissingExtensions(phpBin);
     }
 
-    const composerBin = findCmd('composer');
+    const composerBin = findComposerBinary(EXTRA_DIRS, ROOT_DIR);
     const jsRunner = resolveJsRunner(findCmd);
     const dockerBin = findCmd('docker');
     const dockerRunning = isDockerDaemonRunning(dockerBin);
@@ -416,7 +418,7 @@ function runComposer(env, args, label) {
     }
 }
 
-function ensureLocalPrerequisites(env) {
+async function ensureLocalPrerequisites(env) {
     if (!env.phpBin) {
         logErr('PHP CLI tidak ditemukan.');
         console.log('   • Windows : Jalankan .\\onboarding.bat (panduan install Laragon / Herd / winget PHP)');
@@ -465,8 +467,17 @@ function ensureLocalPrerequisites(env) {
 
     if (!fs.existsSync(path.join(ROOT_DIR, 'vendor/autoload.php'))) {
         if (!env.composerBin) {
-            logErr('Folder vendor/ belum ada dan Composer tidak ditemukan.');
-            process.exit(1);
+            logStep('Composer belum ditemukan. Mengunduh Composer portable secara otomatis...');
+            const compDir = process.platform === 'win32'
+                ? path.join(process.env.USERPROFILE || ROOT_DIR, '.composer', 'bin')
+                : path.join(ROOT_DIR, '.bin');
+            const compRes = await ensurePortableComposer(env.phpBin, compDir);
+            if (!compRes.ok || !compRes.bin) {
+                logErr(`Gagal menyiapkan Composer otomatis: ${compRes.error || 'unknown error'}`);
+                process.exit(1);
+            }
+            env.composerBin = compRes.bin;
+            logOk(`Composer siap di ${compRes.bin}`);
         }
         logStep('Menginstall dependensi PHP (composer install)...');
         runComposer(env, ['install', '--no-interaction', '--prefer-dist'], 'composer install');
@@ -609,7 +620,7 @@ async function runSetup(opts) {
     }
 
     // Local mode setup
-    ensureLocalPrerequisites(env);
+    await ensureLocalPrerequisites(env);
     await ensureDatabaseReady(env, opts, false);
 
     if (!opts.checkOnly) {
@@ -639,7 +650,7 @@ async function runSetup(opts) {
 async function runLocal(opts) {
     logHeader('SIM-Inventaris — Local Dev Runner (Cross-Platform)');
     const env = detectEnvironment();
-    ensureLocalPrerequisites(env);
+    await ensureLocalPrerequisites(env);
     const envMap = await ensureDatabaseReady(env, opts, false);
 
     const effectiveDbHost = normalizeLocalDbHost(envMap.DB_HOST || '127.0.0.1');
@@ -958,7 +969,7 @@ function collectPhpFiles(dirs) {
     return files;
 }
 
-function runLint(opts) {
+async function runLint(opts) {
     logHeader('SIM-Inventaris — Cross-Platform Lint & Build Check');
     const env = detectEnvironment();
     const useDocker = opts.isDocker || (!env.phpBin && env.dockerRunning);
@@ -985,7 +996,7 @@ function runLint(opts) {
         return;
     }
 
-    ensureLocalPrerequisites(env);
+    await ensureLocalPrerequisites(env);
     logStep('1/4 Memeriksa sintaks PHP (`php -l`)...');
     const phpFiles = collectPhpFiles(['app', 'bootstrap', 'config', 'database', 'routes', 'tests']);
     for (const file of phpFiles) {
@@ -1010,7 +1021,7 @@ function runLint(opts) {
     logOk('Semua lint & production build lulus!');
 }
 
-function runTest(opts) {
+async function runTest(opts) {
     const env = detectEnvironment();
     const useDocker = opts.isDocker || (!env.phpBin && env.dockerRunning);
     if (useDocker) {
@@ -1026,7 +1037,7 @@ function runTest(opts) {
         return;
     }
 
-    ensureLocalPrerequisites(env);
+    await ensureLocalPrerequisites(env);
     runSyncOrFail(env.phpBin, ['artisan', 'test', ...opts.extraArgs], 'artisan test');
 }
 
@@ -1132,10 +1143,10 @@ async function main() {
             await runTunnel(opts);
             break;
         case 'lint':
-            runLint(opts);
+            await runLint(opts);
             break;
         case 'test':
-            runTest(opts);
+            await runTest(opts);
             break;
         case 'clean':
             runClean();
