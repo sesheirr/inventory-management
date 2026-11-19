@@ -60,8 +60,15 @@ run_cmd() {
     fi
 }
 
+FRONTEND_PM="bun"
+if command -v bun >/dev/null 2>&1; then
+    FRONTEND_PM="bun"
+elif command -v npm >/dev/null 2>&1; then
+    FRONTEND_PM="npm"
+fi
+
 if [[ "$USE_DOCKER" == "auto" ]]; then
-    if command -v php >/dev/null 2>&1 && command -v composer >/dev/null 2>&1 && command -v bun >/dev/null 2>&1; then
+    if command -v php >/dev/null 2>&1 && command -v composer >/dev/null 2>&1 && (command -v bun >/dev/null 2>&1 || command -v npm >/dev/null 2>&1); then
         USE_DOCKER="no"
     else
         USE_DOCKER="yes"
@@ -71,7 +78,7 @@ fi
 echo -e "${COLOR_BOLD}======================================================================${COLOR_RESET}"
 echo -e "${COLOR_BOLD} 🚀 SIM-Inventaris Diskominfo Garut — Production Deployment (v2)${COLOR_RESET}"
 echo -e " 📌 Target Branch : ${BRANCH}"
-echo -e " ⚙️  Execution Mode: $([[ "$USE_DOCKER" == "yes" ]] && echo "Docker Compose" || echo "Native Host (PHP 8.3 + Bun)")"
+echo -e " ⚙️  Execution Mode: $([[ "$USE_DOCKER" == "yes" ]] && echo "Docker Compose" || echo "Native Host (PHP 8.3 + ${FRONTEND_PM})")"
 echo -e "${COLOR_BOLD}======================================================================${COLOR_RESET}"
 
 # 1. Ensure .env exists
@@ -123,9 +130,13 @@ else
     log_step "4/8 Menginstal dependensi PHP (Composer)..."
     run_cmd composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
-    log_step "5/8 Menginstal dependensi Frontend & membangun bundle produksi via Bun..."
-    run_cmd bun install --frozen-lockfile
-    run_cmd bun run build
+    log_step "5/8 Menginstal dependensi Frontend & membangun bundle produksi via ${FRONTEND_PM}..."
+    if [[ "$FRONTEND_PM" == "bun" ]]; then
+        run_cmd bun install --frozen-lockfile
+    else
+        run_cmd npm install --no-audit --no-fund
+    fi
+    run_cmd "${FRONTEND_PM}" run build
 
     log_step "6/8 Menjalankan migrasi database & storage symlink..."
     run_cmd php artisan migrate --force

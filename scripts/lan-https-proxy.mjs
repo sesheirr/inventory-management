@@ -11,8 +11,8 @@ import https from 'node:https';
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
-import os from 'node:os';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { detectLanIps, findExecutable, getWindowsExtraPaths, resolveBestPhpBinary } from './dev-cli-helpers.mjs';
 
 const ROOT_DIR = process.cwd();
 const CERT_DIR = path.join(ROOT_DIR, 'storage', 'certs');
@@ -20,40 +20,119 @@ const TARGET_HOST = process.env.LAN_TARGET_HOST || '127.0.0.1';
 const TARGET_PORT = Number(process.env.PORT || process.env.LAN_TARGET_PORT || 8000);
 const HTTPS_PORT = Number(process.env.HTTPS_PORT || 8443);
 
-function detectLanIps() {
-    const nets = os.networkInterfaces();
-    const ips = [];
-    for (const name of Object.keys(nets)) {
-        for (const net of nets[name] || []) {
-            if (net.family === 'IPv4' && !net.internal) {
-                // Prioritize private LAN ranges (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
-                ips.push(net.address);
-            }
+function findOpenSslBinary() {
+    const extraDirs = process.platform === 'win32' ? getWindowsExtraPaths() : [];
+    const found = findExecutable('openssl', extraDirs);
+    if (found) {
+        try {
+            execFileSync(found, ['version'], { stdio: 'ignore' });
+            return found;
+        } catch {
+            // Try fallback list below
         }
     }
-    ips.sort((a, b) => {
-        const score = (ip) => (ip.startsWith('192.168.') ? 0 : ip.startsWith('10.') ? 1 : 2);
-        return score(a) - score(b);
-    });
-    return ips.length > 0 ? ips : ['127.0.0.1'];
-}
-
-function findOpenSslBinary() {
     const candidates = [
-        'openssl',
         'C:\\Program Files\\Git\\usr\\bin\\openssl.exe',
+        'C:\\Program Files\\OpenSSL-Win64\\bin\\openssl.exe',
         'C:\\laragon\\bin\\git\\usr\\bin\\openssl.exe',
         'C:\\laragon\\bin\\apache\\httpd-2.4.62-240904-win64-VS17\\bin\\openssl.exe',
     ];
     for (const bin of candidates) {
-        try {
-            execFileSync(bin, ['version'], { stdio: 'ignore' });
-            return bin;
-        } catch {
-            // Try next
+        if (fs.existsSync(bin)) {
+            try {
+                execFileSync(bin, ['version'], { stdio: 'ignore' });
+                return bin;
+            } catch {
+                // Try next
+            }
         }
     }
     return null;
+}
+
+/**
+ * Fallback certificate generator using PHP's built-in ext-openssl when `openssl` CLI is absent
+ * (e.g. fresh Windows without Git Bash or Laragon).
+ */
+function generateCertificatesWithPhp({ caKeyPath, caCertPath, serverKeyPath, serverCertPath, extFilePath, cnfContent }) {
+    const extraDirs = process.platform === 'win32' ? getWindowsExtraPaths() : [];
+    const phpBin = resolveBestPhpBinary(extraDirs);
+    if (!phpBin) {
+        return false;
+    }
+
+    fs.writeFileSync(extFilePath, cnfContent, 'utf8');
+    const phpScript = `
+$caKeyPath = $argv[1];
+$caCertPath = $argv[2];
+$serverKeyPath = $argv[3];
+$serverCertPath = $argv[4];
+$cnfPath = $argv[5];
+
+if (!function_exists('openssl_pkey_new')) {
+    fwrite(STDERR, "ext-openssl unavailable\\n");
+    exit(2);
+}
+
+$baseCfg = ['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA, 'digest_alg' => 'sha256'];
+if (file_exists($cnfPath)) {
+    $baseCfg['config'] = $cnfPath;
+}
+
+if (!file_exists($caKeyPath) || !file_exists($caCertPath)) {
+    $caKey = openssl_pkey_new($baseCfg);
+    if (!$caKey) { exit(3); }
+    $caDn = [
+        'countryName' => 'ID',
+        'stateOrProvinceName' => 'JawaBarat',
+        'localityName' => 'Garut',
+        'organizationName' => 'Diskominfo Garut Local CA',
+        'commonName' => 'Inventaris Diskominfo LAN Root CA',
+    ];
+    $caCfg = array_merge($baseCfg, ['x509_extensions' => 'v3_ca']);
+    $caCsr = openssl_csr_new($caDn, $caKey, $caCfg);
+    $caCert = openssl_csr_sign($caCsr, null, $caKey, 3650, $caCfg, time());
+    if (!$caCsr || !$caCert) { exit(4); }
+    openssl_pkey_export_to_file($caKey, $caKeyPath, null, $caCfg);
+    openssl_x509_export_to_file($caCert, $caCertPath);
+}
+
+$caCertPem = file_get_contents($caCertPath);
+$caKeyPem = file_get_contents($caKeyPath);
+$srvCfg = array_merge($baseCfg, ['x509_extensions' => 'v3_ext']);
+$srvKey = openssl_pkey_new($srvCfg);
+if (!$srvKey) { exit(5); }
+$srvDn = [
+    'countryName' => 'ID',
+    'stateOrProvinceName' => 'JawaBarat',
+    'localityName' => 'Garut',
+    'organizationName' => 'Diskominfo Kabupaten Garut',
+    'commonName' => 'inventaris.local',
+];
+$srvCsr = openssl_csr_new($srvDn, $srvKey, $srvCfg);
+$srvCert = openssl_csr_sign($srvCsr, $caCertPem, $caKeyPem, 825, $srvCfg, time() + 1);
+if (!$srvCsr || !$srvCert) { exit(6); }
+openssl_pkey_export_to_file($srvKey, $serverKeyPath, null, $srvCfg);
+openssl_x509_export_to_file($srvCert, $serverCertPath);
+echo "PHP_OPENSSL_OK";
+`;
+    const caSection = [
+        '',
+        '[v3_ca]',
+        'subjectKeyIdentifier = hash',
+        'authorityKeyIdentifier = keyid:always,issuer',
+        'basicConstraints = critical, CA:true',
+        'keyUsage = critical, digitalSignature, cRLSign, keyCertSign',
+        '',
+    ].join('\n');
+    fs.writeFileSync(extFilePath, `${cnfContent}\n${caSection}`, 'utf8');
+
+    const res = spawnSync(
+        phpBin,
+        ['-r', phpScript, '--', caKeyPath, caCertPath, serverKeyPath, serverCertPath, extFilePath],
+        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
+    );
+    return res.status === 0 && (res.stdout || '').includes('PHP_OPENSSL_OK');
 }
 
 function ensureLanCertificates(lanIps) {
@@ -82,107 +161,136 @@ function ensureLanCertificates(lanIps) {
         }
     }
 
+    const needsCa = !fs.existsSync(caKeyPath) || !fs.existsSync(caCertPath);
+    if (!needsCa && !needsServerRegen) {
+        return {
+            caCertPath,
+            key: fs.readFileSync(serverKeyPath),
+            cert: fs.readFileSync(serverCertPath),
+            ca: fs.readFileSync(caCertPath),
+        };
+    }
+
+    const sanList = [
+        'DNS.1 = localhost',
+        'DNS.2 = *.local',
+        'DNS.3 = inventaris.local',
+        ...ipEntries.map((ip, idx) => `IP.${idx + 1} = ${ip}`),
+    ].join('\n');
+
+    const cnfContent = [
+        '[req]',
+        'default_bits = 2048',
+        'prompt = no',
+        'default_md = sha256',
+        'distinguished_name = dn',
+        '',
+        '[dn]',
+        'C = ID',
+        'ST = JawaBarat',
+        'L = Garut',
+        'O = Diskominfo Kabupaten Garut',
+        `CN = ${ipEntries[1] || ipEntries[0]}`,
+        '',
+        '[v3_ext]',
+        'authorityKeyIdentifier=keyid,issuer',
+        'basicConstraints=CA:FALSE',
+        'keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment',
+        'extendedKeyUsage = serverAuth',
+        'subjectAltName = @alt_names',
+        '',
+        '[alt_names]',
+        sanList,
+        '',
+    ].join('\n');
+
     const openssl = findOpenSslBinary();
+    let updatedCerts = false;
+
     if (!openssl) {
-        throw new Error('OpenSSL binary tidak ditemukan untuk membuat sertifikat HTTPS LAN.');
+        const phpOk = generateCertificatesWithPhp({
+            caKeyPath,
+            caCertPath,
+            serverKeyPath,
+            serverCertPath,
+            extFilePath,
+            cnfContent,
+        });
+        if (!phpOk) {
+            throw new Error(
+                'OpenSSL CLI maupun ekstensi PHP openssl tidak ditemukan untuk membuat sertifikat HTTPS LAN.'
+            );
+        }
+        updatedCerts = true;
+    } else {
+        // 1. Generate Root CA if not exists (valid 10 years so user only installs once)
+        if (needsCa) {
+            execFileSync(openssl, ['genrsa', '-out', caKeyPath, '2048'], { stdio: 'ignore' });
+            execFileSync(
+                openssl,
+                [
+                    'req',
+                    '-x509',
+                    '-new',
+                    '-nodes',
+                    '-key',
+                    caKeyPath,
+                    '-sha256',
+                    '-days',
+                    '3650',
+                    '-out',
+                    caCertPath,
+                    '-subj',
+                    '/C=ID/ST=JawaBarat/L=Garut/O=Diskominfo Garut Local CA/CN=Inventaris Diskominfo LAN Root CA',
+                    '-addext',
+                    'basicConstraints=critical,CA:TRUE',
+                    '-addext',
+                    'keyUsage=critical,keyCertSign,cRLSign,digitalSignature',
+                ],
+                { stdio: 'ignore' }
+            );
+        }
+
+        // 2. Generate Server Certificate signed by Root CA with SAN for all LAN IPs + localhost
+        if (needsServerRegen) {
+            fs.writeFileSync(extFilePath, cnfContent, 'utf8');
+
+            execFileSync(openssl, ['genrsa', '-out', serverKeyPath, '2048'], { stdio: 'ignore' });
+            execFileSync(
+                openssl,
+                ['req', '-new', '-key', serverKeyPath, '-out', serverCsrPath, '-config', extFilePath],
+                { stdio: 'ignore' }
+            );
+            execFileSync(
+                openssl,
+                [
+                    'x509',
+                    '-req',
+                    '-in',
+                    serverCsrPath,
+                    '-CA',
+                    caCertPath,
+                    '-CAkey',
+                    caKeyPath,
+                    '-CAcreateserial',
+                    '-out',
+                    serverCertPath,
+                    '-days',
+                    '825',
+                    '-sha256',
+                    '-extfile',
+                    extFilePath,
+                    '-extensions',
+                    'v3_ext',
+                ],
+                { stdio: 'ignore' }
+            );
+            updatedCerts = true;
+        }
+        updatedCerts = true;
     }
 
-    // 1. Generate Root CA if not exists (valid 10 years so user only installs once)
-    if (!fs.existsSync(caKeyPath) || !fs.existsSync(caCertPath)) {
-        execFileSync(openssl, ['genrsa', '-out', caKeyPath, '2048'], { stdio: 'ignore' });
-        execFileSync(
-            openssl,
-            [
-                'req',
-                '-x509',
-                '-new',
-                '-nodes',
-                '-key',
-                caKeyPath,
-                '-sha256',
-                '-days',
-                '3650',
-                '-out',
-                caCertPath,
-                '-subj',
-                '/C=ID/ST=JawaBarat/L=Garut/O=Diskominfo Garut Local CA/CN=Inventaris Diskominfo LAN Root CA',
-                '-addext',
-                'basicConstraints=critical,CA:TRUE',
-                '-addext',
-                'keyUsage=critical,keyCertSign,cRLSign,digitalSignature',
-            ],
-            { stdio: 'ignore' }
-        );
-    }
-
-    // 2. Generate Server Certificate signed by Root CA with SAN for all LAN IPs + localhost
-    if (needsServerRegen) {
-        const sanList = [
-            'DNS.1 = localhost',
-            'DNS.2 = *.local',
-            'DNS.3 = inventaris.local',
-            ...ipEntries.map((ip, idx) => `IP.${idx + 1} = ${ip}`),
-        ].join('\n');
-
-        const cnfContent = [
-            '[req]',
-            'default_bits = 2048',
-            'prompt = no',
-            'default_md = sha256',
-            'distinguished_name = dn',
-            '',
-            '[dn]',
-            'C = ID',
-            'ST = JawaBarat',
-            'L = Garut',
-            'O = Diskominfo Kabupaten Garut',
-            `CN = ${ipEntries[1] || ipEntries[0]}`,
-            '',
-            '[v3_ext]',
-            'authorityKeyIdentifier=keyid,issuer',
-            'basicConstraints=CA:FALSE',
-            'keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment',
-            'extendedKeyUsage = serverAuth',
-            'subjectAltName = @alt_names',
-            '',
-            '[alt_names]',
-            sanList,
-            '',
-        ].join('\n');
-
-        fs.writeFileSync(extFilePath, cnfContent, 'utf8');
-
-        execFileSync(openssl, ['genrsa', '-out', serverKeyPath, '2048'], { stdio: 'ignore' });
-        execFileSync(
-            openssl,
-            ['req', '-new', '-key', serverKeyPath, '-out', serverCsrPath, '-config', extFilePath],
-            { stdio: 'ignore' }
-        );
-        execFileSync(
-            openssl,
-            [
-                'x509',
-                '-req',
-                '-in',
-                serverCsrPath,
-                '-CA',
-                caCertPath,
-                '-CAkey',
-                caKeyPath,
-                '-CAcreateserial',
-                '-out',
-                serverCertPath,
-                '-days',
-                '825',
-                '-sha256',
-                '-extfile',
-                extFilePath,
-                '-extensions',
-                'v3_ext',
-            ],
-            { stdio: 'ignore' }
-        );
-
+    if (updatedCerts) {
         fs.writeFileSync(
             metaFilePath,
             JSON.stringify({
@@ -213,7 +321,20 @@ function ensureLanCertificates(lanIps) {
 
 const lanIps = detectLanIps();
 const primaryLanIp = lanIps[0] || '127.0.0.1';
-const certs = ensureLanCertificates(lanIps);
+const isOptional = process.argv.includes('--optional');
+
+let certs;
+try {
+    certs = ensureLanCertificates(lanIps);
+} catch (err) {
+    if (isOptional) {
+        console.warn(`⚠️  LAN HTTPS Proxy dilewati: ${err.message}`);
+        console.warn(`   Server HTTP utama tetap berjalan normal di http://127.0.0.1:${TARGET_PORT}`);
+        process.exit(0);
+    }
+    console.error(`❌ ${err.message}`);
+    process.exit(1);
+}
 
 if (process.argv.includes('--generate-only')) {
     console.log(`LAN_CERT_READY:${primaryLanIp}:${HTTPS_PORT}:${certs.caCertPath}`);

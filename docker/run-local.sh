@@ -71,10 +71,10 @@ if ! command -v php >/dev/null 2>&1; then
 fi
 
 PHP_VERSION=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')
-PHP_OK=$(php -r 'echo version_compare(PHP_VERSION, "8.2.0", ">=") ? "1" : "0";')
+PHP_OK=$(php -r 'echo version_compare(PHP_VERSION, "8.3.0", ">=") ? "1" : "0";')
 if [ "$PHP_OK" != "1" ]; then
     print_box_error "Versi PHP Terlalu Lama (Terdeteksi: PHP ${PHP_VERSION})" \
-        "${COLOR_WARNING}Penyebab:${COLOR_RESET} Aplikasi ini membutuhkan minimal ${COLOR_BOLD}PHP 8.2+${COLOR_RESET}." \
+        "${COLOR_WARNING}Penyebab:${COLOR_RESET} Aplikasi ini membutuhkan minimal ${COLOR_BOLD}PHP 8.3+${COLOR_RESET} (sesuai composer.json)." \
         "" \
         "${COLOR_SUCCESS}Solusi Cepat:${COLOR_RESET}" \
         "  • macOS : ${COLOR_BOLD}brew upgrade php${COLOR_RESET}" \
@@ -102,18 +102,21 @@ if [ ${#MISSING_EXTS[@]} -gt 0 ]; then
 fi
 
 # ------------------------------------------------------------------------------
-# 2. Detect Frontend Runtime (Strictly Bun Only)
+# 2. Detect Frontend Runtime (Bun priority, Node.js/npm fallback)
 # ------------------------------------------------------------------------------
 FRONTEND_RUNNER=""
 if command -v bun >/dev/null 2>&1; then
     FRONTEND_RUNNER="bun"
+elif command -v npm >/dev/null 2>&1; then
+    FRONTEND_RUNNER="npm"
 else
-    print_box_error "Bun Runtime Tidak Ditemukan" \
-        "${COLOR_WARNING}Penyebab:${COLOR_RESET} Proyek v2 ini mewajibkan Bun untuk menjalankan & mem-build aset frontend (React 19 + Inertia v2 + Vite)." \
+    print_box_error "Bun / Node.js Tidak Ditemukan" \
+        "${COLOR_WARNING}Penyebab:${COLOR_RESET} Proyek v2 membutuhkan Bun atau Node.js (npm) untuk menjalankan & mem-build aset frontend (React 19 + Inertia v2 + Vite)." \
         "" \
         "${COLOR_SUCCESS}Solusi Cepat:${COLOR_RESET}" \
-        "  • Install Bun (macOS/Linux) : ${COLOR_BOLD}curl -fsSL https://bun.sh/install | bash${COLOR_RESET}" \
-        "  • Atau via Homebrew (macOS) : ${COLOR_BOLD}brew install oven-sh/bun/bun${COLOR_RESET}"
+        "  • Install Bun (macOS/Linux)    : ${COLOR_BOLD}curl -fsSL https://bun.sh/install | bash${COLOR_RESET}" \
+        "  • Atau install Node.js LTS     : ${COLOR_BOLD}https://nodejs.org/${COLOR_RESET}" \
+        "  • Atau via Homebrew (macOS)    : ${COLOR_BOLD}brew install oven-sh/bun/bun${COLOR_RESET}"
     exit 1
 fi
 
@@ -321,7 +324,11 @@ php artisan inventory:webhook-server --host=0.0.0.0 --port="${WEBHOOK_PORT}" &
 WEBHOOK_PID=$!
 
 if [ -f scripts/lan-https-proxy.mjs ]; then
-    HTTPS_PORT="${HTTPS_PORT}" PORT="${PORT}" ${FRONTEND_RUNNER} scripts/lan-https-proxy.mjs &
+    JS_RUNTIME="node"
+    if [ "$FRONTEND_RUNNER" = "bun" ]; then
+        JS_RUNTIME="bun"
+    fi
+    HTTPS_PORT="${HTTPS_PORT}" PORT="${PORT}" ${JS_RUNTIME} scripts/lan-https-proxy.mjs --optional &
     LAN_HTTPS_PID=$!
 fi
 

@@ -32,40 +32,57 @@ Sistem Informasi Manajemen Inventaris, Pemetaan Ruangan, Pemindaian Barcode, dan
 
 ---
 
-## Quick Setup Guide
+## Quick Setup Guide (Cross-Platform: Windows, macOS, Linux)
 
-Proyek ini menggunakan **Bun** secara eksklusif untuk manajemen paket dan *bundler* frontend. Anda dapat menjalankan aplikasi ini dengan **Docker (`make dev`)** maupun **Tanpa Docker (`make run`)**.
+Proyek ini mendukung penuh **Windows (PowerShell / CMD tanpa perlu `make` atau Git Bash)**, **macOS**, dan **Linux**—baik menggunakan **Docker**, **Bun**, maupun **Node.js (`npm`)**.
 
-### Opsi 1: Menggunakan Docker (Direkomendasikan)
+### 1. Setup Otomatis (Direkomendasikan untuk PC Baru / Kondisi Beragam)
 
-Pastikan Docker Desktop sudah menyala, lalu jalankan satu perintah berikut:
+| Sistem Operasi | Perintah | Keterangan |
+| :--- | :--- | :--- |
+| **Windows (Tanpa Make / Git Bash)** | `.\onboarding.bat` *(atau klik ganda di Explorer)* | Mendeteksi otomatis Docker, Laragon/Herd/XAMPP/PHP, Composer, Bun, dan Node.js; menyediakan panduan instalasi jika ada yang kurang. |
+| **macOS / Linux / Git Bash** | `./setup.sh` | Mendeteksi otomatis Bun/Node.js, PHP, Composer, atau Docker lalu menjalankan setup & server. |
+| **Sudah punya Bun / Node.js** | `bun run setup` atau `npm run setup` | Menyiapkan `.env`, `vendor/`, `node_modules/`, database, dan build awal lintas OS. |
 
-```bash
-make dev
-```
+### 2. Menjalankan Server Development
 
-Perintah `make dev` akan secara otomatis:
-- Menyiapkan container PHP 8.4, MySQL 8.0, dan Bun + Vite HMR.
-- Membuat file `.env` dan `APP_KEY` jika belum tersedia.
-- Menjalankan **Smart Database Sync (`php artisan inventory:smart-db-sync`)**.
-- Menjalankan server di:
-  - **Aplikasi Web**: `http://localhost:8000`
-  - **Vite HMR (Bun)**: `http://localhost:5173`
-  - **Laravel Telescope (Admin)**: `http://localhost:8000/telescope`
+- **Tanpa Docker (Local Mode — PHP + Bun/Node + SQLite/MySQL)**:
+  - Windows: `.\dev.bat` (atau `bun run start` / `npm run start`)
+  - macOS / Linux: `bun run start` / `npm run start` / `make run`
+- **Dengan Docker (Docker Mode — PHP 8.3 + MySQL 8.4 + Bun)**:
+  - Windows: `.\onboarding.bat --docker` atau `.\dev.bat dev` (atau `bun run start:docker` / `npm run start:docker`)
+  - macOS / Linux: `bun run start:docker` / `npm run start:docker` / `make dev`
 
-### Opsi 2: Tanpa Docker (Smart Local Runner)
+Setelah server berjalan, aplikasi dapat diakses di:
+- **Aplikasi Web**: `http://localhost:8000`
+- **LAN HTTPS (Mobile Chrome PWA)**: `https://<IP_LAN_ANDA>:8443`
+- **Vite HMR**: `http://localhost:5173`
+- **Webhook Broker**: `http://localhost:8085/webhook`
+- **Laravel Telescope (Admin)**: `http://localhost:8000/telescope`
 
-Jika ingin menjalankan langsung menggunakan PHP, Composer, MySQL/SQLite, dan **Bun** di mesin lokal:
+---
 
-```bash
-make run
-```
+## Padanan Perintah Cross-Platform (`package.json` / `dev.bat` / `Makefile`)
+
+Pengguna Windows **tidak perlu** menginstal `make` atau Git Bash. Seluruh perintah tersedia lewat `bun run`, `npm run`, maupun `.\dev.bat` (`Makefile` di macOS/Linux tetap berfungsi sebagai alias tipis):
+
+| Tugas | Windows (`dev.bat`) | Bun / Node.js (`package.json`) | macOS / Linux (`Makefile`) |
+| :--- | :--- | :--- | :--- |
+| Onboarding interaktif | `.\onboarding.bat` | `bun run setup` / `npm run setup` | `./setup.sh` / `make setup` |
+| Jalankan Local Mode | `.\dev.bat` | `bun run start` / `npm run start` | `make run` |
+| Jalankan Docker Mode | `.\dev.bat dev` | `bun run start:docker` / `npm run start:docker` | `make dev` |
+| Cloudflare HTTPS Tunnel | `.\dev.bat tunnel` | `bun run tunnel` / `npm run tunnel` | `make tunnel` |
+| Lint + Typecheck + Build | `.\dev.bat lint` | `bun run lint` / `npm run lint` | `make lint` |
+| Jalankan Test Suite | `.\dev.bat test` | `bun run test` / `npm run test` | `make test` |
+| Cek / Ganti Database | `.\dev.bat db:sqlite` | `bun run db:sqlite` / `db:local` / `db:live` | `make db-status` / `use-db:local` |
+| Diagnostik PC / Tool | `.\dev.bat doctor` | `bun run doctor` / `npm run doctor` | `make doctor` |
+| Bersihkan Cache | `.\dev.bat clean` | `bun run clean` / `npm run clean` | `make clean` |
 
 ---
 
 ## Smart Database Detection (`inventory:smart-db-sync`)
 
-Setiap kali Anda menjalankan `make dev` atau `make run`, perintah `php artisan inventory:smart-db-sync` akan memeriksa kondisi database lokal secara pintar:
+Setiap kali Anda menjalankan `bun run start` / `npm run start` / `.\dev.bat` / `make dev`, perintah `php artisan inventory:smart-db-sync` akan memeriksa kondisi database lokal secara pintar:
 
 | Kondisi Database Lokal | Strategi Otomatis yang Dijalankan |
 | :--- | :--- |
@@ -94,21 +111,24 @@ php artisan inventory:smart-db-sync --strategy=replace-irrelevant
 
 ---
 
-## Perintah Utilitas & Pengujian (`Makefile`)
+## Perintah Utilitas & Pengujian (Bun / npm / Windows / Makefile)
 
 ```bash
-# Menjalankan aplikasi dengan Docker + Smart DB Sync
-make dev
+# Diagnostik tool & konfigurasi PC
+bun run doctor        # atau: npm run doctor  |  .\dev.bat doctor
 
-# Menjalankan aplikasi tanpa Docker (Local PHP + Bun)
-make run
+# Menjalankan aplikasi tanpa Docker (Local PHP + Bun/Node)
+bun run start         # atau: npm run start   |  .\dev.bat  |  make run
+
+# Menjalankan aplikasi dengan Docker + Smart DB Sync
+bun run start:docker  # atau: npm run start:docker  |  .\dev.bat dev  |  make dev
 
 # Menjalankan seluruh pengujian (PHPUnit Feature & Unit Tests)
-make test
+bun run test          # atau: npm run test    |  .\dev.bat test  |  make test
 
-# Memeriksa kualitas kode & pemformatan (Laravel Pint + TypeScript + Bun Vite Build)
-make lint
+# Memeriksa kualitas kode & pemformatan (PHP syntax + Pint + TypeScript + Vite Build)
+bun run lint          # atau: npm run lint    |  .\dev.bat lint  |  make lint
 
-# Menjalankan perintah Bun di dalam container Docker
+# Menjalankan perintah Bun di dalam container Docker (opsional via Makefile)
 make bun c="run build"
 ```

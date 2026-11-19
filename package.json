@@ -19,9 +19,25 @@
         }
     ],
     "scripts": {
-        "build": "vite build",
+        "setup": "node scripts/dev-cli.mjs setup",
         "dev": "vite",
-        "typecheck": "tsc --noEmit"
+        "build": "vite build",
+        "typecheck": "tsc --noEmit",
+        "start": "node scripts/dev-cli.mjs run",
+        "start:docker": "node scripts/dev-cli.mjs dev",
+        "install:docker": "node scripts/dev-cli.mjs setup --docker",
+        "tunnel": "node scripts/dev-cli.mjs tunnel",
+        "tunnel:local": "node scripts/dev-cli.mjs tunnel --local",
+        "tunnel:docker": "node scripts/dev-cli.mjs tunnel --docker",
+        "lan-https": "node scripts/lan-https-proxy.mjs",
+        "lint": "node scripts/dev-cli.mjs lint",
+        "test": "node scripts/dev-cli.mjs test",
+        "clean": "node scripts/dev-cli.mjs clean",
+        "doctor": "node scripts/dev-cli.mjs doctor",
+        "db:status": "node scripts/dev-cli.mjs db:status",
+        "db:local": "node scripts/dev-cli.mjs db:local",
+        "db:live": "node scripts/dev-cli.mjs db:live",
+        "db:sqlite": "node scripts/dev-cli.mjs db:sqlite"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",
